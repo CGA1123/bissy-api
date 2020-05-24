@@ -1,3 +1,4 @@
+// +heroku goVersion go1.13
 module github.com/cga1123/bissy-api
 
 go 1.13
