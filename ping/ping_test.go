@@ -1,4 +1,4 @@
-package handlers
+package ping
 
 import (
 	"net/http"
@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestPingHandler(t *testing.T) {
+func TestHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "/health-check", nil)
 	if err != nil {
 		t.Fatal(err)
