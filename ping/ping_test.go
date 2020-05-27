@@ -15,7 +15,7 @@ func TestHandler(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(Ping)
+	handler := http.HandlerFunc(Handler)
 
 	handler.ServeHTTP(rr, req)
 

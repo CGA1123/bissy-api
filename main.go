@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/ping"
+	"github.com/cga1123/bissy-api/robert"
 	"github.com/gorilla/mux"
 )
 
@@ -17,6 +18,10 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/ping", ping.Handler)
+
+	robertMux := router.PathPrefix("/robert").Subrouter()
+	config := robert.Config{}
+	config.SetupHandlers(robertMux)
 
 	server := &http.Server{
 		Addr:         ":" + port,
