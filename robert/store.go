@@ -29,12 +29,12 @@ func (clock *RealClock) Now() time.Time {
 	return time.Now()
 }
 
-type Store interface {
-	Get(string) (Query, error)
-	Create(Query) (Query, error)
+type QueryStore interface {
+	Get(string) (*Query, error)
+	Create(*CreateQuery) (*Query, error)
 	List(page int, per int) ([]Query, error)
-	Delete(string) (Query, error)
-	Update(Query) (Query, error)
+	Delete(string) (*Query, error)
+	Update(string, *UpdateQuery) (*Query, error)
 }
 
 type InMemoryStore struct {

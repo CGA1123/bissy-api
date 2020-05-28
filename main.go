@@ -20,7 +20,12 @@ func main() {
 	router.HandleFunc("/ping", ping.Handler)
 
 	robertMux := router.PathPrefix("/robert").Subrouter()
-	config := robert.Config{}
+	clock := &robert.RealClock{}
+	generator := &robert.UUIDGenerator{}
+	config := robert.Config{
+		Store: robert.NewInMemoryStore(clock, generator),
+	}
+
 	config.SetupHandlers(robertMux)
 
 	server := &http.Server{
