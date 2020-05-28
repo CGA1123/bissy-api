@@ -7,22 +7,22 @@ import (
 )
 
 type Query struct {
-	Id          string
-	Query       string
-	Lifetime    Duration
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	LastRefresh time.Time
+	Id          string    `json:"id"`
+	Query       string    `json:"query"`
+	Lifetime    Duration  `json:"lifetime"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	LastRefresh time.Time `json:"lastRefresh"`
 }
 
 type CreateQuery struct {
-	Query    string
-	Lifetime Duration
+	Query    string   `json:"query"`
+	Lifetime Duration `json:"lifetime"`
 }
 
 type UpdateQuery struct {
-	Query    *string
-	Lifetime *Duration
+	Query    *string   `json:"query"`
+	Lifetime *Duration `json:"lifetime"`
 }
 
 type Duration time.Duration

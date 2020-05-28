@@ -35,13 +35,13 @@ func TestInMemoryCreate(t *testing.T) {
 	store := NewInMemoryStore(clock, generator)
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * time.Hour,
+		Lifetime: 3 * Duration(time.Hour),
 	}
 
 	expected := Query{
 		Id:          id,
 		Query:       "SELECT 1;",
-		Lifetime:    3 * time.Hour,
+		Lifetime:    3 * Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -62,7 +62,7 @@ func TestInMemoryCreateSmoke(t *testing.T) {
 	store := NewInMemoryStore(clock, generator)
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * time.Hour,
+		Lifetime: 3 * Duration(time.Hour),
 	}
 
 	_, err := store.Create(&createQuery)
@@ -80,13 +80,13 @@ func TestInMemoryGet(t *testing.T) {
 	store := NewInMemoryStore(clock, generator)
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * time.Hour,
+		Lifetime: 3 * Duration(time.Hour),
 	}
 
 	expected := Query{
 		Id:          id,
 		Query:       "SELECT 1;",
-		Lifetime:    3 * time.Hour,
+		Lifetime:    3 * Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -115,13 +115,13 @@ func TestInMemoryDelete(t *testing.T) {
 	store := NewInMemoryStore(clock, generator)
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * time.Hour,
+		Lifetime: 3 * Duration(time.Hour),
 	}
 
 	expected := Query{
 		Id:          id,
 		Query:       "SELECT 1;",
-		Lifetime:    3 * time.Hour,
+		Lifetime:    3 * Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -149,11 +149,11 @@ func TestInMemoryUpdate(t *testing.T) {
 	store := NewInMemoryStore(clock, generator)
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * time.Hour,
+		Lifetime: 3 * Duration(time.Hour),
 	}
 
 	newQuery := "SELECT 2;"
-	newLifetime := time.Hour
+	newLifetime := Duration(time.Hour)
 	updateQuery := UpdateQuery{
 		Query:    &newQuery,
 		Lifetime: &newLifetime,
@@ -162,7 +162,7 @@ func TestInMemoryUpdate(t *testing.T) {
 	expected := Query{
 		Id:          id,
 		Query:       "SELECT 2;",
-		Lifetime:    time.Hour,
+		Lifetime:    Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -188,7 +188,7 @@ func TestInMemoryUpdate(t *testing.T) {
 	expect.Equal(t, newQuery, query.Query)
 	expect.Equal(t, newLifetime, query.Lifetime)
 
-	newLifetime = 15 * time.Second
+	newLifetime = 15 * Duration(time.Second)
 	query, err = store.Update(id, &UpdateQuery{Lifetime: &newLifetime})
 	expect.Ok(t, err)
 	expect.Equal(t, newLifetime, query.Lifetime)
@@ -221,7 +221,7 @@ func TestInMemoryList(t *testing.T) {
 		s := fmt.Sprintf("SELECT %v;", i)
 		q := &CreateQuery{
 			Query:    s,
-			Lifetime: time.Duration(i) * time.Hour,
+			Lifetime: Duration(time.Duration(i) * time.Hour),
 		}
 		selects = append(selects, s)
 		_, err := store.Create(q)

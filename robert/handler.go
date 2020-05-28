@@ -7,6 +7,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -31,8 +33,50 @@ func (c *Config) Home(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "robert, a poor man's trevor\nrobert -> trebor -> trevor\n")
 }
 
-// TODO
-func (c *Config) IndexQueries(w http.ResponseWriter, r *http.Request) {}
+// TODO:
+// - Implement Index
+// - Tests
+// - Specs
+// - Implement an adapter
+// - Implement caching layer
+// - Allow multi-adapter (add http adapter?)
+//		- PG
+//		- MySQL
+// 		- Snowflake
+//		- HTTP
+// - Ensure Read-Only?
+
+// TODO: Clean up error handling with func(http.ResponseWriter, *http.Request) error
+//
+// type HandlerError interface {
+//		error
+// 		Status()
+// }
+func intWithDefault(v url.Values, k string, d int) int {
+	value, err := strconv.Atoi(v.Get(k))
+	if err != nil {
+		value = d
+	}
+
+	return value
+}
+
+func (c *Config) IndexQueries(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+	params := r.URL.Query()
+	page := intWithDefault(params, "page", 1)
+	per := intWithDefault(params, "per", 25)
+
+	queries, err := c.Store.List(page, per)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := json.NewEncoder(w).Encode(queries); err != nil {
+		panic(err)
+	}
+}
 
 func (c *Config) CreateQuery(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
