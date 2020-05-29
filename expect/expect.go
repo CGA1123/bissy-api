@@ -40,12 +40,12 @@ func StatusOK(t *testing.T, rr *httptest.ResponseRecorder) {
 	StatusHTTP(t, http.StatusOK, rr)
 }
 
-func BodyString(t *testing.T, expected string, rr *httptest.ResponseRecorder) {
-	Equal(t, expected, rr.Body.String())
-}
-
 func ContentType(t *testing.T, expected string, rr *httptest.ResponseRecorder) {
 	Equal(t, expected, rr.Header().Get("Content-Type"))
+}
+
+func BodyString(t *testing.T, expected string, rr *httptest.ResponseRecorder) {
+	Equal(t, expected, rr.Body.String())
 }
 
 func BodyJSON(t *testing.T, expected interface{}, rr *httptest.ResponseRecorder) {
