@@ -1,8 +1,9 @@
-package robert
+package robert_test
 
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/handlerutils"
+	"github.com/cga1123/bissy-api/robert"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -32,7 +34,7 @@ func structAsJson(data interface{}) (interface{}, error) {
 	return mapData, nil
 }
 
-func testHandler(c *Config, r *http.Request) *httptest.ResponseRecorder {
+func testHandler(c *robert.Config, r *http.Request) *httptest.ResponseRecorder {
 	recorder := httptest.NewRecorder()
 
 	router := mux.NewRouter()
@@ -43,11 +45,13 @@ func testHandler(c *Config, r *http.Request) *httptest.ResponseRecorder {
 	return recorder
 }
 
-func testConfig() (time.Time, string, *Config) {
+func testConfig() (time.Time, string, *robert.Config) {
 	now := time.Now()
 	id := uuid.New().String()
 
-	return now, id, &Config{Store: newTestStore(now, id)}
+	return now, id, &robert.Config{
+		Store:    newTestStore(now, id),
+		Executor: &testExecutor{}}
 }
 
 func jsonBody(v interface{}) (*bytes.Reader, error) {
@@ -92,9 +96,9 @@ func TestCreate(t *testing.T) {
 	expect.StatusOK(t, response)
 
 	actual, err := config.Store.Get(id)
-	expected := &Query{
+	expected := &robert.Query{
 		Id:          id,
-		Lifetime:    Duration(time.Hour + time.Minute),
+		Lifetime:    robert.Duration(time.Hour + time.Minute),
 		Query:       "SELECT 1;",
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -118,15 +122,13 @@ func TestCreateBadRequest(t *testing.T) {
 	expect.StatusHTTP(t, http.StatusUnprocessableEntity, response)
 }
 
-// TODO: Handle not found errors, add custom errors to store and switch?
-// can add to store -> handler error function as well to help!
 func TestGet(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
-	query, err := config.Store.Create(&CreateQuery{
+	query, err := config.Store.Create(&robert.CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: Duration(time.Hour),
+		Lifetime: robert.Duration(time.Hour),
 	})
 	expect.Ok(t, err)
 
@@ -140,4 +142,170 @@ func TestGet(t *testing.T) {
 	expect.StatusOK(t, response)
 	expect.ContentType(t, handlerutils.ContentTypeJson, response)
 	expect.BodyJSON(t, queryAsJson, response)
+}
+
+// TODO: Handle not found errors, add custom errors to store and switch?
+// can add to store -> handler error function as well to help!
+func TestGetNotFound(t *testing.T) {
+	t.Parallel()
+
+	_, _, config := testConfig()
+
+	request, err := http.NewRequest("GET", "/queries/does-not-exist", nil)
+	expect.Ok(t, err)
+
+	response := testHandler(config, request)
+	expect.StatusHTTP(t, http.StatusInternalServerError, response)
+}
+
+func TestDelete(t *testing.T) {
+	t.Parallel()
+
+	_, id, config := testConfig()
+	query, err := config.Store.Create(&robert.CreateQuery{
+		Query:    "SELECT 1;",
+		Lifetime: robert.Duration(time.Hour),
+	})
+	expect.Ok(t, err)
+
+	queryAsJson, err := structAsJson(query)
+	expect.Ok(t, err)
+
+	request, err := http.NewRequest("DELETE", "/queries/"+id, nil)
+	expect.Ok(t, err)
+
+	response := testHandler(config, request)
+	expect.StatusOK(t, response)
+	expect.ContentType(t, handlerutils.ContentTypeJson, response)
+	expect.BodyJSON(t, queryAsJson, response)
+
+	queries, err := config.Store.List(1, 1)
+	expect.Ok(t, err)
+	expect.Equal(t, []robert.Query{}, queries)
+}
+
+// TODO: Handle not found errors, add custom errors to store and switch?
+// can add to store -> handler error function as well to help!
+func TestDeleteNotFound(t *testing.T) {
+	t.Parallel()
+
+	_, _, config := testConfig()
+
+	request, err := http.NewRequest("DELETE", "/queries/does-not-exist", nil)
+	expect.Ok(t, err)
+
+	response := testHandler(config, request)
+	expect.StatusHTTP(t, http.StatusInternalServerError, response)
+}
+
+func TestUpdate(t *testing.T) {
+	t.Parallel()
+
+	now, id, config := testConfig()
+	query, err := config.Store.Create(&robert.CreateQuery{
+		Query:    "SELECT 1;",
+		Lifetime: robert.Duration(time.Hour),
+	})
+	expect.Ok(t, err)
+
+	oneHourAgo := now.Add(-time.Hour)
+	json, err := jsonBody(map[string]string{
+		"lifetime":    "1h01m",
+		"query":       "SELECT 2;",
+		"lastRefresh": oneHourAgo.Format(time.RFC3339Nano)})
+	expect.Ok(t, err)
+
+	request, err := http.NewRequest("PATCH", "/queries/"+id, json)
+	expect.Ok(t, err)
+
+	query.Lifetime = robert.Duration(time.Hour + time.Minute)
+	query.Query = "SELECT 2;"
+	query.LastRefresh = oneHourAgo
+	queryAsJson, err := structAsJson(query)
+	expect.Ok(t, err)
+
+	response := testHandler(config, request)
+	expect.StatusOK(t, response)
+	expect.ContentType(t, handlerutils.ContentTypeJson, response)
+	expect.BodyJSON(t, queryAsJson, response)
+
+	query, err = config.Store.Get(id)
+	expect.Ok(t, err)
+
+	expect.Equal(t, robert.Duration(time.Hour+time.Minute), query.Lifetime)
+	expect.Equal(t, "SELECT 2;", query.Query)
+}
+
+// TODO: move to expect.BodyStructJson() ?
+// maybe should have expecthttp tbh separate core and http helpers
+func TestUpdateNotFound(t *testing.T) {
+	t.Parallel()
+
+	_, id, config := testConfig()
+	json, err := jsonBody(map[string]string{
+		"lifetime": "1h01m",
+		"query":    "SELECT 2;",
+	})
+	expect.Ok(t, err)
+
+	request, err := http.NewRequest("PATCH", "/queries/"+id, json)
+	expect.Ok(t, err)
+
+	response := testHandler(config, request)
+	expect.StatusHTTP(t, http.StatusInternalServerError, response)
+}
+
+func TestList(t *testing.T) {
+	t.Parallel()
+
+	config := &robert.Config{Store: robert.NewInMemoryStore(&robert.RealClock{}, &robert.UUIDGenerator{})}
+	queries := []robert.Query{}
+
+	for i := 0; i < 30; i++ {
+		query, err := config.Store.Create(&robert.CreateQuery{
+			Query: fmt.Sprintf("SELECT %v", i)})
+
+		expect.Ok(t, err)
+		queries = append(queries, *query)
+	}
+
+	request, err := http.NewRequest("GET", "/queries", nil)
+	expect.Ok(t, err)
+
+	expected, err := structAsJson(queries[:25])
+	expect.Ok(t, err)
+
+	response := testHandler(config, request)
+	expect.StatusOK(t, response)
+	expect.ContentType(t, handlerutils.ContentTypeJson, response)
+	expect.BodyJSON(t, expected, response)
+
+	// pagination
+	request, err = http.NewRequest("GET", "/queries?page=2&per=5", nil)
+	expect.Ok(t, err)
+
+	expected, err = structAsJson(queries[5:10])
+	expect.Ok(t, err)
+
+	response = testHandler(config, request)
+	expect.StatusOK(t, response)
+	expect.ContentType(t, handlerutils.ContentTypeJson, response)
+	expect.BodyJSON(t, expected, response)
+}
+
+func TestExecute(t *testing.T) {
+	t.Parallel()
+
+	_, id, config := testConfig()
+
+	_, err := config.Store.Create(&robert.CreateQuery{Query: "SELECT * FROM users"})
+	expect.Ok(t, err)
+
+	request, err := http.NewRequest("GET", "/queries/"+id+"/result", nil)
+	expect.Ok(t, err)
+
+	response := testHandler(config, request)
+	expect.StatusOK(t, response)
+	expect.ContentType(t, handlerutils.ContentTypeCsv, response)
+	expect.BodyString(t, "Got: SELECT * FROM users", response)
 }

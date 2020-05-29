@@ -11,6 +11,7 @@ import (
 const (
 	ContentTypeJson      = "application/json; charset=UTF-8"
 	ContentTypePlaintext = "text/plain"
+	ContentTypeCsv       = "text/csv"
 )
 
 type requestParams struct {
@@ -85,7 +86,7 @@ func (p *requestParams) Get(k string) (string, error) {
 	return values[0], nil
 }
 
-func (p *requestParams) IntParam(k string) (int, error) {
+func (p *requestParams) Int(k string) (int, error) {
 	value, err := p.Get(k)
 	if err != nil {
 		return -1, err
@@ -94,8 +95,8 @@ func (p *requestParams) IntParam(k string) (int, error) {
 	return strconv.Atoi(value)
 }
 
-func (p *requestParams) MaybeIntParam(k string, fallback int) int {
-	value, err := p.IntParam(k)
+func (p *requestParams) MaybeInt(k string, fallback int) int {
+	value, err := p.Int(k)
 	if err != nil {
 		return fallback
 	}

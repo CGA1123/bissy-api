@@ -15,14 +15,23 @@ type Query struct {
 	LastRefresh time.Time `json:"lastRefresh"`
 }
 
+func (query *Query) Fresh(now time.Time) bool {
+	timeSinceLastRefresh := now.Sub(query.LastRefresh)
+	refreshedRecently := Duration(timeSinceLastRefresh) < query.Lifetime
+	updatedRecently := query.UpdatedAt.After(query.LastRefresh)
+
+	return refreshedRecently && !updatedRecently
+}
+
 type CreateQuery struct {
 	Query    string   `json:"query"`
 	Lifetime Duration `json:"lifetime"`
 }
 
 type UpdateQuery struct {
-	Query    *string   `json:"query"`
-	Lifetime *Duration `json:"lifetime"`
+	Query       *string   `json:"query"`
+	Lifetime    *Duration `json:"lifetime"`
+	LastRefresh time.Time `json:"lastRefresh"`
 }
 
 type Duration time.Duration

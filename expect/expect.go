@@ -9,6 +9,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func True(t *testing.T, actual bool) {
+	Equal(t, true, actual)
+}
+
+func False(t *testing.T, actual bool) {
+	Equal(t, false, actual)
+}
+
 func Equal(t *testing.T, expected, actual interface{}) {
 	diff := cmp.Diff(expected, actual)
 	if diff != "" {

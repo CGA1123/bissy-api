@@ -108,6 +108,10 @@ func (store *InMemoryStore) Update(id string, update *UpdateQuery) (*Query, erro
 		query.Lifetime = *update.Lifetime
 	}
 
+	if !update.LastRefresh.IsZero() {
+		query.LastRefresh = update.LastRefresh
+	}
+
 	store.Queries[id] = query
 
 	return &query, nil

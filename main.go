@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -22,8 +23,14 @@ func main() {
 	robertMux := router.PathPrefix("/robert").Subrouter()
 	clock := &robert.RealClock{}
 	generator := &robert.UUIDGenerator{}
+	executor, err := robert.NewSQLExecutor("postgres", "sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	config := robert.Config{
-		Store: robert.NewInMemoryStore(clock, generator),
+		Store:    robert.NewInMemoryStore(clock, generator),
+		Executor: executor,
 	}
 
 	config.SetupHandlers(robertMux)
