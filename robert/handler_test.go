@@ -15,6 +15,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// TODO: move to expect.BodyStructJson() ?
+// maybe should have expecthttp tbh separate core and http helpers
 func structAsJson(data interface{}) (interface{}, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
@@ -116,6 +118,8 @@ func TestCreateBadRequest(t *testing.T) {
 	expect.StatusHTTP(t, http.StatusUnprocessableEntity, response)
 }
 
+// TODO: Handle not found errors, add custom errors to store and switch?
+// can add to store -> handler error function as well to help!
 func TestGet(t *testing.T) {
 	t.Parallel()
 
