@@ -48,7 +48,9 @@ func testConfig() (time.Time, string, *Config) {
 	now := time.Now()
 	id := uuid.New().String()
 
-	return now, id, &Config{Store: newTestStore(now, id)}
+	return now, id, &Config{
+		Store:    newTestStore(now, id),
+		Executor: &testExecutor{}}
 }
 
 func jsonBody(v interface{}) (*bytes.Reader, error) {
@@ -286,4 +288,21 @@ func TestList(t *testing.T) {
 	expect.StatusOK(t, response)
 	expect.ContentType(t, handlerutils.ContentTypeJson, response)
 	expect.BodyJSON(t, expected, response)
+}
+
+func TestExecute(t *testing.T) {
+	t.Parallel()
+
+	_, id, config := testConfig()
+
+	_, err := config.Store.Create(&CreateQuery{Query: "SELECT * FROM users"})
+	expect.Ok(t, err)
+
+	request, err := http.NewRequest("GET", "/queries/"+id+"/result", nil)
+	expect.Ok(t, err)
+
+	response := testHandler(config, request)
+	expect.StatusOK(t, response)
+	expect.ContentType(t, handlerutils.ContentTypeCsv, response)
+	expect.BodyString(t, "Got: SELECT * FROM users", response)
 }

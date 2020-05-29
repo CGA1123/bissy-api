@@ -1,6 +1,9 @@
 package robert
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type testClock struct {
 	time time.Time
@@ -22,4 +25,10 @@ func newTestStore(now time.Time, id string) *InMemoryStore {
 	return NewInMemoryStore(
 		&testClock{time: now},
 		&testIdGenerator{id: id})
+}
+
+type testExecutor struct{}
+
+func (t *testExecutor) Execute(query string) (string, error) {
+	return fmt.Sprintf("Got: %v", query), nil
 }

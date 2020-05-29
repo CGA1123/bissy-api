@@ -13,7 +13,8 @@ import (
 )
 
 type Config struct {
-	Store QueryStore
+	Store    QueryStore
+	Executor Executor
 }
 
 func (c *Config) SetupHandlers(router *mux.Router) {
@@ -38,6 +39,10 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 	router.
 		Handle("/queries/{id}", &handlerutils.Handler{H: c.queryUpdate}).
 		Methods("PATCH")
+
+	router.
+		Handle("/queries/{id}/result", &handlerutils.Handler{H: c.queryResult}).
+		Methods("GET")
 }
 
 func (c *Config) Home(w http.ResponseWriter, r *http.Request) {
@@ -164,4 +169,24 @@ func (c *Config) queryUpdate(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return json.NewEncoder(w).Encode(query)
+}
+
+func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
+	handlerutils.ContentType(w, handlerutils.ContentTypeCsv)
+
+	params := handlerutils.Params(r)
+	id, err := params.Get("id")
+	if err != nil {
+		return &handlerutils.HandlerError{
+			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
+	}
+
+	query, err := c.Store.Get(id)
+	if err != nil {
+		return err
+	}
+	result, err := c.Executor.Execute(query.Query)
+	_, err = fmt.Fprintf(w, result)
+
+	return err
 }

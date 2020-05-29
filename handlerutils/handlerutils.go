@@ -11,6 +11,7 @@ import (
 const (
 	ContentTypeJson      = "application/json; charset=UTF-8"
 	ContentTypePlaintext = "text/plain"
+	ContentTypeCsv       = "text/csv"
 )
 
 type requestParams struct {
