@@ -5,19 +5,44 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"time"
-
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
-	_ "github.com/snowflakedb/gosnowflake"
 )
 
+type QueryCache interface {
+	Get(*Query) (string, bool)
+	Set(*Query, string) error
+}
+
 type Executor interface {
-	Execute(string) (string, error)
+	Execute(*Query) (string, error)
+}
+
+type CachedExecutor struct {
+	Cache    QueryCache
+	Executor Executor
 }
 
 type SQLExecutor struct {
 	db *sql.DB
+}
+
+func (cache *CachedExecutor) Execute(query *Query) (string, error) {
+	if result, ok := cache.Cache.Get(query); ok {
+		return result, nil
+	}
+
+	result, err := cache.Executor.Execute(query)
+	if err != nil {
+		return "", err
+	}
+
+	err = cache.Cache.Set(query, result)
+	if err != nil {
+		log.Printf("could not set cache: %v", err)
+	}
+
+	return result, nil
 }
 
 func NewSQLExecutor(driver, conn string) (*SQLExecutor, error) {
@@ -29,8 +54,8 @@ func NewSQLExecutor(driver, conn string) (*SQLExecutor, error) {
 	return &SQLExecutor{db: db}, db.Ping()
 }
 
-func (sql *SQLExecutor) Execute(query string) (string, error) {
-	rows, err := sql.db.Query(query)
+func (sql *SQLExecutor) Execute(query *Query) (string, error) {
+	rows, err := sql.db.Query(query.Query)
 	if err != nil {
 		return "", err
 	}

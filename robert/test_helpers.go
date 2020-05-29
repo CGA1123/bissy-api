@@ -29,6 +29,6 @@ func newTestStore(now time.Time, id string) *InMemoryStore {
 
 type testExecutor struct{}
 
-func (t *testExecutor) Execute(query string) (string, error) {
-	return fmt.Sprintf("Got: %v", query), nil
+func (t *testExecutor) Execute(query *Query) (string, error) {
+	return fmt.Sprintf("Got: %v", query.Query), nil
 }

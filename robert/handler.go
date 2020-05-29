@@ -185,7 +185,7 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	result, err := c.Executor.Execute(query.Query)
+	result, err := c.Executor.Execute(query)
 	_, err = fmt.Fprintf(w, result)
 
 	return err
