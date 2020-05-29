@@ -5,13 +5,30 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
-	"log"
 	"time"
 )
 
 type QueryCache interface {
 	Get(*Query) (string, bool)
 	Set(*Query, string) error
+}
+
+type InMemoryCache struct {
+	Cache map[string]string
+}
+
+func NewInMemoryCache() *InMemoryCache {
+	return &InMemoryCache{Cache: map[string]string{}}
+}
+func (cache *InMemoryCache) Get(query *Query) (string, bool) {
+	value, ok := cache.Cache[query.Id]
+	return value, ok
+}
+
+func (cache *InMemoryCache) Set(query *Query, result string) error {
+	cache.Cache[query.Id] = result
+
+	return nil
 }
 
 type Executor interface {
@@ -21,15 +38,27 @@ type Executor interface {
 type CachedExecutor struct {
 	Cache    QueryCache
 	Executor Executor
+	Store    QueryStore
+	Clock    Clock
 }
 
 type SQLExecutor struct {
 	db *sql.DB
 }
 
+func updateCache(cache *CachedExecutor, query *Query, result string) {
+	if err := cache.Cache.Set(query, result); err != nil {
+		return
+	}
+
+	cache.Store.Update(query.Id, &UpdateQuery{LastRefresh: time.Now()})
+}
+
 func (cache *CachedExecutor) Execute(query *Query) (string, error) {
-	if result, ok := cache.Cache.Get(query); ok {
-		return result, nil
+	if query.Fresh(cache.Clock.Now()) {
+		if result, ok := cache.Cache.Get(query); ok {
+			return result, nil
+		}
 	}
 
 	result, err := cache.Executor.Execute(query)
@@ -37,10 +66,7 @@ func (cache *CachedExecutor) Execute(query *Query) (string, error) {
 		return "", err
 	}
 
-	err = cache.Cache.Set(query, result)
-	if err != nil {
-		log.Printf("could not set cache: %v", err)
-	}
+	updateCache(cache, query, result)
 
 	return result, nil
 }

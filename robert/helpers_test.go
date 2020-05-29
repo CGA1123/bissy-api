@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/robert"
+	"github.com/google/uuid"
 )
 
 type testClock struct {
@@ -33,4 +34,16 @@ type testExecutor struct{}
 
 func (t *testExecutor) Execute(query *robert.Query) (string, error) {
 	return fmt.Sprintf("Got: %v", query.Query), nil
+}
+
+func testCachedExecutor() *robert.CachedExecutor {
+	now := time.Now()
+	id := uuid.New().String()
+	store := newTestStore(now, id)
+	return &robert.CachedExecutor{
+		Cache:    robert.NewInMemoryCache(),
+		Store:    store,
+		Executor: &testExecutor{},
+		Clock:    &testClock{time: now},
+	}
 }
