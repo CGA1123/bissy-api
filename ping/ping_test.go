@@ -5,33 +5,22 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/cga1123/bissy-api/expect"
+	"github.com/cga1123/bissy-api/handlerutils"
 )
 
 func TestHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "/health-check", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	expect.Ok(t, err)
 
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(Ping)
+	handler := http.HandlerFunc(Handler)
 
 	handler.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
-	}
+	expectedJson := map[string]interface{}{"message": "pong"}
 
-	if ctype := rr.Header().Get("Content-Type"); ctype != "application/json" {
-		t.Errorf("content type header does not match: got %v want %v",
-			ctype, "application/json")
-	}
-
-	expected := "{\"message\":\"pong\"}\n"
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: %v",
-			cmp.Diff(rr.Body.String(), expected))
-	}
+	expect.StatusOK(t, rr)
+	expect.ContentType(t, handlerutils.ContentTypeJson, rr)
+	expect.BodyJSON(t, expectedJson, rr)
 }
