@@ -18,7 +18,13 @@ type Config struct {
 
 func (c *Config) SetupHandlers(router *mux.Router) {
 	router.HandleFunc("/", c.Home).Methods("GET")
-	router.Handle("/queries", &handlerutils.Handler{H: c.queriesCreate}).Methods("POST")
+	router.
+		Handle("/queries", &handlerutils.Handler{H: c.queriesCreate}).
+		Methods("POST")
+
+	router.
+		Handle("/queries/{id}", &handlerutils.Handler{H: c.queriesGet}).
+		Methods("GET")
 }
 
 func (c *Config) Home(w http.ResponseWriter, r *http.Request) {
@@ -59,4 +65,22 @@ func (c *Config) queriesCreate(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return nil
+}
+
+func (c *Config) queriesGet(w http.ResponseWriter, r *http.Request) error {
+	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+
+	params := handlerutils.Params(r)
+	id, err := params.Get("id")
+	if err != nil {
+		return &handlerutils.HandlerError{
+			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
+	}
+
+	query, err := c.Store.Get(id)
+	if err != nil {
+		return err
+	}
+
+	return json.NewEncoder(w).Encode(query)
 }
