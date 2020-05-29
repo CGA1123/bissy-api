@@ -6,6 +6,11 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.14
+      - image: circleci/postgres:11
+        environment:
+          POSTGRES_USER: circleci
+          POSTGRES_DB: circleci
+          POSTGRES_HOST_AUTH_METHOD: trust
 
     working_directory: /go/src/github.com/CGA1123/bissy-api
     steps:
