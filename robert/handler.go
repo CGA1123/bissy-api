@@ -18,19 +18,48 @@ type Config struct {
 
 func (c *Config) SetupHandlers(router *mux.Router) {
 	router.HandleFunc("/", c.Home).Methods("GET")
+
+	router.
+		Handle("/queries", &handlerutils.Handler{H: c.queriesList}).
+		Methods("GET")
+
 	router.
 		Handle("/queries", &handlerutils.Handler{H: c.queriesCreate}).
 		Methods("POST")
 
 	router.
-		Handle("/queries/{id}", &handlerutils.Handler{H: c.queriesGet}).
+		Handle("/queries/{id}", &handlerutils.Handler{H: c.queryGet}).
 		Methods("GET")
+
+	router.
+		Handle("/queries/{id}", &handlerutils.Handler{H: c.queryDelete}).
+		Methods("DELETE")
+
+	router.
+		Handle("/queries/{id}", &handlerutils.Handler{H: c.queryUpdate}).
+		Methods("PATCH")
 }
 
 func (c *Config) Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 
 	fmt.Fprintf(w, "robert, a poor man's trevor\nrobert -> trebor -> trevor\n")
+}
+
+func (c *Config) queriesList(w http.ResponseWriter, r *http.Request) error {
+	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+
+	params := handlerutils.Params(r)
+	page := params.MaybeInt("page", 1)
+	per := params.MaybeInt("per", 25)
+
+	queries, err := c.Store.List(page, per)
+	if err != nil {
+		return &handlerutils.HandlerError{
+			Err: err, Status: http.StatusInternalServerError}
+	}
+
+	return json.NewEncoder(w).Encode(queries)
 }
 
 func (c *Config) queriesCreate(w http.ResponseWriter, r *http.Request) error {
@@ -67,7 +96,7 @@ func (c *Config) queriesCreate(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (c *Config) queriesGet(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) queryGet(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
@@ -78,6 +107,58 @@ func (c *Config) queriesGet(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	query, err := c.Store.Get(id)
+	if err != nil {
+		return err
+	}
+
+	return json.NewEncoder(w).Encode(query)
+}
+
+func (c *Config) queryDelete(w http.ResponseWriter, r *http.Request) error {
+	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+
+	params := handlerutils.Params(r)
+	id, err := params.Get("id")
+	if err != nil {
+		return &handlerutils.HandlerError{
+			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
+	}
+
+	query, err := c.Store.Delete(id)
+	if err != nil {
+		return err
+	}
+
+	return json.NewEncoder(w).Encode(query)
+}
+
+func (c *Config) queryUpdate(w http.ResponseWriter, r *http.Request) error {
+	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+
+	params := handlerutils.Params(r)
+	id, err := params.Get("id")
+	if err != nil {
+		return &handlerutils.HandlerError{
+			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
+	}
+
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+	if err != nil {
+		return &handlerutils.HandlerError{
+			Err: err, Status: http.StatusInternalServerError}
+	}
+	if err := r.Body.Close(); err != nil {
+		return &handlerutils.HandlerError{
+			Err: err, Status: http.StatusInternalServerError}
+	}
+
+	var updateQuery UpdateQuery
+	if err := json.Unmarshal(body, &updateQuery); err != nil {
+		return &handlerutils.HandlerError{
+			Err: err, Status: http.StatusUnprocessableEntity}
+	}
+
+	query, err := c.Store.Update(id, &updateQuery)
 	if err != nil {
 		return err
 	}
