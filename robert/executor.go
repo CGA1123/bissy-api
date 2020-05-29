@@ -2,10 +2,13 @@ package robert
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type QueryCache interface {
@@ -29,6 +32,26 @@ func (cache *InMemoryCache) Set(query *Query, result string) error {
 	cache.Cache[query.Id] = result
 
 	return nil
+}
+
+type RedisCache struct {
+	Client *redis.Client
+}
+
+func (cache *RedisCache) Get(query *Query) (string, bool) {
+	value, err := cache.Client.Get(context.TODO(), query.Id).Result()
+
+	return value, err == nil
+}
+
+func (cache *RedisCache) Set(query *Query, result string) error {
+	set := cache.Client.Set(
+		context.TODO(),
+		query.Id,
+		result,
+		time.Duration(query.Lifetime))
+
+	return set.Err()
 }
 
 type Executor interface {
