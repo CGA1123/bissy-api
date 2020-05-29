@@ -9,30 +9,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type testClock struct {
-	time time.Time
-}
-
-func (clock *testClock) Now() time.Time {
-	return clock.time
-}
-
-type testIdGenerator struct {
-	id string
-}
-
-func (generator *testIdGenerator) Generate() string {
-	return generator.id
-}
-
 func TestInMemoryCreate(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
 	id := uuid.New().String()
-	generator := &testIdGenerator{id: id}
-	clock := &testClock{time: now}
-	store := NewInMemoryStore(clock, generator)
+	store := newTestStore(now, id)
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * Duration(time.Hour),
@@ -57,9 +39,7 @@ func TestInMemoryCreate(t *testing.T) {
 func TestInMemoryCreateSmoke(t *testing.T) {
 	t.Parallel()
 
-	clock := &RealClock{}
-	generator := &UUIDGenerator{}
-	store := NewInMemoryStore(clock, generator)
+	store := NewInMemoryStore(&RealClock{}, &UUIDGenerator{})
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * Duration(time.Hour),
@@ -75,9 +55,7 @@ func TestInMemoryGet(t *testing.T) {
 
 	now := time.Now()
 	id := uuid.New().String()
-	generator := &testIdGenerator{id: id}
-	clock := &testClock{time: now}
-	store := NewInMemoryStore(clock, generator)
+	store := newTestStore(now, id)
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * Duration(time.Hour),
@@ -110,9 +88,7 @@ func TestInMemoryDelete(t *testing.T) {
 
 	now := time.Now()
 	id := uuid.New().String()
-	generator := &testIdGenerator{id: id}
-	clock := &testClock{time: now}
-	store := NewInMemoryStore(clock, generator)
+	store := newTestStore(now, id)
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * Duration(time.Hour),
@@ -144,9 +120,7 @@ func TestInMemoryUpdate(t *testing.T) {
 
 	now := time.Now()
 	id := uuid.New().String()
-	generator := &testIdGenerator{id: id}
-	clock := &testClock{time: now}
-	store := NewInMemoryStore(clock, generator)
+	store := newTestStore(now, id)
 	createQuery := CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * Duration(time.Hour),
@@ -212,9 +186,7 @@ func selectsFromSlice(queries []Query) []string {
 func TestInMemoryList(t *testing.T) {
 	t.Parallel()
 
-	generator := &UUIDGenerator{}
-	clock := &RealClock{}
-	store := NewInMemoryStore(clock, generator)
+	store := NewInMemoryStore(&RealClock{}, &UUIDGenerator{})
 	selects := []string{}
 
 	for i := 0; i < 10; i++ {
