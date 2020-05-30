@@ -1,28 +1,28 @@
-package robert_test
+package querycache_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/cga1123/bissy-api/expect"
-	"github.com/cga1123/bissy-api/robert"
+	"github.com/cga1123/bissy-api/querycache"
 )
 
-func freshQuery(now time.Time) *robert.Query {
+func freshQuery(now time.Time) *querycache.Query {
 	oneHourAgo := now.Add(-time.Hour)
 	twoHoursAgo := now.Add(-2 * time.Hour)
 
-	return &robert.Query{
+	return &querycache.Query{
 		LastRefresh: oneHourAgo,
 		UpdatedAt:   twoHoursAgo,
-		Lifetime:    robert.Duration(3 * time.Hour)}
+		Lifetime:    querycache.Duration(3 * time.Hour)}
 }
 
 func TestFresh(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
-	var query *robert.Query
+	var query *querycache.Query
 
 	// fresh query
 	query = freshQuery(now)

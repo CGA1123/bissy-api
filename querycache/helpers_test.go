@@ -1,10 +1,10 @@
-package robert_test
+package querycache_test
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/cga1123/bissy-api/robert"
+	"github.com/cga1123/bissy-api/querycache"
 	"github.com/google/uuid"
 )
 
@@ -24,24 +24,24 @@ func (generator *testIdGenerator) Generate() string {
 	return generator.id
 }
 
-func newTestStore(now time.Time, id string) *robert.InMemoryStore {
-	return robert.NewInMemoryStore(
+func newTestStore(now time.Time, id string) *querycache.InMemoryStore {
+	return querycache.NewInMemoryStore(
 		&testClock{time: now},
 		&testIdGenerator{id: id})
 }
 
 type testExecutor struct{}
 
-func (t *testExecutor) Execute(query *robert.Query) (string, error) {
+func (t *testExecutor) Execute(query *querycache.Query) (string, error) {
 	return fmt.Sprintf("Got: %v", query.Query), nil
 }
 
-func testCachedExecutor() *robert.CachedExecutor {
+func testCachedExecutor() *querycache.CachedExecutor {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestStore(now, id)
-	return &robert.CachedExecutor{
-		Cache:    robert.NewInMemoryCache(),
+	return &querycache.CachedExecutor{
+		Cache:    querycache.NewInMemoryCache(),
 		Store:    store,
 		Executor: &testExecutor{},
 		Clock:    &testClock{time: now},

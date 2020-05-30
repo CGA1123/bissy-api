@@ -1,4 +1,4 @@
-package robert_test
+package querycache_test
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/handlerutils"
-	"github.com/cga1123/bissy-api/robert"
+	"github.com/cga1123/bissy-api/querycache"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -34,7 +34,7 @@ func structAsJson(data interface{}) (interface{}, error) {
 	return mapData, nil
 }
 
-func testHandler(c *robert.Config, r *http.Request) *httptest.ResponseRecorder {
+func testHandler(c *querycache.Config, r *http.Request) *httptest.ResponseRecorder {
 	recorder := httptest.NewRecorder()
 
 	router := mux.NewRouter()
@@ -45,11 +45,11 @@ func testHandler(c *robert.Config, r *http.Request) *httptest.ResponseRecorder {
 	return recorder
 }
 
-func testConfig() (time.Time, string, *robert.Config) {
+func testConfig() (time.Time, string, *querycache.Config) {
 	now := time.Now()
 	id := uuid.New().String()
 
-	return now, id, &robert.Config{
+	return now, id, &querycache.Config{
 		Store:    newTestStore(now, id),
 		Executor: &testExecutor{}}
 }
@@ -72,7 +72,7 @@ func TestHome(t *testing.T) {
 
 	response := testHandler(config, request)
 
-	expectedBody := "robert, a poor man's trevor\nrobert -> trebor -> trevor\n"
+	expectedBody := "querycache, a poor man's trevor\nquerycache -> trebor -> trevor\n"
 
 	expect.StatusOK(t, response)
 	expect.ContentType(t, handlerutils.ContentTypePlaintext, response)
@@ -96,9 +96,9 @@ func TestCreate(t *testing.T) {
 	expect.StatusOK(t, response)
 
 	actual, err := config.Store.Get(id)
-	expected := &robert.Query{
+	expected := &querycache.Query{
 		Id:          id,
-		Lifetime:    robert.Duration(time.Hour + time.Minute),
+		Lifetime:    querycache.Duration(time.Hour + time.Minute),
 		Query:       "SELECT 1;",
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -126,9 +126,9 @@ func TestGet(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
-	query, err := config.Store.Create(&robert.CreateQuery{
+	query, err := config.Store.Create(&querycache.CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: robert.Duration(time.Hour),
+		Lifetime: querycache.Duration(time.Hour),
 	})
 	expect.Ok(t, err)
 
@@ -162,9 +162,9 @@ func TestDelete(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
-	query, err := config.Store.Create(&robert.CreateQuery{
+	query, err := config.Store.Create(&querycache.CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: robert.Duration(time.Hour),
+		Lifetime: querycache.Duration(time.Hour),
 	})
 	expect.Ok(t, err)
 
@@ -181,7 +181,7 @@ func TestDelete(t *testing.T) {
 
 	queries, err := config.Store.List(1, 1)
 	expect.Ok(t, err)
-	expect.Equal(t, []robert.Query{}, queries)
+	expect.Equal(t, []querycache.Query{}, queries)
 }
 
 // TODO: Handle not found errors, add custom errors to store and switch?
@@ -202,9 +202,9 @@ func TestUpdate(t *testing.T) {
 	t.Parallel()
 
 	now, id, config := testConfig()
-	query, err := config.Store.Create(&robert.CreateQuery{
+	query, err := config.Store.Create(&querycache.CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: robert.Duration(time.Hour),
+		Lifetime: querycache.Duration(time.Hour),
 	})
 	expect.Ok(t, err)
 
@@ -218,7 +218,7 @@ func TestUpdate(t *testing.T) {
 	request, err := http.NewRequest("PATCH", "/queries/"+id, json)
 	expect.Ok(t, err)
 
-	query.Lifetime = robert.Duration(time.Hour + time.Minute)
+	query.Lifetime = querycache.Duration(time.Hour + time.Minute)
 	query.Query = "SELECT 2;"
 	query.LastRefresh = oneHourAgo
 	queryAsJson, err := structAsJson(query)
@@ -232,7 +232,7 @@ func TestUpdate(t *testing.T) {
 	query, err = config.Store.Get(id)
 	expect.Ok(t, err)
 
-	expect.Equal(t, robert.Duration(time.Hour+time.Minute), query.Lifetime)
+	expect.Equal(t, querycache.Duration(time.Hour+time.Minute), query.Lifetime)
 	expect.Equal(t, "SELECT 2;", query.Query)
 }
 
@@ -258,11 +258,11 @@ func TestUpdateNotFound(t *testing.T) {
 func TestList(t *testing.T) {
 	t.Parallel()
 
-	config := &robert.Config{Store: robert.NewInMemoryStore(&robert.RealClock{}, &robert.UUIDGenerator{})}
-	queries := []robert.Query{}
+	config := &querycache.Config{Store: querycache.NewInMemoryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})}
+	queries := []querycache.Query{}
 
 	for i := 0; i < 30; i++ {
-		query, err := config.Store.Create(&robert.CreateQuery{
+		query, err := config.Store.Create(&querycache.CreateQuery{
 			Query: fmt.Sprintf("SELECT %v", i)})
 
 		expect.Ok(t, err)
@@ -298,7 +298,7 @@ func TestExecute(t *testing.T) {
 
 	_, id, config := testConfig()
 
-	_, err := config.Store.Create(&robert.CreateQuery{Query: "SELECT * FROM users"})
+	_, err := config.Store.Create(&querycache.CreateQuery{Query: "SELECT * FROM users"})
 	expect.Ok(t, err)
 
 	request, err := http.NewRequest("GET", "/queries/"+id+"/result", nil)

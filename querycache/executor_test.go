@@ -1,21 +1,21 @@
-package robert_test
+package querycache_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/cga1123/bissy-api/expect"
-	"github.com/cga1123/bissy-api/robert"
+	"github.com/cga1123/bissy-api/querycache"
 	_ "github.com/lib/pq"
 )
 
 func TestExecutePostgres(t *testing.T) {
 	t.Parallel()
 
-	executor, err := robert.NewSQLExecutor("postgres", "sslmode=disable")
+	executor, err := querycache.NewSQLExecutor("postgres", "sslmode=disable")
 	expect.Ok(t, err)
 
-	query := &robert.Query{Query: "SELECT * FROM (SELECT 1 a, 2 b) t"}
+	query := &querycache.Query{Query: "SELECT * FROM (SELECT 1 a, 2 b) t"}
 	csv, err := executor.Execute(query)
 	expect.Ok(t, err)
 	expect.Equal(t, "a,b\n1,2\n", csv)
@@ -28,11 +28,11 @@ func TestCachedExecutorExecute(t *testing.T) {
 	now := time.Now()
 
 	executor := testCachedExecutor()
-	query := &robert.Query{
+	query := &querycache.Query{
 		Id:          "1",
 		LastRefresh: now,
 		UpdatedAt:   now.Add(-time.Second),
-		Lifetime:    robert.Duration(time.Hour),
+		Lifetime:    querycache.Duration(time.Hour),
 		Query:       "SELECT 1;"}
 
 	result, err := executor.Execute(query)

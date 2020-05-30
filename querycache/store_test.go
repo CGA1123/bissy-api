@@ -1,4 +1,4 @@
-package robert_test
+package querycache_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/expect"
-	"github.com/cga1123/bissy-api/robert"
+	"github.com/cga1123/bissy-api/querycache"
 	"github.com/google/uuid"
 )
 
@@ -16,15 +16,15 @@ func TestInMemoryCreate(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestStore(now, id)
-	createQuery := robert.CreateQuery{
+	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * robert.Duration(time.Hour),
+		Lifetime: 3 * querycache.Duration(time.Hour),
 	}
 
-	expected := robert.Query{
+	expected := querycache.Query{
 		Id:          id,
 		Query:       "SELECT 1;",
-		Lifetime:    3 * robert.Duration(time.Hour),
+		Lifetime:    3 * querycache.Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -40,10 +40,10 @@ func TestInMemoryCreate(t *testing.T) {
 func TestInMemoryCreateSmoke(t *testing.T) {
 	t.Parallel()
 
-	store := robert.NewInMemoryStore(&robert.RealClock{}, &robert.UUIDGenerator{})
-	createQuery := robert.CreateQuery{
+	store := querycache.NewInMemoryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * robert.Duration(time.Hour),
+		Lifetime: 3 * querycache.Duration(time.Hour),
 	}
 
 	_, err := store.Create(&createQuery)
@@ -57,15 +57,15 @@ func TestInMemoryGet(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestStore(now, id)
-	createQuery := robert.CreateQuery{
+	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * robert.Duration(time.Hour),
+		Lifetime: 3 * querycache.Duration(time.Hour),
 	}
 
-	expected := robert.Query{
+	expected := querycache.Query{
 		Id:          id,
 		Query:       "SELECT 1;",
-		Lifetime:    3 * robert.Duration(time.Hour),
+		Lifetime:    3 * querycache.Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -90,15 +90,15 @@ func TestInMemoryDelete(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestStore(now, id)
-	createQuery := robert.CreateQuery{
+	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * robert.Duration(time.Hour),
+		Lifetime: 3 * querycache.Duration(time.Hour),
 	}
 
-	expected := robert.Query{
+	expected := querycache.Query{
 		Id:          id,
 		Query:       "SELECT 1;",
-		Lifetime:    3 * robert.Duration(time.Hour),
+		Lifetime:    3 * querycache.Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -110,7 +110,7 @@ func TestInMemoryDelete(t *testing.T) {
 	query, err := store.Delete(id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, *query)
-	expect.Equal(t, map[string]robert.Query{}, store.Queries)
+	expect.Equal(t, map[string]querycache.Query{}, store.Queries)
 
 	_, err = store.Delete(id)
 	expect.Error(t, err)
@@ -122,22 +122,22 @@ func TestInMemoryUpdate(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestStore(now, id)
-	createQuery := robert.CreateQuery{
+	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
-		Lifetime: 3 * robert.Duration(time.Hour),
+		Lifetime: 3 * querycache.Duration(time.Hour),
 	}
 
 	newQuery := "SELECT 2;"
-	newLifetime := robert.Duration(time.Hour)
-	updateQuery := robert.UpdateQuery{
+	newLifetime := querycache.Duration(time.Hour)
+	updateQuery := querycache.UpdateQuery{
 		Query:    &newQuery,
 		Lifetime: &newLifetime,
 	}
 
-	expected := robert.Query{
+	expected := querycache.Query{
 		Id:          id,
 		Query:       "SELECT 2;",
-		Lifetime:    robert.Duration(time.Hour),
+		Lifetime:    querycache.Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -158,19 +158,19 @@ func TestInMemoryUpdate(t *testing.T) {
 
 	// Test partial update
 	newQuery = "SELECT 15;"
-	query, err = store.Update(id, &robert.UpdateQuery{Query: &newQuery})
+	query, err = store.Update(id, &querycache.UpdateQuery{Query: &newQuery})
 	expect.Ok(t, err)
 	expect.Equal(t, newQuery, query.Query)
 	expect.Equal(t, newLifetime, query.Lifetime)
 
-	newLifetime = 15 * robert.Duration(time.Second)
-	query, err = store.Update(id, &robert.UpdateQuery{Lifetime: &newLifetime})
+	newLifetime = 15 * querycache.Duration(time.Second)
+	query, err = store.Update(id, &querycache.UpdateQuery{Lifetime: &newLifetime})
 	expect.Ok(t, err)
 	expect.Equal(t, newLifetime, query.Lifetime)
 	expect.Equal(t, newQuery, query.Query)
 
 	// Test updating lastrefresh
-	query, err = store.Update(id, &robert.UpdateQuery{LastRefresh: now.Add(time.Hour)})
+	query, err = store.Update(id, &querycache.UpdateQuery{LastRefresh: now.Add(time.Hour)})
 	expect.Ok(t, err)
 	expect.Equal(t, newQuery, query.Query)
 	expect.Equal(t, newLifetime, query.Lifetime)
@@ -182,7 +182,7 @@ func TestInMemoryUpdate(t *testing.T) {
 
 }
 
-func selectsFromSlice(queries []robert.Query) []string {
+func selectsFromSlice(queries []querycache.Query) []string {
 	selects := []string{}
 	for _, query := range queries {
 		selects = append(selects, query.Query)
@@ -194,14 +194,14 @@ func selectsFromSlice(queries []robert.Query) []string {
 func TestInMemoryList(t *testing.T) {
 	t.Parallel()
 
-	store := robert.NewInMemoryStore(&robert.RealClock{}, &robert.UUIDGenerator{})
+	store := querycache.NewInMemoryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
 	selects := []string{}
 
 	for i := 0; i < 10; i++ {
 		s := fmt.Sprintf("SELECT %v;", i)
-		q := &robert.CreateQuery{
+		q := &querycache.CreateQuery{
 			Query:    s,
-			Lifetime: robert.Duration(time.Duration(i) * time.Hour),
+			Lifetime: querycache.Duration(time.Duration(i) * time.Hour),
 		}
 		selects = append(selects, s)
 		_, err := store.Create(q)
@@ -226,7 +226,7 @@ func TestInMemoryList(t *testing.T) {
 
 	queries, err = store.List(10, 3)
 	expect.Ok(t, err)
-	expect.Equal(t, []robert.Query{}, queries)
+	expect.Equal(t, []querycache.Query{}, queries)
 
 	queries, err = store.List(1, 30)
 	expect.Ok(t, err)
