@@ -56,7 +56,7 @@ func TestHome(t *testing.T) {
 
 	response := testHandler(config, request)
 
-	expectedBody := "querycache, a poor man's trevor\nquerycache -> trebor -> trevor\n"
+	expectedBody := "querycache: using cache, saving cash\n"
 
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypePlaintext, response)

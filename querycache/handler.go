@@ -47,7 +47,7 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 func (c *Config) Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 
-	fmt.Fprintf(w, "querycache, a poor man's trevor\nquerycache -> trebor -> trevor\n")
+	fmt.Fprintf(w, "querycache: using cache, saving cash\n")
 }
 
 func (c *Config) queriesList(w http.ResponseWriter, r *http.Request) error {
