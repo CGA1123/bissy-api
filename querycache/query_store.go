@@ -1,32 +1,67 @@
 package querycache
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
 )
 
-type Clock interface {
-	Now() time.Time
+type Query struct {
+	Id          string    `json:"id"`
+	Query       string    `json:"query"`
+	Lifetime    Duration  `json:"lifetime"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	LastRefresh time.Time `json:"lastRefresh"`
 }
 
-type IdGenerator interface {
-	Generate() string
+func (query *Query) Fresh(now time.Time) bool {
+	timeSinceLastRefresh := now.Sub(query.LastRefresh)
+	refreshedRecently := Duration(timeSinceLastRefresh) < query.Lifetime
+	updatedRecently := query.UpdatedAt.After(query.LastRefresh)
+
+	return refreshedRecently && !updatedRecently
 }
 
-type UUIDGenerator struct{}
-
-func (generator *UUIDGenerator) Generate() string {
-	return uuid.New().String()
+type CreateQuery struct {
+	Query    string   `json:"query"`
+	Lifetime Duration `json:"lifetime"`
 }
 
-type RealClock struct{}
+type UpdateQuery struct {
+	Query       *string   `json:"query"`
+	Lifetime    *Duration `json:"lifetime"`
+	LastRefresh time.Time `json:"lastRefresh"`
+}
 
-func (clock *RealClock) Now() time.Time {
-	return time.Now()
+type Duration time.Duration
+
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Duration(d).String())
+}
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		*d = Duration(time.Duration(value))
+		return nil
+	case string:
+		tmp, err := time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		*d = Duration(tmp)
+		return nil
+	default:
+		return errors.New("invalid duration")
+	}
 }
 
 type QueryStore interface {
@@ -75,6 +110,9 @@ func (store *InMemoryStore) Create(createQuery *CreateQuery) (*Query, error) {
 }
 
 func (store *InMemoryStore) Get(id string) (*Query, error) {
+	store.lock.RLock()
+	defer store.lock.RUnlock()
+
 	query, ok := store.Queries[id]
 	if !ok {
 		return nil, fmt.Errorf("Query (id: %v) not found", id)
@@ -84,6 +122,9 @@ func (store *InMemoryStore) Get(id string) (*Query, error) {
 }
 
 func (store *InMemoryStore) Delete(id string) (*Query, error) {
+	store.lock.Lock()
+	defer store.lock.Unlock()
+
 	query, ok := store.Queries[id]
 	if !ok {
 		return nil, fmt.Errorf("Query (id: %v) not found", id)
@@ -95,6 +136,9 @@ func (store *InMemoryStore) Delete(id string) (*Query, error) {
 }
 
 func (store *InMemoryStore) Update(id string, update *UpdateQuery) (*Query, error) {
+	store.lock.Lock()
+	defer store.lock.Unlock()
+
 	query, ok := store.Queries[id]
 	if !ok {
 		return nil, fmt.Errorf("Query (id: %v) not found", id)
@@ -118,6 +162,9 @@ func (store *InMemoryStore) Update(id string, update *UpdateQuery) (*Query, erro
 }
 
 func (store *InMemoryStore) List(page, per int) ([]Query, error) {
+	store.lock.RLock()
+	defer store.lock.RUnlock()
+
 	if page < 1 {
 		return nil, fmt.Errorf("page must be greater than 0 (is %v)", page)
 	}
