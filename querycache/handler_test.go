@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/expect"
+	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/google/uuid"
@@ -74,9 +75,9 @@ func TestHome(t *testing.T) {
 
 	expectedBody := "querycache, a poor man's trevor\nquerycache -> trebor -> trevor\n"
 
-	expect.StatusOK(t, response)
-	expect.ContentType(t, handlerutils.ContentTypePlaintext, response)
-	expect.BodyString(t, expectedBody, response)
+	expecthttp.Ok(t, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypePlaintext, response)
+	expecthttp.StringBody(t, expectedBody, response)
 }
 
 func TestCreate(t *testing.T) {
@@ -93,7 +94,7 @@ func TestCreate(t *testing.T) {
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
-	expect.StatusOK(t, response)
+	expecthttp.Ok(t, response)
 
 	actual, err := config.Store.Get(id)
 	expected := &querycache.Query{
@@ -119,7 +120,7 @@ func TestCreateBadRequest(t *testing.T) {
 	_, _, config := testConfig()
 	response := testHandler(config, request)
 
-	expect.StatusHTTP(t, http.StatusUnprocessableEntity, response)
+	expecthttp.Status(t, http.StatusUnprocessableEntity, response)
 }
 
 func TestGet(t *testing.T) {
@@ -139,9 +140,9 @@ func TestGet(t *testing.T) {
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
-	expect.StatusOK(t, response)
-	expect.ContentType(t, handlerutils.ContentTypeJson, response)
-	expect.BodyJSON(t, queryAsJson, response)
+	expecthttp.Ok(t, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.JSONBody(t, queryAsJson, response)
 }
 
 // TODO: Handle not found errors, add custom errors to store and switch?
@@ -155,7 +156,7 @@ func TestGetNotFound(t *testing.T) {
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
-	expect.StatusHTTP(t, http.StatusInternalServerError, response)
+	expecthttp.Status(t, http.StatusInternalServerError, response)
 }
 
 func TestDelete(t *testing.T) {
@@ -175,9 +176,9 @@ func TestDelete(t *testing.T) {
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
-	expect.StatusOK(t, response)
-	expect.ContentType(t, handlerutils.ContentTypeJson, response)
-	expect.BodyJSON(t, queryAsJson, response)
+	expecthttp.Ok(t, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.JSONBody(t, queryAsJson, response)
 
 	queries, err := config.Store.List(1, 1)
 	expect.Ok(t, err)
@@ -195,7 +196,7 @@ func TestDeleteNotFound(t *testing.T) {
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
-	expect.StatusHTTP(t, http.StatusInternalServerError, response)
+	expecthttp.Status(t, http.StatusInternalServerError, response)
 }
 
 func TestUpdate(t *testing.T) {
@@ -225,9 +226,9 @@ func TestUpdate(t *testing.T) {
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
-	expect.StatusOK(t, response)
-	expect.ContentType(t, handlerutils.ContentTypeJson, response)
-	expect.BodyJSON(t, queryAsJson, response)
+	expecthttp.Ok(t, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.JSONBody(t, queryAsJson, response)
 
 	query, err = config.Store.Get(id)
 	expect.Ok(t, err)
@@ -252,7 +253,7 @@ func TestUpdateNotFound(t *testing.T) {
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
-	expect.StatusHTTP(t, http.StatusInternalServerError, response)
+	expecthttp.Status(t, http.StatusInternalServerError, response)
 }
 
 func TestList(t *testing.T) {
@@ -276,9 +277,9 @@ func TestList(t *testing.T) {
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
-	expect.StatusOK(t, response)
-	expect.ContentType(t, handlerutils.ContentTypeJson, response)
-	expect.BodyJSON(t, expected, response)
+	expecthttp.Ok(t, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.JSONBody(t, expected, response)
 
 	// pagination
 	request, err = http.NewRequest("GET", "/queries?page=2&per=5", nil)
@@ -288,9 +289,9 @@ func TestList(t *testing.T) {
 	expect.Ok(t, err)
 
 	response = testHandler(config, request)
-	expect.StatusOK(t, response)
-	expect.ContentType(t, handlerutils.ContentTypeJson, response)
-	expect.BodyJSON(t, expected, response)
+	expecthttp.Ok(t, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.JSONBody(t, expected, response)
 }
 
 func TestExecute(t *testing.T) {
@@ -305,7 +306,7 @@ func TestExecute(t *testing.T) {
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
-	expect.StatusOK(t, response)
-	expect.ContentType(t, handlerutils.ContentTypeCsv, response)
-	expect.BodyString(t, "Got: SELECT * FROM users", response)
+	expecthttp.Ok(t, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeCsv, response)
+	expecthttp.StringBody(t, "Got: SELECT * FROM users", response)
 }

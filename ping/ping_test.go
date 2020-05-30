@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cga1123/bissy-api/expect"
+	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
 )
 
@@ -20,7 +21,7 @@ func TestHandler(t *testing.T) {
 
 	expectedJson := map[string]interface{}{"message": "pong"}
 
-	expect.StatusOK(t, rr)
-	expect.ContentType(t, handlerutils.ContentTypeJson, rr)
-	expect.BodyJSON(t, expectedJson, rr)
+	expecthttp.Ok(t, rr)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJson, rr)
+	expecthttp.JSONBody(t, expectedJson, rr)
 }
