@@ -34,7 +34,7 @@ func testConfig() (time.Time, string, *querycache.Config) {
 	id := uuid.New().String()
 
 	return now, id, &querycache.Config{
-		Store:    newTestStore(now, id),
+		Store:    newTestQueryStore(now, id),
 		Executor: &testExecutor{}}
 }
 
@@ -232,7 +232,7 @@ func TestUpdateNotFound(t *testing.T) {
 func TestList(t *testing.T) {
 	t.Parallel()
 
-	config := &querycache.Config{Store: querycache.NewInMemoryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})}
+	config := &querycache.Config{Store: querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})}
 	queries := []querycache.Query{}
 
 	for i := 0; i < 30; i++ {

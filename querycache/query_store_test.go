@@ -52,7 +52,7 @@ func TestInMemoryCreate(t *testing.T) {
 
 	now := time.Now()
 	id := uuid.New().String()
-	store := newTestStore(now, id)
+	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -77,7 +77,7 @@ func TestInMemoryCreate(t *testing.T) {
 func TestInMemoryCreateSmoke(t *testing.T) {
 	t.Parallel()
 
-	store := querycache.NewInMemoryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	store := querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -93,7 +93,7 @@ func TestInMemoryGet(t *testing.T) {
 
 	now := time.Now()
 	id := uuid.New().String()
-	store := newTestStore(now, id)
+	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -126,7 +126,7 @@ func TestInMemoryDelete(t *testing.T) {
 
 	now := time.Now()
 	id := uuid.New().String()
-	store := newTestStore(now, id)
+	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -158,7 +158,7 @@ func TestInMemoryUpdate(t *testing.T) {
 
 	now := time.Now()
 	id := uuid.New().String()
-	store := newTestStore(now, id)
+	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -231,7 +231,7 @@ func selectsFromSlice(queries []querycache.Query) []string {
 func TestInMemoryList(t *testing.T) {
 	t.Parallel()
 
-	store := querycache.NewInMemoryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	store := querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
 	selects := []string{}
 
 	for i := 0; i < 10; i++ {

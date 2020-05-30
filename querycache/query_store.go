@@ -72,15 +72,15 @@ type QueryStore interface {
 	Update(string, *UpdateQuery) (*Query, error)
 }
 
-type InMemoryStore struct {
+type InMemoryQueryStore struct {
 	Queries     map[string]Query
 	clock       Clock
 	idGenerator IdGenerator
 	lock        sync.RWMutex
 }
 
-func NewInMemoryStore(clock Clock, idGenerator IdGenerator) *InMemoryStore {
-	return &InMemoryStore{
+func NewInMemoryQueryStore(clock Clock, idGenerator IdGenerator) *InMemoryQueryStore {
+	return &InMemoryQueryStore{
 		clock:       clock,
 		idGenerator: idGenerator,
 		Queries:     map[string]Query{},
@@ -88,7 +88,7 @@ func NewInMemoryStore(clock Clock, idGenerator IdGenerator) *InMemoryStore {
 }
 
 // Create and persist to memory a Query from a CreateQuery struct
-func (store *InMemoryStore) Create(createQuery *CreateQuery) (*Query, error) {
+func (store *InMemoryQueryStore) Create(createQuery *CreateQuery) (*Query, error) {
 	id := store.idGenerator.Generate()
 	now := store.clock.Now()
 
@@ -109,7 +109,7 @@ func (store *InMemoryStore) Create(createQuery *CreateQuery) (*Query, error) {
 	return &query, nil
 }
 
-func (store *InMemoryStore) Get(id string) (*Query, error) {
+func (store *InMemoryQueryStore) Get(id string) (*Query, error) {
 	store.lock.RLock()
 	defer store.lock.RUnlock()
 
@@ -121,7 +121,7 @@ func (store *InMemoryStore) Get(id string) (*Query, error) {
 	return &query, nil
 }
 
-func (store *InMemoryStore) Delete(id string) (*Query, error) {
+func (store *InMemoryQueryStore) Delete(id string) (*Query, error) {
 	store.lock.Lock()
 	defer store.lock.Unlock()
 
@@ -135,7 +135,7 @@ func (store *InMemoryStore) Delete(id string) (*Query, error) {
 	return &query, nil
 }
 
-func (store *InMemoryStore) Update(id string, update *UpdateQuery) (*Query, error) {
+func (store *InMemoryQueryStore) Update(id string, update *UpdateQuery) (*Query, error) {
 	store.lock.Lock()
 	defer store.lock.Unlock()
 
@@ -161,7 +161,7 @@ func (store *InMemoryStore) Update(id string, update *UpdateQuery) (*Query, erro
 	return &query, nil
 }
 
-func (store *InMemoryStore) List(page, per int) ([]Query, error) {
+func (store *InMemoryQueryStore) List(page, per int) ([]Query, error) {
 	store.lock.RLock()
 	defer store.lock.RUnlock()
 

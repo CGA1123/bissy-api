@@ -24,8 +24,8 @@ func (generator *testIdGenerator) Generate() string {
 	return generator.id
 }
 
-func newTestStore(now time.Time, id string) *querycache.InMemoryStore {
-	return querycache.NewInMemoryStore(
+func newTestQueryStore(now time.Time, id string) *querycache.InMemoryQueryStore {
+	return querycache.NewInMemoryQueryStore(
 		&testClock{time: now},
 		&testIdGenerator{id: id})
 }
@@ -39,7 +39,7 @@ func (t *testExecutor) Execute(query *querycache.Query) (string, error) {
 func testCachedExecutor() *querycache.CachedExecutor {
 	now := time.Now()
 	id := uuid.New().String()
-	store := newTestStore(now, id)
+	store := newTestQueryStore(now, id)
 	return &querycache.CachedExecutor{
 		Cache:    querycache.NewInMemoryCache(),
 		Store:    store,

@@ -29,7 +29,7 @@ func main() {
 	}
 
 	config := querycache.Config{
-		Store:    querycache.NewInMemoryStore(clock, generator),
+		Store:    querycache.NewInMemoryQueryStore(clock, generator),
 		Executor: executor,
 	}
 
