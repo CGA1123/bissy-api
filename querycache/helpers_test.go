@@ -30,6 +30,12 @@ func newTestQueryStore(now time.Time, id string) *querycache.InMemoryQueryStore 
 		&testIdGenerator{id: id})
 }
 
+func newTestAdapterStore(now time.Time, id string) *querycache.InMemoryAdapterStore {
+	return querycache.NewInMemoryAdapterStore(
+		&testClock{time: now},
+		&testIdGenerator{id: id})
+}
+
 type testExecutor struct{}
 
 func (t *testExecutor) Execute(query *querycache.Query) (string, error) {

@@ -47,7 +47,7 @@ func TestFresh(t *testing.T) {
 	expect.False(t, query.Fresh(now))
 }
 
-func TestInMemoryCreate(t *testing.T) {
+func TestInMemoryQueryCreate(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
@@ -74,7 +74,7 @@ func TestInMemoryCreate(t *testing.T) {
 	expect.Equal(t, expected, store.Queries[id])
 }
 
-func TestInMemoryCreateSmoke(t *testing.T) {
+func TestInMemoryQueryCreateSmoke(t *testing.T) {
 	t.Parallel()
 
 	store := querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
@@ -88,7 +88,7 @@ func TestInMemoryCreateSmoke(t *testing.T) {
 	expect.Ok(t, err)
 }
 
-func TestInMemoryGet(t *testing.T) {
+func TestInMemoryQueryGet(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
@@ -121,7 +121,7 @@ func TestInMemoryGet(t *testing.T) {
 	expect.Error(t, err)
 }
 
-func TestInMemoryDelete(t *testing.T) {
+func TestInMemoryQueryDelete(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
@@ -153,7 +153,7 @@ func TestInMemoryDelete(t *testing.T) {
 	expect.Error(t, err)
 }
 
-func TestInMemoryUpdate(t *testing.T) {
+func TestInMemoryQueryUpdate(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
@@ -228,7 +228,7 @@ func selectsFromSlice(queries []querycache.Query) []string {
 	return selects
 }
 
-func TestInMemoryList(t *testing.T) {
+func TestInMemoryQueryList(t *testing.T) {
 	t.Parallel()
 
 	store := querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})

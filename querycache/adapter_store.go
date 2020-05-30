@@ -1,6 +1,9 @@
 package querycache
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type Adapter struct {
 	Id        string    `json:"id"`
@@ -29,4 +32,19 @@ type AdapterStore interface {
 	List(page int, per int) ([]Adapter, error)
 	Delete(string) (*Adapter, error)
 	Update(string, *UpdateAdapter) (*Adapter, error)
+}
+
+type InMemoryAdapterStore struct {
+	Store       map[string]Adapter
+	clock       Clock
+	idGenerator IdGenerator
+	lock        sync.RWMutex
+}
+
+func NewInMemoryAdapterStore(clock Clock, idGenerator IdGenerator) *InMemoryAdapterStore {
+	return &InMemoryAdapterStore{
+		clock:       clock,
+		idGenerator: idGenerator,
+		Store:       map[string]Adapter{},
+	}
 }
