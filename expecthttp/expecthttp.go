@@ -26,12 +26,23 @@ func StringBody(t *testing.T, expected string, rr *httptest.ResponseRecorder) {
 }
 
 func JSONBody(t *testing.T, expected interface{}, rr *httptest.ResponseRecorder) {
-	var body interface{}
+	var actualBody, expectedBody interface{}
 
-	if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
-		t.Errorf("failed to parse body %v", err)
+	expectedBytes, err := json.Marshal(expected)
+	if err != nil {
+		t.Errorf("failed to marshal expected %v", err)
 		return
 	}
 
-	expect.Equal(t, expected, body)
+	if err := json.Unmarshal(expectedBytes, &expectedBody); err != nil {
+		t.Errorf("failed to unmarshal exepcted %v", err)
+		return
+	}
+
+	if err := json.Unmarshal(rr.Body.Bytes(), &actualBody); err != nil {
+		t.Errorf("failed to unmarshal actual %v", err)
+		return
+	}
+
+	expect.Equal(t, expectedBody, actualBody)
 }

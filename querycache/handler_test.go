@@ -18,23 +18,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// TODO: move to expect.BodyStructJson() ?
-// maybe should have expecthttp tbh separate core and http helpers
-func structAsJson(data interface{}) (interface{}, error) {
-	dataBytes, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	var mapData interface{}
-	err = json.Unmarshal(dataBytes, &mapData)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapData, nil
-}
-
 func testHandler(c *querycache.Config, r *http.Request) *httptest.ResponseRecorder {
 	recorder := httptest.NewRecorder()
 
@@ -133,16 +116,13 @@ func TestGet(t *testing.T) {
 	})
 	expect.Ok(t, err)
 
-	queryAsJson, err := structAsJson(query)
-	expect.Ok(t, err)
-
 	request, err := http.NewRequest("GET", "/queries/"+id, nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, queryAsJson, response)
+	expecthttp.JSONBody(t, query, response)
 }
 
 // TODO: Handle not found errors, add custom errors to store and switch?
@@ -169,16 +149,13 @@ func TestDelete(t *testing.T) {
 	})
 	expect.Ok(t, err)
 
-	queryAsJson, err := structAsJson(query)
-	expect.Ok(t, err)
-
 	request, err := http.NewRequest("DELETE", "/queries/"+id, nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, queryAsJson, response)
+	expecthttp.JSONBody(t, query, response)
 
 	queries, err := config.Store.List(1, 1)
 	expect.Ok(t, err)
@@ -222,13 +199,11 @@ func TestUpdate(t *testing.T) {
 	query.Lifetime = querycache.Duration(time.Hour + time.Minute)
 	query.Query = "SELECT 2;"
 	query.LastRefresh = oneHourAgo
-	queryAsJson, err := structAsJson(query)
-	expect.Ok(t, err)
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, queryAsJson, response)
+	expecthttp.JSONBody(t, query, response)
 
 	query, err = config.Store.Get(id)
 	expect.Ok(t, err)
@@ -237,8 +212,6 @@ func TestUpdate(t *testing.T) {
 	expect.Equal(t, "SELECT 2;", query.Query)
 }
 
-// TODO: move to expect.BodyStructJson() ?
-// maybe should have expecthttp tbh separate core and http helpers
 func TestUpdateNotFound(t *testing.T) {
 	t.Parallel()
 
@@ -273,25 +246,19 @@ func TestList(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries", nil)
 	expect.Ok(t, err)
 
-	expected, err := structAsJson(queries[:25])
-	expect.Ok(t, err)
-
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, expected, response)
+	expecthttp.JSONBody(t, queries[:25], response)
 
 	// pagination
 	request, err = http.NewRequest("GET", "/queries?page=2&per=5", nil)
 	expect.Ok(t, err)
 
-	expected, err = structAsJson(queries[5:10])
-	expect.Ok(t, err)
-
 	response = testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, expected, response)
+	expecthttp.JSONBody(t, queries[5:10], response)
 }
 
 func TestExecute(t *testing.T) {
