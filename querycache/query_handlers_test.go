@@ -11,6 +11,7 @@ import (
 	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/querycache"
+	_ "github.com/lib/pq"
 )
 
 func TestQueryCreate(t *testing.T) {
@@ -221,8 +222,10 @@ func TestQueryExecute(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
+	_, err := config.AdapterStore.Create(&querycache.CreateAdapter{Type: "test", Name: "Test"})
+	expect.Ok(t, err)
 
-	_, err := config.QueryStore.Create(&querycache.CreateQuery{Query: "SELECT * FROM users"})
+	_, err = config.QueryStore.Create(&querycache.CreateQuery{Query: "SELECT * FROM users", AdapterId: id})
 	expect.Ok(t, err)
 
 	request, err := http.NewRequest("GET", "/queries/"+id+"/result", nil)
@@ -232,4 +235,26 @@ func TestQueryExecute(t *testing.T) {
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeCsv, response)
 	expecthttp.StringBody(t, "Got: SELECT * FROM users", response)
+
+	// PG Test
+	newType := "postgres"
+	newName := "PG Test"
+	newOptions := "sslmode=disable"
+	_, err = config.AdapterStore.Update(id, &querycache.UpdateAdapter{
+		Type: &newType, Name: &newName, Options: &newOptions})
+
+	expect.Ok(t, err)
+
+	newQuery := "SELECT 1"
+	_, err = config.QueryStore.Update(id, &querycache.UpdateQuery{
+		Query: &newQuery})
+	expect.Ok(t, err)
+
+	request, err = http.NewRequest("GET", "/queries/"+id+"/result", nil)
+	expect.Ok(t, err)
+
+	response = testHandler(config, request)
+	expecthttp.Ok(t, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeCsv, response)
+	expecthttp.StringBody(t, "?column?\n1\n", response)
 }

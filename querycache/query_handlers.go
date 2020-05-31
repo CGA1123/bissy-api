@@ -144,7 +144,18 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	result, err := c.Executor.Execute(query)
+
+	adapter, err := c.AdapterStore.Get(id)
+	if err != nil {
+		return err
+	}
+
+	executor, err := adapter.NewExecutor()
+	if err != nil {
+		return err
+	}
+
+	result, err := executor.Execute(query)
 	_, err = fmt.Fprintf(w, result)
 
 	return err

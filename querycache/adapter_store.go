@@ -43,6 +43,15 @@ type InMemoryAdapterStore struct {
 	lock        sync.RWMutex
 }
 
+func (a *Adapter) NewExecutor() (Executor, error) {
+	switch a.Type {
+	case "test":
+		return &TestExecutor{}, nil
+	default:
+		return NewSQLExecutor(a.Type, a.Options)
+	}
+}
+
 func NewInMemoryAdapterStore(clock Clock, idGenerator IdGenerator) *InMemoryAdapterStore {
 	return &InMemoryAdapterStore{
 		clock:       clock,
