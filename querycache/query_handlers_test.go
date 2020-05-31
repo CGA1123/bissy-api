@@ -1,11 +1,8 @@
 package querycache_test
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -14,54 +11,7 @@ import (
 	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/querycache"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
-
-func testHandler(c *querycache.Config, r *http.Request) *httptest.ResponseRecorder {
-	recorder := httptest.NewRecorder()
-
-	router := mux.NewRouter()
-	c.SetupHandlers(router)
-
-	router.ServeHTTP(recorder, r)
-
-	return recorder
-}
-
-func testConfig() (time.Time, string, *querycache.Config) {
-	now := time.Now()
-	id := uuid.New().String()
-
-	return now, id, &querycache.Config{
-		Store:    newTestQueryStore(now, id),
-		Executor: &testExecutor{}}
-}
-
-func jsonBody(v interface{}) (*bytes.Reader, error) {
-	body, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes.NewReader(body), nil
-}
-
-func TestHome(t *testing.T) {
-	t.Parallel()
-
-	_, _, config := testConfig()
-	request, err := http.NewRequest("GET", "/", nil)
-	expect.Ok(t, err)
-
-	response := testHandler(config, request)
-
-	expectedBody := "querycache: using cache, saving cash\n"
-
-	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypePlaintext, response)
-	expecthttp.StringBody(t, expectedBody, response)
-}
 
 func TestCreate(t *testing.T) {
 	t.Parallel()
