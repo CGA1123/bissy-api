@@ -47,10 +47,14 @@ func (cache *InMemoryCache) Set(query *Query, result string) error {
 
 type RedisCache struct {
 	Client *redis.Client
+	Prefix string
 }
 
 func (cache *RedisCache) Get(query *Query) (string, bool) {
-	value, err := cache.Client.Get(context.TODO(), query.Id).Result()
+	value, err := cache.Client.Get(
+		context.TODO(),
+		cache.Prefix+":"+query.Id,
+	).Result()
 
 	return value, err == nil
 }
@@ -58,7 +62,7 @@ func (cache *RedisCache) Get(query *Query) (string, bool) {
 func (cache *RedisCache) Set(query *Query, result string) error {
 	set := cache.Client.Set(
 		context.TODO(),
-		query.Id,
+		cache.Prefix+":"+query.Id,
 		result,
 		time.Duration(query.Lifetime))
 
