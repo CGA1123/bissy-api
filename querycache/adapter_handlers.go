@@ -76,8 +76,6 @@ func (c *Config) adapterGet(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return json.NewEncoder(w).Encode(adapter)
-
-	return nil
 }
 
 func (c *Config) adapterDelete(w http.ResponseWriter, r *http.Request) error {
