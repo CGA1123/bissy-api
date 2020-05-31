@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: bissy_development
+      POSTGRES_USER: bissy
+      POSTGRES_PASSWORD: bissy
+    ports:
+      - 5432:5432
+  redis:
+    image: redis:6
+    ports:
+      - 6379:6379
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_development
+      - PORT=8080
+    ports:
+      - 8080:8080
+    command: sh -c "dockerize -wait tcp://redis:6379 -wait tcp://postgres:5432 -timeout 10s -wait-retry-interval 1s bissy-api"

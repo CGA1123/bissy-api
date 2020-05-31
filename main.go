@@ -13,22 +13,32 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func initRedis() (*redis.Client, error) {
+	redisUrl, ok := os.LookupEnv("REDIS_URL")
+	if !ok {
+		redisUrl = "redis://localhost:6379"
+	}
+
+	options, err := redis.ParseURL(redisUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	redisClient := redis.NewClient(options)
+	if err := redisClient.Ping(context.TODO()).Err(); err != nil {
+		return nil, err
+	}
+
+	return redisClient, nil
+}
+
 func main() {
 	port, ok := os.LookupEnv("PORT")
 	if !ok {
 		port = "8080"
 	}
 
-	redisUrl, ok := os.LookupEnv("REDIS_URL")
-	if !ok {
-		redisUrl = "localhost:6379"
-	}
-
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: redisUrl,
-	})
-
-	err := redisClient.Ping(context.TODO()).Err()
+	redisClient, err := initRedis()
 	if err != nil {
 		log.Fatal(err)
 	}
