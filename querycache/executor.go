@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	_ "github.com/lib/pq"
 )
 
 type QueryCache interface {
@@ -73,6 +74,12 @@ type CachedExecutor struct {
 	Clock    Clock
 }
 
+type TestExecutor struct{}
+
+func (t *TestExecutor) Execute(query *Query) (string, error) {
+	return fmt.Sprintf("Got: %v", query.Query), nil
+}
+
 type SQLExecutor struct {
 	db *sql.DB
 }
@@ -108,7 +115,7 @@ func NewSQLExecutor(driver, conn string) (*SQLExecutor, error) {
 		return nil, err
 	}
 
-	return &SQLExecutor{db: db}, db.Ping()
+	return &SQLExecutor{db: db}, nil
 }
 
 func (sql *SQLExecutor) Execute(query *Query) (string, error) {

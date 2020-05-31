@@ -3,7 +3,6 @@ package querycache_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -41,12 +40,6 @@ func newTestAdapterStore(now time.Time, id string) *querycache.InMemoryAdapterSt
 		&testIdGenerator{id: id})
 }
 
-type testExecutor struct{}
-
-func (t *testExecutor) Execute(query *querycache.Query) (string, error) {
-	return fmt.Sprintf("Got: %v", query.Query), nil
-}
-
 func testCachedExecutor() *querycache.CachedExecutor {
 	now := time.Now()
 	id := uuid.New().String()
@@ -54,7 +47,7 @@ func testCachedExecutor() *querycache.CachedExecutor {
 	return &querycache.CachedExecutor{
 		Cache:    querycache.NewInMemoryCache(),
 		Store:    store,
-		Executor: &testExecutor{},
+		Executor: &querycache.TestExecutor{},
 		Clock:    &testClock{time: now},
 	}
 }
@@ -66,7 +59,7 @@ func testConfig() (time.Time, string, *querycache.Config) {
 	return now, id, &querycache.Config{
 		QueryStore:   newTestQueryStore(now, id),
 		AdapterStore: newTestAdapterStore(now, id),
-		Executor:     &testExecutor{}}
+		Executor:     &querycache.TestExecutor{}}
 }
 
 func testHandler(c *querycache.Config, r *http.Request) *httptest.ResponseRecorder {

@@ -11,6 +11,7 @@ import (
 	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/querycache"
+	_ "github.com/lib/pq"
 )
 
 func TestQueryCreate(t *testing.T) {
@@ -217,19 +218,50 @@ func TestQueryList(t *testing.T) {
 	expecthttp.JSONBody(t, queries[5:10], response)
 }
 
-func TestQueryExecute(t *testing.T) {
+func TestQueryResult(t *testing.T) {
 	t.Parallel()
 
-	_, id, config := testConfig()
+	clock := &querycache.RealClock{}
+	generator := &querycache.UUIDGenerator{}
+	config := &querycache.Config{
+		QueryStore:   querycache.NewInMemoryQueryStore(clock, generator),
+		AdapterStore: querycache.NewInMemoryAdapterStore(clock, generator),
+	}
 
-	_, err := config.QueryStore.Create(&querycache.CreateQuery{Query: "SELECT * FROM users"})
+	adapter, err := config.AdapterStore.Create(&querycache.CreateAdapter{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("GET", "/queries/"+id+"/result", nil)
+	query, err := config.QueryStore.Create(&querycache.CreateQuery{
+		Query: "SELECT * FROM users", AdapterId: adapter.Id})
+	expect.Ok(t, err)
+
+	request, err := http.NewRequest("GET", "/queries/"+query.Id+"/result", nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeCsv, response)
 	expecthttp.StringBody(t, "Got: SELECT * FROM users", response)
+
+	// PG Test
+	newType := "postgres"
+	newName := "PG Test"
+	newOptions := "sslmode=disable"
+	adapter, err = config.AdapterStore.Update(adapter.Id, &querycache.UpdateAdapter{
+		Type: &newType, Name: &newName, Options: &newOptions})
+
+	expect.Ok(t, err)
+
+	newQuery := "SELECT 1"
+	query, err = config.QueryStore.Update(query.Id, &querycache.UpdateQuery{
+		Query: &newQuery})
+	expect.Ok(t, err)
+
+	request, err = http.NewRequest("GET", "/queries/"+query.Id+"/result", nil)
+	expect.Ok(t, err)
+
+	response = testHandler(config, request)
+	expecthttp.Ok(t, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeCsv, response)
+	expecthttp.StringBody(t, "?column?\n1\n", response)
 }
