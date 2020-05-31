@@ -156,6 +156,10 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	result, err := executor.Execute(query)
+	if err != nil {
+		return err
+	}
+
 	_, err = fmt.Fprintf(w, result)
 
 	return err
