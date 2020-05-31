@@ -25,4 +25,6 @@ services:
       - PORT=8080
     ports:
       - 8080:8080
-    command: sh -c "dockerize -wait tcp://redis:6379 -wait tcp://postgres:5432 -timeout 10s -wait-retry-interval 1s bissy-api"
+    volumes:
+      - .:/go/src/app
+    entrypoint: "./scripts/start.sh"
