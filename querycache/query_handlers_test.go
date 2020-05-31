@@ -13,7 +13,7 @@ import (
 	"github.com/cga1123/bissy-api/querycache"
 )
 
-func TestCreate(t *testing.T) {
+func TestQueryCreate(t *testing.T) {
 	t.Parallel()
 
 	now, id, config := testConfig()
@@ -29,7 +29,7 @@ func TestCreate(t *testing.T) {
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 
-	actual, err := config.Store.Get(id)
+	actual, err := config.QueryStore.Get(id)
 	expected := &querycache.Query{
 		Id:          id,
 		Lifetime:    querycache.Duration(time.Hour + time.Minute),
@@ -43,7 +43,7 @@ func TestCreate(t *testing.T) {
 	expect.Equal(t, expected, actual)
 }
 
-func TestCreateBadRequest(t *testing.T) {
+func TestQueryCreateBadRequest(t *testing.T) {
 	t.Parallel()
 
 	body := strings.NewReader("not json")
@@ -56,11 +56,11 @@ func TestCreateBadRequest(t *testing.T) {
 	expecthttp.Status(t, http.StatusUnprocessableEntity, response)
 }
 
-func TestGet(t *testing.T) {
+func TestQueryGet(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
-	query, err := config.Store.Create(&querycache.CreateQuery{
+	query, err := config.QueryStore.Create(&querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: querycache.Duration(time.Hour),
 	})
@@ -77,7 +77,7 @@ func TestGet(t *testing.T) {
 
 // TODO: Handle not found errors, add custom errors to store and switch?
 // can add to store -> handler error function as well to help!
-func TestGetNotFound(t *testing.T) {
+func TestQueryGetNotFound(t *testing.T) {
 	t.Parallel()
 
 	_, _, config := testConfig()
@@ -89,11 +89,11 @@ func TestGetNotFound(t *testing.T) {
 	expecthttp.Status(t, http.StatusInternalServerError, response)
 }
 
-func TestDelete(t *testing.T) {
+func TestQueryDelete(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
-	query, err := config.Store.Create(&querycache.CreateQuery{
+	query, err := config.QueryStore.Create(&querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: querycache.Duration(time.Hour),
 	})
@@ -107,14 +107,14 @@ func TestDelete(t *testing.T) {
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
 	expecthttp.JSONBody(t, query, response)
 
-	queries, err := config.Store.List(1, 1)
+	queries, err := config.QueryStore.List(1, 1)
 	expect.Ok(t, err)
 	expect.Equal(t, []querycache.Query{}, queries)
 }
 
 // TODO: Handle not found errors, add custom errors to store and switch?
 // can add to store -> handler error function as well to help!
-func TestDeleteNotFound(t *testing.T) {
+func TestQueryDeleteNotFound(t *testing.T) {
 	t.Parallel()
 
 	_, _, config := testConfig()
@@ -126,11 +126,11 @@ func TestDeleteNotFound(t *testing.T) {
 	expecthttp.Status(t, http.StatusInternalServerError, response)
 }
 
-func TestUpdate(t *testing.T) {
+func TestQueryUpdate(t *testing.T) {
 	t.Parallel()
 
 	now, id, config := testConfig()
-	query, err := config.Store.Create(&querycache.CreateQuery{
+	query, err := config.QueryStore.Create(&querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: querycache.Duration(time.Hour),
 	})
@@ -155,14 +155,14 @@ func TestUpdate(t *testing.T) {
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
 	expecthttp.JSONBody(t, query, response)
 
-	query, err = config.Store.Get(id)
+	query, err = config.QueryStore.Get(id)
 	expect.Ok(t, err)
 
 	expect.Equal(t, querycache.Duration(time.Hour+time.Minute), query.Lifetime)
 	expect.Equal(t, "SELECT 2;", query.Query)
 }
 
-func TestUpdateNotFound(t *testing.T) {
+func TestQueryUpdateNotFound(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
@@ -179,14 +179,16 @@ func TestUpdateNotFound(t *testing.T) {
 	expecthttp.Status(t, http.StatusInternalServerError, response)
 }
 
-func TestList(t *testing.T) {
+func TestQueryList(t *testing.T) {
 	t.Parallel()
 
-	config := &querycache.Config{Store: querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})}
 	queries := []querycache.Query{}
+	config := &querycache.Config{
+		QueryStore: querycache.NewInMemoryQueryStore(&querycache.RealClock{},
+			&querycache.UUIDGenerator{})}
 
 	for i := 0; i < 30; i++ {
-		query, err := config.Store.Create(&querycache.CreateQuery{
+		query, err := config.QueryStore.Create(&querycache.CreateQuery{
 			Query: fmt.Sprintf("SELECT %v", i)})
 
 		expect.Ok(t, err)
@@ -211,12 +213,12 @@ func TestList(t *testing.T) {
 	expecthttp.JSONBody(t, queries[5:10], response)
 }
 
-func TestExecute(t *testing.T) {
+func TestQueryExecute(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
 
-	_, err := config.Store.Create(&querycache.CreateQuery{Query: "SELECT * FROM users"})
+	_, err := config.QueryStore.Create(&querycache.CreateQuery{Query: "SELECT * FROM users"})
 	expect.Ok(t, err)
 
 	request, err := http.NewRequest("GET", "/queries/"+id+"/result", nil)

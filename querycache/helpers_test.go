@@ -64,8 +64,9 @@ func testConfig() (time.Time, string, *querycache.Config) {
 	id := uuid.New().String()
 
 	return now, id, &querycache.Config{
-		Store:    newTestQueryStore(now, id),
-		Executor: &testExecutor{}}
+		QueryStore:   newTestQueryStore(now, id),
+		AdapterStore: newTestAdapterStore(now, id),
+		Executor:     &testExecutor{}}
 }
 
 func testHandler(c *querycache.Config, r *http.Request) *httptest.ResponseRecorder {

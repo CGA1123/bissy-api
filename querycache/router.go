@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	Store    QueryStore
-	Executor Executor
+	QueryStore   QueryStore
+	AdapterStore AdapterStore
+	Executor     Executor
 }
 
 func (c *Config) SetupHandlers(router *mux.Router) {
@@ -39,6 +40,26 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 	router.
 		Handle("/queries/{id}/result", &handlerutils.Handler{H: c.queryResult}).
 		Methods("GET")
+
+	router.
+		Handle("/adapters", &handlerutils.Handler{H: c.adaptersList}).
+		Methods("GET")
+
+	router.
+		Handle("/adapters", &handlerutils.Handler{H: c.adaptersCreate}).
+		Methods("POST")
+
+	router.
+		Handle("/adapters/{id}", &handlerutils.Handler{H: c.adapterGet}).
+		Methods("GET")
+
+	router.
+		Handle("/adapters/{id}", &handlerutils.Handler{H: c.adapterDelete}).
+		Methods("DELETE")
+
+	router.
+		Handle("/adapters/{id}", &handlerutils.Handler{H: c.adapterUpdate}).
+		Methods("PATCH")
 }
 
 func (c *Config) Home(w http.ResponseWriter, r *http.Request) {

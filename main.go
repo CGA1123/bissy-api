@@ -29,8 +29,8 @@ func main() {
 	}
 
 	config := querycache.Config{
-		Store:    querycache.NewInMemoryQueryStore(clock, generator),
-		Executor: executor,
+		QueryStore: querycache.NewInMemoryQueryStore(clock, generator),
+		Executor:   executor,
 	}
 
 	config.SetupHandlers(querycacheMux)

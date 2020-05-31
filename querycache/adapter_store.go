@@ -90,7 +90,7 @@ func (s *InMemoryAdapterStore) Get(id string) (*Adapter, error) {
 
 	adapter, ok := s.Store[id]
 	if !ok {
-		return nil, fmt.Errorf("Query (id: %v) not found", id)
+		return nil, fmt.Errorf("Adapter (id: %v) not found", id)
 	}
 
 	return &adapter, nil

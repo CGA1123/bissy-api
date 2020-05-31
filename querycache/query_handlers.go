@@ -17,7 +17,7 @@ func (c *Config) queriesList(w http.ResponseWriter, r *http.Request) error {
 	page := params.MaybeInt("page", 1)
 	per := params.MaybeInt("per", 25)
 
-	queries, err := c.Store.List(page, per)
+	queries, err := c.QueryStore.List(page, per)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusInternalServerError}
@@ -45,7 +45,7 @@ func (c *Config) queriesCreate(w http.ResponseWriter, r *http.Request) error {
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	query, err := c.Store.Create(&createQuery)
+	query, err := c.QueryStore.Create(&createQuery)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}
@@ -70,7 +70,7 @@ func (c *Config) queryGet(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
 
-	query, err := c.Store.Get(id)
+	query, err := c.QueryStore.Get(id)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (c *Config) queryDelete(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
 
-	query, err := c.Store.Delete(id)
+	query, err := c.QueryStore.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (c *Config) queryUpdate(w http.ResponseWriter, r *http.Request) error {
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	query, err := c.Store.Update(id, &updateQuery)
+	query, err := c.QueryStore.Update(id, &updateQuery)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
 
-	query, err := c.Store.Get(id)
+	query, err := c.QueryStore.Get(id)
 	if err != nil {
 		return err
 	}
