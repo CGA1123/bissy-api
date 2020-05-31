@@ -218,17 +218,24 @@ func TestQueryList(t *testing.T) {
 	expecthttp.JSONBody(t, queries[5:10], response)
 }
 
-func TestQueryExecute(t *testing.T) {
+func TestQueryResult(t *testing.T) {
 	t.Parallel()
 
-	_, id, config := testConfig()
-	_, err := config.AdapterStore.Create(&querycache.CreateAdapter{Type: "test", Name: "Test"})
+	clock := &querycache.RealClock{}
+	generator := &querycache.UUIDGenerator{}
+	config := &querycache.Config{
+		QueryStore:   querycache.NewInMemoryQueryStore(clock, generator),
+		AdapterStore: querycache.NewInMemoryAdapterStore(clock, generator),
+	}
+
+	adapter, err := config.AdapterStore.Create(&querycache.CreateAdapter{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
-	_, err = config.QueryStore.Create(&querycache.CreateQuery{Query: "SELECT * FROM users", AdapterId: id})
+	query, err := config.QueryStore.Create(&querycache.CreateQuery{
+		Query: "SELECT * FROM users", AdapterId: adapter.Id})
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("GET", "/queries/"+id+"/result", nil)
+	request, err := http.NewRequest("GET", "/queries/"+query.Id+"/result", nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
@@ -240,17 +247,17 @@ func TestQueryExecute(t *testing.T) {
 	newType := "postgres"
 	newName := "PG Test"
 	newOptions := "sslmode=disable"
-	_, err = config.AdapterStore.Update(id, &querycache.UpdateAdapter{
+	adapter, err = config.AdapterStore.Update(adapter.Id, &querycache.UpdateAdapter{
 		Type: &newType, Name: &newName, Options: &newOptions})
 
 	expect.Ok(t, err)
 
 	newQuery := "SELECT 1"
-	_, err = config.QueryStore.Update(id, &querycache.UpdateQuery{
+	query, err = config.QueryStore.Update(query.Id, &querycache.UpdateQuery{
 		Query: &newQuery})
 	expect.Ok(t, err)
 
-	request, err = http.NewRequest("GET", "/queries/"+id+"/result", nil)
+	request, err = http.NewRequest("GET", "/queries/"+query.Id+"/result", nil)
 	expect.Ok(t, err)
 
 	response = testHandler(config, request)

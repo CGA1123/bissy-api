@@ -145,7 +145,7 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	adapter, err := c.AdapterStore.Get(id)
+	adapter, err := c.AdapterStore.Get(query.AdapterId)
 	if err != nil {
 		return err
 	}
