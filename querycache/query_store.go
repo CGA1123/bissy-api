@@ -12,6 +12,7 @@ import (
 type Query struct {
 	Id          string    `json:"id"`
 	Query       string    `json:"query"`
+	AdapterId   string    `json:"adapterId"`
 	Lifetime    Duration  `json:"lifetime"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
@@ -27,12 +28,14 @@ func (query *Query) Fresh(now time.Time) bool {
 }
 
 type CreateQuery struct {
-	Query    string   `json:"query"`
-	Lifetime Duration `json:"lifetime"`
+	Query     string   `json:"query"`
+	Lifetime  Duration `json:"lifetime"`
+	AdapterId string   `json:"adapterId"`
 }
 
 type UpdateQuery struct {
 	Query       *string   `json:"query"`
+	AdapterId   *string   `json:"adapterId"`
 	Lifetime    *Duration `json:"lifetime"`
 	LastRefresh time.Time `json:"lastRefresh"`
 }
@@ -96,6 +99,7 @@ func (store *InMemoryQueryStore) Create(createQuery *CreateQuery) (*Query, error
 		Id:          id,
 		Query:       createQuery.Query,
 		Lifetime:    createQuery.Lifetime,
+		AdapterId:   createQuery.AdapterId,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -150,6 +154,10 @@ func (store *InMemoryQueryStore) Update(id string, update *UpdateQuery) (*Query,
 
 	if update.Lifetime != nil {
 		query.Lifetime = *update.Lifetime
+	}
+
+	if update.AdapterId != nil {
+		query.AdapterId = *update.AdapterId
 	}
 
 	if !update.LastRefresh.IsZero() {

@@ -54,13 +54,15 @@ func TestInMemoryQueryCreate(t *testing.T) {
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
-		Query:    "SELECT 1;",
-		Lifetime: 3 * querycache.Duration(time.Hour),
+		Query:     "SELECT 1;",
+		Lifetime:  3 * querycache.Duration(time.Hour),
+		AdapterId: "my-adapter",
 	}
 
 	expected := querycache.Query{
 		Id:          id,
 		Query:       "SELECT 1;",
+		AdapterId:   "my-adapter",
 		Lifetime:    3 * querycache.Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -95,13 +97,15 @@ func TestInMemoryQueryGet(t *testing.T) {
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
-		Query:    "SELECT 1;",
-		Lifetime: 3 * querycache.Duration(time.Hour),
+		Query:     "SELECT 1;",
+		Lifetime:  3 * querycache.Duration(time.Hour),
+		AdapterId: "adapter-id",
 	}
 
 	expected := querycache.Query{
 		Id:          id,
 		Query:       "SELECT 1;",
+		AdapterId:   "adapter-id",
 		Lifetime:    3 * querycache.Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -160,20 +164,24 @@ func TestInMemoryQueryUpdate(t *testing.T) {
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
-		Query:    "SELECT 1;",
-		Lifetime: 3 * querycache.Duration(time.Hour),
+		Query:     "SELECT 1;",
+		AdapterId: "adapter-1",
+		Lifetime:  3 * querycache.Duration(time.Hour),
 	}
 
 	newQuery := "SELECT 2;"
 	newLifetime := querycache.Duration(time.Hour)
+	newAdapterId := "adapter-2"
 	updateQuery := querycache.UpdateQuery{
-		Query:    &newQuery,
-		Lifetime: &newLifetime,
+		Query:     &newQuery,
+		Lifetime:  &newLifetime,
+		AdapterId: &newAdapterId,
 	}
 
 	expected := querycache.Query{
 		Id:          id,
 		Query:       "SELECT 2;",
+		AdapterId:   "adapter-2",
 		Lifetime:    querycache.Duration(time.Hour),
 		CreatedAt:   now,
 		UpdatedAt:   now,

@@ -18,8 +18,9 @@ func TestQueryCreate(t *testing.T) {
 
 	now, id, config := testConfig()
 	json, err := jsonBody(map[string]string{
-		"lifetime": "1h01m",
-		"query":    "SELECT 1;",
+		"lifetime":  "1h01m",
+		"query":     "SELECT 1;",
+		"adapterId": "adapter-id",
 	})
 	expect.Ok(t, err)
 
@@ -34,6 +35,7 @@ func TestQueryCreate(t *testing.T) {
 		Id:          id,
 		Lifetime:    querycache.Duration(time.Hour + time.Minute),
 		Query:       "SELECT 1;",
+		AdapterId:   "adapter-id",
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		LastRefresh: now,
@@ -140,6 +142,7 @@ func TestQueryUpdate(t *testing.T) {
 	json, err := jsonBody(map[string]string{
 		"lifetime":    "1h01m",
 		"query":       "SELECT 2;",
+		"adapterId":   "adapter-id",
 		"lastRefresh": oneHourAgo.Format(time.RFC3339Nano)})
 	expect.Ok(t, err)
 
@@ -149,6 +152,7 @@ func TestQueryUpdate(t *testing.T) {
 	query.Lifetime = querycache.Duration(time.Hour + time.Minute)
 	query.Query = "SELECT 2;"
 	query.LastRefresh = oneHourAgo
+	query.AdapterId = "adapter-id"
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
