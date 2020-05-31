@@ -94,6 +94,15 @@ func updateCache(cache *CachedExecutor, query *Query, result string) {
 	cache.Store.Update(query.Id, &UpdateQuery{LastRefresh: time.Now()})
 }
 
+func NewCachedExecutor(cache QueryCache, store QueryStore, clock Clock, executor Executor) *CachedExecutor {
+	return &CachedExecutor{
+		Cache:    cache,
+		Store:    store,
+		Clock:    clock,
+		Executor: executor,
+	}
+}
+
 func (cache *CachedExecutor) Execute(query *Query) (string, error) {
 	if query.Fresh(cache.Clock.Now()) {
 		if result, ok := cache.Cache.Get(query); ok {

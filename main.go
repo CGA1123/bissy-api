@@ -25,6 +25,8 @@ func main() {
 	config := querycache.Config{
 		QueryStore:   querycache.NewInMemoryQueryStore(clock, generator),
 		AdapterStore: querycache.NewInMemoryAdapterStore(clock, generator),
+		Cache:        querycache.NewInMemoryCache(),
+		Clock:        clock,
 	}
 
 	config.SetupHandlers(querycacheMux)

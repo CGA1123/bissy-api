@@ -12,6 +12,8 @@ type Config struct {
 	QueryStore   QueryStore
 	AdapterStore AdapterStore
 	Executor     Executor
+	Cache        QueryCache
+	Clock        Clock
 }
 
 func (c *Config) SetupHandlers(router *mux.Router) {

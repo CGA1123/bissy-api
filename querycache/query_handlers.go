@@ -155,6 +155,10 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	if c.Cache != nil {
+		executor = NewCachedExecutor(c.Cache, c.QueryStore, c.Clock, executor)
+	}
+
 	result, err := executor.Execute(query)
 	if err != nil {
 		return err
