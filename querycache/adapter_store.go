@@ -48,6 +48,7 @@ func (a *Adapter) NewExecutor() (Executor, error) {
 	case "test":
 		return &TestExecutor{}, nil
 	default:
+		// TODO: Cache this per adapter-id? keep DB objects available and not need to recreate connections?
 		return NewSQLExecutor(a.Type, a.Options)
 	}
 }
