@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -18,17 +19,24 @@ type QueryCache interface {
 
 type InMemoryCache struct {
 	Cache map[string]string
+	lock  sync.RWMutex
 }
 
 func NewInMemoryCache() *InMemoryCache {
 	return &InMemoryCache{Cache: map[string]string{}}
 }
 func (cache *InMemoryCache) Get(query *Query) (string, bool) {
+	cache.lock.RLock()
+	defer cache.lock.RUnlock()
+
 	value, ok := cache.Cache[query.Id]
 	return value, ok
 }
 
 func (cache *InMemoryCache) Set(query *Query, result string) error {
+	cache.lock.Lock()
+	defer cache.lock.Unlock()
+
 	cache.Cache[query.Id] = result
 
 	return nil

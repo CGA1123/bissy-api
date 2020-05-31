@@ -10,12 +10,49 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestInMemoryCreate(t *testing.T) {
+func freshQuery(now time.Time) *querycache.Query {
+	oneHourAgo := now.Add(-time.Hour)
+	twoHoursAgo := now.Add(-2 * time.Hour)
+
+	return &querycache.Query{
+		LastRefresh: oneHourAgo,
+		UpdatedAt:   twoHoursAgo,
+		Lifetime:    querycache.Duration(3 * time.Hour)}
+}
+
+func TestFresh(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	var query *querycache.Query
+
+	// fresh query
+	query = freshQuery(now)
+	expect.True(t, query.Fresh(now))
+
+	// query updated after last refresh
+	query = freshQuery(now)
+	query.UpdatedAt = query.LastRefresh.Add(time.Second)
+	expect.False(t, query.Fresh(now))
+
+	// last refresh longer than lifetime ago
+	query = freshQuery(now)
+	query.LastRefresh = now.Add(-time.Duration(query.Lifetime)).Add(-time.Second)
+	expect.False(t, query.Fresh(now))
+
+	// last refresh longer than lifetime ago and updated after last refresh
+	query = freshQuery(now)
+	query.UpdatedAt = query.LastRefresh.Add(time.Second)
+	query.LastRefresh = now.Add(-time.Duration(query.Lifetime)).Add(-time.Second)
+	expect.False(t, query.Fresh(now))
+}
+
+func TestInMemoryQueryCreate(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
 	id := uuid.New().String()
-	store := newTestStore(now, id)
+	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -37,10 +74,10 @@ func TestInMemoryCreate(t *testing.T) {
 	expect.Equal(t, expected, store.Queries[id])
 }
 
-func TestInMemoryCreateSmoke(t *testing.T) {
+func TestInMemoryQueryCreateSmoke(t *testing.T) {
 	t.Parallel()
 
-	store := querycache.NewInMemoryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	store := querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -51,12 +88,12 @@ func TestInMemoryCreateSmoke(t *testing.T) {
 	expect.Ok(t, err)
 }
 
-func TestInMemoryGet(t *testing.T) {
+func TestInMemoryQueryGet(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
 	id := uuid.New().String()
-	store := newTestStore(now, id)
+	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -84,12 +121,12 @@ func TestInMemoryGet(t *testing.T) {
 	expect.Error(t, err)
 }
 
-func TestInMemoryDelete(t *testing.T) {
+func TestInMemoryQueryDelete(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
 	id := uuid.New().String()
-	store := newTestStore(now, id)
+	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -116,12 +153,12 @@ func TestInMemoryDelete(t *testing.T) {
 	expect.Error(t, err)
 }
 
-func TestInMemoryUpdate(t *testing.T) {
+func TestInMemoryQueryUpdate(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
 	id := uuid.New().String()
-	store := newTestStore(now, id)
+	store := newTestQueryStore(now, id)
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -191,10 +228,10 @@ func selectsFromSlice(queries []querycache.Query) []string {
 	return selects
 }
 
-func TestInMemoryList(t *testing.T) {
+func TestInMemoryQueryList(t *testing.T) {
 	t.Parallel()
 
-	store := querycache.NewInMemoryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	store := querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
 	selects := []string{}
 
 	for i := 0; i < 10; i++ {
