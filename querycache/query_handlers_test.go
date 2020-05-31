@@ -246,7 +246,7 @@ func TestQueryResult(t *testing.T) {
 	// PG Test
 	newType := "postgres"
 	newName := "PG Test"
-	newOptions := "sslmode=disable"
+	newOptions := "postgres://bissy:bissy@postgres:5432/bissy_test?sslmode=disable" // TODO extract
 	adapter, err = config.AdapterStore.Update(adapter.Id, &querycache.UpdateAdapter{
 		Type: &newType, Name: &newName, Options: &newOptions})
 

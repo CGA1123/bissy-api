@@ -12,7 +12,7 @@ import (
 func TestExecutePostgres(t *testing.T) {
 	t.Parallel()
 
-	executor, err := querycache.NewSQLExecutor("postgres", "sslmode=disable")
+	executor, err := querycache.NewSQLExecutor("postgres", "postgres://bissy:bissy@postgres:5432/bissy_test?sslmode=disable") // TODO: extract
 	expect.Ok(t, err)
 
 	query := &querycache.Query{Query: "SELECT * FROM (SELECT 1 a, 2 b) t"}
