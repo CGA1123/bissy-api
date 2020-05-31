@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -23,14 +22,9 @@ func main() {
 	querycacheMux := router.PathPrefix("/querycache").Subrouter()
 	clock := &querycache.RealClock{}
 	generator := &querycache.UUIDGenerator{}
-	executor, err := querycache.NewSQLExecutor("postgres", "sslmode=disable")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	config := querycache.Config{
-		QueryStore: querycache.NewInMemoryQueryStore(clock, generator),
-		Executor:   executor,
+		QueryStore:   querycache.NewInMemoryQueryStore(clock, generator),
+		AdapterStore: querycache.NewInMemoryAdapterStore(clock, generator),
 	}
 
 	config.SetupHandlers(querycacheMux)
