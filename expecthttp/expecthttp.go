@@ -10,22 +10,32 @@ import (
 )
 
 func Status(t *testing.T, expected int, rr *httptest.ResponseRecorder) {
+	t.Helper()
+
 	expect.Equal(t, expected, rr.Code)
 }
 
 func Ok(t *testing.T, rr *httptest.ResponseRecorder) {
+	t.Helper()
+
 	Status(t, http.StatusOK, rr)
 }
 
 func ContentType(t *testing.T, expected string, rr *httptest.ResponseRecorder) {
+	t.Helper()
+
 	expect.Equal(t, expected, rr.Header().Get("Content-Type"))
 }
 
 func StringBody(t *testing.T, expected string, rr *httptest.ResponseRecorder) {
+	t.Helper()
+
 	expect.Equal(t, expected, rr.Body.String())
 }
 
 func JSONBody(t *testing.T, expected interface{}, rr *httptest.ResponseRecorder) {
+	t.Helper()
+
 	var actualBody, expectedBody interface{}
 
 	expectedBytes, err := json.Marshal(expected)

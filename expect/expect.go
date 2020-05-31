@@ -7,14 +7,20 @@ import (
 )
 
 func True(t *testing.T, actual bool) {
+	t.Helper()
+
 	Equal(t, true, actual)
 }
 
 func False(t *testing.T, actual bool) {
+	t.Helper()
+
 	Equal(t, false, actual)
 }
 
 func Equal(t *testing.T, expected, actual interface{}) {
+	t.Helper()
+
 	diff := cmp.Diff(expected, actual)
 	if diff != "" {
 		t.Errorf("Not Equal: %v", diff)
@@ -22,6 +28,8 @@ func Equal(t *testing.T, expected, actual interface{}) {
 }
 
 func Ok(t *testing.T, err error) {
+	t.Helper()
+
 	if err == nil {
 		return
 	}
@@ -30,6 +38,8 @@ func Ok(t *testing.T, err error) {
 }
 
 func Error(t *testing.T, err error) {
+	t.Helper()
+
 	if err != nil {
 		return
 	}
