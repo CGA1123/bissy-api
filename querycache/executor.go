@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	_ "github.com/snowflakedb/gosnowflake"
 )
 
 type QueryCache interface {
