@@ -1,6 +1,7 @@
 package querycache_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -17,6 +18,8 @@ func TestExecutePostgres(t *testing.T) {
 	if !ok {
 		t.Fatal("DATABASE_URL not set")
 	}
+
+	fmt.Println("url:", url)
 
 	executor, err := querycache.NewSQLExecutor("postgres", url)
 	expect.Ok(t, err)
