@@ -6,4 +6,4 @@ dockerize \
   -wait tcp://postgres:5432 \
   -timeout 10s \
   -wait-retry-interval 1s \
-  fswatch sh -c "clear; go test ./... -parallel 4"
+  fswatch --config fsw.test.yml

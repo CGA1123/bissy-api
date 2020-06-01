@@ -1,0 +1,14 @@
+desc: "Reload server on file change"
+triggers:
+- name: ""
+  pattens:
+  - '**/*.go'
+  cmd: cd /go/src/app && go get -t && go vet && go build -o /bin/app && /bin/app
+  shell: true
+  delay: 100ms
+  stop_timeout: 500ms
+  signal: KILL
+  kill_signal: ""
+watch_paths:
+- /go/src/app
+watch_depth: 3
