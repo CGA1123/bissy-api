@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: bissy_development
+      POSTGRES_USER: bissy
+      POSTGRES_PASSWORD: bissy
+    ports:
+      - 5432:5432
+  redis:
+    image: redis:6
+    ports:
+      - 6379:6379
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_development?sslmode=disable
+      - PORT=8080
+    ports:
+      - 8080:8080
+    volumes:
+      - .:/go/src/app
+    entrypoint: "./scripts/start.sh"
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_test?sslmode=disable
+      - PORT=8080
+    volumes:
+      - .:/go/src/app
+    entrypoint: "./scripts/test.sh"

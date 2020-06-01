@@ -3,6 +3,7 @@ package querycache_test
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -246,7 +247,11 @@ func TestQueryResult(t *testing.T) {
 	// PG Test
 	newType := "postgres"
 	newName := "PG Test"
-	newOptions := "sslmode=disable"
+	newOptions, ok := os.LookupEnv("DATABASE_URL")
+	if !ok {
+		t.Fatal("DATABASE_URL is not set")
+	}
+
 	adapter, err = config.AdapterStore.Update(adapter.Id, &querycache.UpdateAdapter{
 		Type: &newType, Name: &newName, Options: &newOptions})
 

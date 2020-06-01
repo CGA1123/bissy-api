@@ -1,0 +1,14 @@
+desc: "Reload tests on file change"
+triggers:
+- name: ""
+  pattens:
+  - '**/*.go'
+  cmd: clear; go test ./... -parallel 4
+  shell: true
+  delay: 100ms
+  stop_timeout: 500ms
+  signal: KILL
+  kill_signal: ""
+watch_paths:
+- /go/src/app
+watch_depth: 3
