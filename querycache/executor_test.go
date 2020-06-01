@@ -1,6 +1,7 @@
 package querycache_test
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -12,7 +13,12 @@ import (
 func TestExecutePostgres(t *testing.T) {
 	t.Parallel()
 
-	executor, err := querycache.NewSQLExecutor("postgres", "postgres://bissy:bissy@postgres:5432/bissy_test?sslmode=disable") // TODO: extract
+	url, ok := os.LookupEnv("DATABASE_URL")
+	if !ok {
+		t.Fatal("DATABASE_URL not set")
+	}
+
+	executor, err := querycache.NewSQLExecutor("postgres", url)
 	expect.Ok(t, err)
 
 	query := &querycache.Query{Query: "SELECT * FROM (SELECT 1 a, 2 b) t"}

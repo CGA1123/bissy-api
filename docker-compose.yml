@@ -21,7 +21,7 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_development
+      - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_development?ssl_mode=disable
       - PORT=8080
     ports:
       - 8080:8080
@@ -37,7 +37,7 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_test
+      - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_test?ssl_mode=disable
       - PORT=8080
     volumes:
       - .:/go/src/app
