@@ -6,8 +6,6 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.14
-        environment:
-          DATABASE_URL: postgres://circleci:circleci@localhost:5432/circleci?sslmode=disable
       - image: circleci/redis:6
       - image: circleci/postgres:11
         environment:
@@ -16,10 +14,16 @@ jobs:
           POSTGRES_DB: circleci
 
     working_directory: /go/src/github.com/CGA1123/bissy-api
+    environment:
+      DATABASE_URL: postgres://circleci:circleci@localhost:5432/circleci?sslmode=disable
+      MIGRATE_VERSION: v4.11.0
     steps:
       - checkout
+      - run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/$MIGRATE_VERSION/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate.linux-amd64 /bin/migrate
 
-      # specify any bash command here prefixed with `run: `
+      - run: migrate -database $DATABASE_URL -path migrations up
       - run: go get -v -t -d ./...
       - run: go test -v ./... -parallel 4
       - run: go vet ./...
