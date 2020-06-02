@@ -8,10 +8,12 @@ services:
       POSTGRES_PASSWORD: bissy
     ports:
       - 5432:5432
+
   redis:
     image: redis:6
     ports:
       - 6379:6379
+
   dev:
     build:
       context: .
@@ -28,6 +30,7 @@ services:
     volumes:
       - .:/go/src/app
     entrypoint: "./scripts/start.sh"
+
   test:
     build:
       context: .
