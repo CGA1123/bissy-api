@@ -1,6 +1,8 @@
 package querycache
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -32,8 +34,10 @@ func (s *SQLAdapterStore) Create(ca *CreateAdapter) (*Adapter, error) {
 
 func (s *SQLAdapterStore) Get(id string) (*Adapter, error) {
 	var adapter Adapter
-	err := s.db.QueryRowx("SELECT * FROM querycache_adapters WHERE id = $1", id).StructScan(&adapter)
-	if err != nil {
+
+	query := "SELECT * FROM querycache_adapters WHERE id = $1"
+
+	if err := s.db.Get(&adapter, query, id); err != nil {
 		return nil, err
 	}
 
@@ -42,8 +46,45 @@ func (s *SQLAdapterStore) Get(id string) (*Adapter, error) {
 
 func (s *SQLAdapterStore) Delete(id string) (*Adapter, error) {
 	var adapter Adapter
-	err := s.db.QueryRowx("DELETE FROM querycache_adapters WHERE id = $1 RETURNING *", id).StructScan(&adapter)
-	if err != nil {
+
+	query := "DELETE FROM querycache_adapters WHERE id = $1 RETURNING *"
+
+	if err := s.db.Get(&adapter, query, id); err != nil {
+		return nil, err
+	}
+
+	return &adapter, nil
+}
+
+func (s *SQLAdapterStore) List(page, per int) ([]*Adapter, error) {
+	if page < 1 || per < 1 {
+		return nil,
+			fmt.Errorf("page and per must be greater than 0 (page %v) (per %v)",
+				page, per)
+	}
+
+	adapters := []*Adapter{}
+
+	query := `SELECT * FROM querycache_adapters ORDER BY created_at OFFSET $1 LIMIT $2`
+	if err := s.db.Select(&adapters, query, (page-1)*per, per); err != nil {
+		return nil, err
+	}
+
+	return adapters, nil
+}
+
+func (s *SQLAdapterStore) Update(id string, ua *UpdateAdapter) (*Adapter, error) {
+	var adapter Adapter
+
+	query := `
+		UPDATE querycache_adapters
+		SET name = COALESCE($2, name),
+				type = COALESCE($3, type),
+				options = COALESCE($4, options)
+		WHERE id = $1
+		RETURNING *`
+
+	if err := s.db.Get(&adapter, query, id, ua.Name, ua.Type, ua.Options); err != nil {
 		return nil, err
 	}
 
