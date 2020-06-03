@@ -35,8 +35,8 @@ func TestInMemoryAdapterCreate(t *testing.T) {
 	expect.Ok(t, err)
 	expect.Equal(t, expected, adapter)
 
-	expectedStore := map[string]querycache.Adapter{}
-	expectedStore[id] = *expected
+	expectedStore := map[string]*querycache.Adapter{}
+	expectedStore[id] = expected
 
 	expect.Equal(t, expectedStore, store.Store)
 }
@@ -48,7 +48,7 @@ func TestInMemoryAdapterDelete(t *testing.T) {
 	id := uuid.New().String()
 	store := newTestAdapterStore(now, id)
 
-	expected := querycache.Adapter{
+	expected := &querycache.Adapter{
 		Id:        id,
 		Name:      "test adapter",
 		Type:      "postgres",
@@ -61,9 +61,9 @@ func TestInMemoryAdapterDelete(t *testing.T) {
 
 	adapter, err := store.Delete(id)
 	expect.Ok(t, err)
-	expect.Equal(t, &expected, adapter)
+	expect.Equal(t, expected, adapter)
 
-	expectedStore := map[string]querycache.Adapter{}
+	expectedStore := map[string]*querycache.Adapter{}
 	expect.Equal(t, expectedStore, store.Store)
 }
 
@@ -139,7 +139,7 @@ func TestInMemoryAdapterList(t *testing.T) {
 	store := querycache.NewInMemoryAdapterStore(
 		&querycache.RealClock{}, &querycache.UUIDGenerator{})
 
-	expectedAdapters := []querycache.Adapter{}
+	expectedAdapters := []*querycache.Adapter{}
 
 	for i := 0; i < 10; i++ {
 		s := fmt.Sprintf("name %v;", i)
@@ -147,7 +147,7 @@ func TestInMemoryAdapterList(t *testing.T) {
 		adapter, err := store.Create(q)
 		expect.Ok(t, err)
 
-		expectedAdapters = append(expectedAdapters, *adapter)
+		expectedAdapters = append(expectedAdapters, adapter)
 	}
 
 	_, err := store.List(0, 1)
@@ -167,7 +167,7 @@ func TestInMemoryAdapterList(t *testing.T) {
 
 	adapters, err = store.List(10, 3)
 	expect.Ok(t, err)
-	expect.Equal(t, []querycache.Adapter{}, adapters)
+	expect.Equal(t, []*querycache.Adapter{}, adapters)
 
 	adapters, err = store.List(1, 30)
 	expect.Ok(t, err)

@@ -85,7 +85,7 @@ func TestAdapterDelete(t *testing.T) {
 
 	adapters, err := config.AdapterStore.List(1, 1)
 	expect.Ok(t, err)
-	expect.Equal(t, []querycache.Adapter{}, adapters)
+	expect.Equal(t, []*querycache.Adapter{}, adapters)
 }
 
 func TestAdapterUpdate(t *testing.T) {
@@ -127,7 +127,7 @@ func TestAdapterUpdate(t *testing.T) {
 func TestAdapterList(t *testing.T) {
 	t.Parallel()
 
-	adapters := []querycache.Adapter{}
+	adapters := []*querycache.Adapter{}
 	config := &querycache.Config{
 		AdapterStore: querycache.NewInMemoryAdapterStore(&querycache.RealClock{},
 			&querycache.UUIDGenerator{})}
@@ -137,7 +137,7 @@ func TestAdapterList(t *testing.T) {
 			Name: fmt.Sprintf("Name %v", i)})
 
 		expect.Ok(t, err)
-		adapters = append(adapters, *adapter)
+		adapters = append(adapters, adapter)
 	}
 
 	request, err := http.NewRequest("GET", "/adapters", nil)

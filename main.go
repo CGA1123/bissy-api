@@ -11,7 +11,11 @@ import (
 	"github.com/cga1123/bissy-api/ping"
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/go-redis/redis/v8"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/honeycombio/beeline-go"
+	"github.com/honeycombio/beeline-go/wrappers/hnygorilla"
+	"github.com/honeycombio/beeline-go/wrappers/hnynethttp"
 )
 
 func initRedis() (*redis.Client, error) {
@@ -39,6 +43,13 @@ func main() {
 		port = "8080"
 	}
 
+	hcWrite := os.Getenv("HONEYCOMB_WRITEKEY")
+	beeline.Init(beeline.Config{
+		WriteKey:    hcWrite,
+		Dataset:     "bissy-api",
+		ServiceName: "bissy-api",
+	})
+
 	redisClient, err := initRedis()
 	if err != nil {
 		log.Fatal(err)
@@ -47,6 +58,7 @@ func main() {
 	cache := &querycache.RedisCache{Client: redisClient, Prefix: "querycache"}
 
 	router := mux.NewRouter()
+	router.Use(hnygorilla.Middleware)
 	router.HandleFunc("/ping", ping.Handler)
 
 	querycacheMux := router.PathPrefix("/querycache").Subrouter()
@@ -61,12 +73,14 @@ func main() {
 
 	config.SetupHandlers(querycacheMux)
 
+	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
+
 	server := &http.Server{
-		Addr:         ":" + port,
+		Addr:         "0.0.0.0:" + port,
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
-		Handler:      router,
+		Handler:      handler,
 	}
 
 	// Run our server in a goroutine so that it doesn't block.

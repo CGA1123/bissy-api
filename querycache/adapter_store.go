@@ -8,12 +8,12 @@ import (
 )
 
 type Adapter struct {
-	Id        string    `json:"id"`
+	Id        string    `json:"id" db:"id"`
 	Name      string    `json:"name"`
 	Type      string    `json:"type"`
 	Options   string    `json:"options"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 }
 
 type UpdateAdapter struct {
@@ -31,13 +31,13 @@ type CreateAdapter struct {
 type AdapterStore interface {
 	Get(string) (*Adapter, error)
 	Create(*CreateAdapter) (*Adapter, error)
-	List(page int, per int) ([]Adapter, error)
+	List(page int, per int) ([]*Adapter, error)
 	Delete(string) (*Adapter, error)
 	Update(string, *UpdateAdapter) (*Adapter, error)
 }
 
 type InMemoryAdapterStore struct {
-	Store       map[string]Adapter
+	Store       map[string]*Adapter
 	clock       Clock
 	idGenerator IdGenerator
 	lock        sync.RWMutex
@@ -57,7 +57,7 @@ func NewInMemoryAdapterStore(clock Clock, idGenerator IdGenerator) *InMemoryAdap
 	return &InMemoryAdapterStore{
 		clock:       clock,
 		idGenerator: idGenerator,
-		Store:       map[string]Adapter{},
+		Store:       map[string]*Adapter{},
 	}
 }
 
@@ -75,7 +75,7 @@ func (s *InMemoryAdapterStore) Create(a *CreateAdapter) (*Adapter, error) {
 		UpdatedAt: s.clock.Now(),
 	}
 
-	s.Store[id] = adapter
+	s.Store[id] = &adapter
 
 	return &adapter, nil
 }
@@ -103,7 +103,7 @@ func (s *InMemoryAdapterStore) Get(id string) (*Adapter, error) {
 		return nil, fmt.Errorf("Adapter (id: %v) not found", id)
 	}
 
-	return &adapter, nil
+	return adapter, nil
 }
 
 func (s *InMemoryAdapterStore) Update(id string, u *UpdateAdapter) (*Adapter, error) {
@@ -127,12 +127,10 @@ func (s *InMemoryAdapterStore) Update(id string, u *UpdateAdapter) (*Adapter, er
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.Store[id] = *adapter
-
 	return adapter, nil
 }
 
-func (s *InMemoryAdapterStore) List(page, per int) ([]Adapter, error) {
+func (s *InMemoryAdapterStore) List(page, per int) ([]*Adapter, error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
@@ -140,7 +138,7 @@ func (s *InMemoryAdapterStore) List(page, per int) ([]Adapter, error) {
 		return nil, fmt.Errorf("page must be greater than 0 (is %v)", page)
 	}
 
-	adapters := []Adapter{}
+	adapters := []*Adapter{}
 	for _, adapter := range s.Store {
 		adapters = append(adapters, adapter)
 	}
@@ -160,7 +158,7 @@ func (s *InMemoryAdapterStore) List(page, per int) ([]Adapter, error) {
 	endIndex := startIndex + per
 
 	if startIndex > adapterCount-1 {
-		return []Adapter{}, nil
+		return []*Adapter{}, nil
 	}
 
 	if endIndex > adapterCount {
