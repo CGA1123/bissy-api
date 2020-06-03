@@ -47,19 +47,14 @@ func TestFresh(t *testing.T) {
 	expect.False(t, query.Fresh(now))
 }
 
-func TestInMemoryQueryCreate(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestQueryStore(now, id)
+func testQueryCreate(t *testing.T, store querycache.QueryStore, id string, now time.Time) {
 	createQuery := querycache.CreateQuery{
 		Query:     "SELECT 1;",
 		Lifetime:  3 * querycache.Duration(time.Hour),
 		AdapterId: "my-adapter",
 	}
 
-	expected := querycache.Query{
+	expected := &querycache.Query{
 		Id:          id,
 		Query:       "SELECT 1;",
 		AdapterId:   "my-adapter",
@@ -72,30 +67,14 @@ func TestInMemoryQueryCreate(t *testing.T) {
 	query, err := store.Create(&createQuery)
 
 	expect.Ok(t, err)
-	expect.Equal(t, expected, *query)
-	expect.Equal(t, expected, store.Queries[id])
-}
+	expect.Equal(t, expected, query)
 
-func TestInMemoryQueryCreateSmoke(t *testing.T) {
-	t.Parallel()
-
-	store := querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
-	createQuery := querycache.CreateQuery{
-		Query:    "SELECT 1;",
-		Lifetime: 3 * querycache.Duration(time.Hour),
-	}
-
-	_, err := store.Create(&createQuery)
-
+	query, err = store.Get(id)
 	expect.Ok(t, err)
+	expect.Equal(t, expected, query)
 }
 
-func TestInMemoryQueryGet(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestQueryStore(now, id)
+func testQueryGet(t *testing.T, store querycache.QueryStore, id string, now time.Time) {
 	createQuery := querycache.CreateQuery{
 		Query:     "SELECT 1;",
 		Lifetime:  3 * querycache.Duration(time.Hour),
@@ -125,12 +104,48 @@ func TestInMemoryQueryGet(t *testing.T) {
 	expect.Error(t, err)
 }
 
-func TestInMemoryQueryDelete(t *testing.T) {
-	t.Parallel()
+func testQueryList(t *testing.T, store querycache.QueryStore) {
+	expectedQueries := []*querycache.Query{}
 
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestQueryStore(now, id)
+	for i := 0; i < 10; i++ {
+		q := &querycache.CreateQuery{
+			Query:    fmt.Sprintf("SELECT %v;", i),
+			Lifetime: querycache.Duration(time.Duration(i) * time.Hour),
+		}
+		query, err := store.Create(q)
+		expect.Ok(t, err)
+
+		expectedQueries = append(expectedQueries, query)
+	}
+
+	_, err := store.List(0, 1)
+	expect.Error(t, err)
+
+	_, err = store.List(1, 0)
+	expect.Error(t, err)
+
+	queries, err := store.List(1, 10)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedQueries, queries)
+
+	queries, err = store.List(2, 3)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedQueries[3:6], queries)
+
+	queries, err = store.List(4, 3)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedQueries[9:10], queries)
+
+	queries, err = store.List(10, 3)
+	expect.Ok(t, err)
+	expect.Equal(t, []*querycache.Query{}, queries)
+
+	queries, err = store.List(1, 30)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedQueries, queries)
+}
+
+func testQueryDelete(t *testing.T, store querycache.QueryStore, id string, now time.Time) {
 	createQuery := querycache.CreateQuery{
 		Query:    "SELECT 1;",
 		Lifetime: 3 * querycache.Duration(time.Hour),
@@ -151,18 +166,17 @@ func TestInMemoryQueryDelete(t *testing.T) {
 	query, err := store.Delete(id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, *query)
-	expect.Equal(t, map[string]querycache.Query{}, store.Queries)
+
+	queries, err := store.List(1, 1)
+	expect.Ok(t, err)
+
+	expect.Equal(t, []*querycache.Query{}, queries)
 
 	_, err = store.Delete(id)
 	expect.Error(t, err)
 }
 
-func TestInMemoryQueryUpdate(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestQueryStore(now, id)
+func testQueryUpdate(t *testing.T, store querycache.QueryStore, id string, now time.Time) {
 	createQuery := querycache.CreateQuery{
 		Query:     "SELECT 1;",
 		AdapterId: "adapter-1",
@@ -224,56 +238,52 @@ func TestInMemoryQueryUpdate(t *testing.T) {
 	// Updating not existing query
 	_, err = store.Update("", &updateQuery)
 	expect.Error(t, err)
-
 }
 
-func selectsFromSlice(queries []querycache.Query) []string {
-	selects := []string{}
-	for _, query := range queries {
-		selects = append(selects, query.Query)
-	}
+func TestInMemoryQueryCreate(t *testing.T) {
+	t.Parallel()
 
-	return selects
+	now := time.Now()
+	id := uuid.New().String()
+	store := newTestQueryStore(now, id)
+
+	testQueryCreate(t, store, id, now)
+}
+
+func TestInMemoryQueryGet(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	id := uuid.New().String()
+	store := newTestQueryStore(now, id)
+
+	testQueryGet(t, store, id, now)
+}
+
+func TestInMemoryQueryDelete(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	id := uuid.New().String()
+	store := newTestQueryStore(now, id)
+
+	testQueryDelete(t, store, id, now)
+}
+
+func TestInMemoryQueryUpdate(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	id := uuid.New().String()
+	store := newTestQueryStore(now, id)
+
+	testQueryUpdate(t, store, id, now)
 }
 
 func TestInMemoryQueryList(t *testing.T) {
 	t.Parallel()
 
 	store := querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
-	selects := []string{}
 
-	for i := 0; i < 10; i++ {
-		s := fmt.Sprintf("SELECT %v;", i)
-		q := &querycache.CreateQuery{
-			Query:    s,
-			Lifetime: querycache.Duration(time.Duration(i) * time.Hour),
-		}
-		selects = append(selects, s)
-		_, err := store.Create(q)
-
-		expect.Ok(t, err)
-	}
-
-	_, err := store.List(0, 1)
-	expect.Error(t, err)
-
-	queries, err := store.List(1, 10)
-	expect.Ok(t, err)
-	expect.Equal(t, selects, selectsFromSlice(queries))
-
-	queries, err = store.List(2, 3)
-	expect.Ok(t, err)
-	expect.Equal(t, selects[3:6], selectsFromSlice(queries))
-
-	queries, err = store.List(4, 3)
-	expect.Ok(t, err)
-	expect.Equal(t, selects[9:10], selectsFromSlice(queries))
-
-	queries, err = store.List(10, 3)
-	expect.Ok(t, err)
-	expect.Equal(t, []querycache.Query{}, queries)
-
-	queries, err = store.List(1, 30)
-	expect.Ok(t, err)
-	expect.Equal(t, selects, selectsFromSlice(queries))
+	testQueryList(t, store)
 }

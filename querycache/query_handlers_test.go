@@ -113,7 +113,7 @@ func TestQueryDelete(t *testing.T) {
 
 	queries, err := config.QueryStore.List(1, 1)
 	expect.Ok(t, err)
-	expect.Equal(t, []querycache.Query{}, queries)
+	expect.Equal(t, []*querycache.Query{}, queries)
 }
 
 // TODO: Handle not found errors, add custom errors to store and switch?
