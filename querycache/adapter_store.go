@@ -134,8 +134,10 @@ func (s *InMemoryAdapterStore) List(page, per int) ([]*Adapter, error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	if page < 1 {
-		return nil, fmt.Errorf("page must be greater than 0 (is %v)", page)
+	if page < 1 || per < 1 {
+		return nil,
+			fmt.Errorf("page and per must be greater than 0 (page %v) (per %v)",
+				page, per)
 	}
 
 	adapters := []*Adapter{}
