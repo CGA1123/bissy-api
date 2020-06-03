@@ -21,6 +21,3 @@ RUN go get -u -d github.com/golang-migrate/migrate/cmd/migrate \
       && go build -tags 'postgres' -ldflags="-X main.Version=$(git describe --tags)" -o $GOPATH/bin/migrate $GOPATH/src/github.com/golang-migrate/migrate/cmd/migrate
 
 RUN go get github.com/codeskyblue/fswatch
-
-HEALTHCHECK --interval=5m --timeout=3s \
-  CMD curl -f http://localhost:8080/ping || exit 1

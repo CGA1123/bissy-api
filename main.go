@@ -11,6 +11,7 @@ import (
 	"github.com/cga1123/bissy-api/ping"
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/go-redis/redis/v8"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/honeycombio/beeline-go"
 	"github.com/honeycombio/beeline-go/wrappers/hnygorilla"
@@ -72,12 +73,14 @@ func main() {
 
 	config.SetupHandlers(querycacheMux)
 
+	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
+
 	server := &http.Server{
 		Addr:         "0.0.0.0:" + port,
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
-		Handler:      hnynethttp.WrapHandler(router),
+		Handler:      handler,
 	}
 
 	// Run our server in a goroutine so that it doesn't block.
