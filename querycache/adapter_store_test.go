@@ -243,7 +243,7 @@ func testSQLAdapterStore(now time.Time, id string, db *sqlx.DB) *querycache.SQLA
 	)
 }
 
-func withTestSQLStore(t *testing.T, f func(*testing.T, querycache.AdapterStore, string, time.Time)) {
+func withTestSQLAdapterStore(t *testing.T, f func(*testing.T, querycache.AdapterStore, string, time.Time)) {
 	db, err := testDb(uuid.New().String())
 	expect.Ok(t, err)
 	defer db.Close()
@@ -261,19 +261,19 @@ func withTestSQLStore(t *testing.T, f func(*testing.T, querycache.AdapterStore, 
 func TestSQLAdapterStoreCreate(t *testing.T) {
 	t.Parallel()
 
-	withTestSQLStore(t, testAdapterCreate)
+	withTestSQLAdapterStore(t, testAdapterCreate)
 }
 
 func TestSQLAdapterGet(t *testing.T) {
 	t.Parallel()
 
-	withTestSQLStore(t, testAdapterGet)
+	withTestSQLAdapterStore(t, testAdapterGet)
 }
 
 func TestSQLAdapterDelete(t *testing.T) {
 	t.Parallel()
 
-	withTestSQLStore(t, testAdapterDelete)
+	withTestSQLAdapterStore(t, testAdapterDelete)
 }
 
 func TestSQLAdapterList(t *testing.T) {
@@ -292,5 +292,5 @@ func TestSQLAdapterList(t *testing.T) {
 func TestSQLAdapterUpdate(t *testing.T) {
 	t.Parallel()
 
-	withTestSQLStore(t, testAdapterUpdate)
+	withTestSQLAdapterStore(t, testAdapterUpdate)
 }

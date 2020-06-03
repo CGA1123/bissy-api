@@ -20,12 +20,13 @@ func (s *SQLAdapterStore) Create(ca *CreateAdapter) (*Adapter, error) {
 	now := s.clock.Now()
 	id := s.idGenerator.Generate()
 
-	var adapter Adapter
-	err := s.db.QueryRowx(`
+	query := `
 		INSERT INTO querycache_adapters (id, name, type, options, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING *`, id, ca.Name, ca.Type, ca.Options, now, now).StructScan(&adapter)
-	if err != nil {
+		RETURNING *`
+
+	var adapter Adapter
+	if err := s.db.Get(&adapter, query, id, ca.Name, ca.Type, ca.Options, now, now); err != nil {
 		return nil, err
 	}
 

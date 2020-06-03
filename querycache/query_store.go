@@ -12,11 +12,11 @@ import (
 type Query struct {
 	Id          string    `json:"id"`
 	Query       string    `json:"query"`
-	AdapterId   string    `json:"adapterId"`
+	AdapterId   string    `json:"adapterId" db:"adapter_id"`
 	Lifetime    Duration  `json:"lifetime"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-	LastRefresh time.Time `json:"lastRefresh"`
+	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
+	LastRefresh time.Time `json:"lastRefresh" db:"last_refresh"`
 }
 
 func (query *Query) Fresh(now time.Time) bool {

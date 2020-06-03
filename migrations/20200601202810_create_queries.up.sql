@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS querycache_queries (
     id uuid,
     adapter_id uuid NOT NULL,
-    name varchar(255) NOT NULL,
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
     last_refresh timestamp NOT NULL,
