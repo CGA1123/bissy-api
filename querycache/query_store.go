@@ -12,11 +12,11 @@ import (
 type Query struct {
 	Id          string    `json:"id"`
 	Query       string    `json:"query"`
-	AdapterId   string    `json:"adapterId"`
+	AdapterId   string    `json:"adapterId" db:"adapter_id"`
 	Lifetime    Duration  `json:"lifetime"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-	LastRefresh time.Time `json:"lastRefresh"`
+	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
+	LastRefresh time.Time `json:"lastRefresh" db:"last_refresh"`
 }
 
 func (query *Query) Fresh(now time.Time) bool {
@@ -70,13 +70,13 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 type QueryStore interface {
 	Get(string) (*Query, error)
 	Create(*CreateQuery) (*Query, error)
-	List(page int, per int) ([]Query, error)
+	List(page int, per int) ([]*Query, error)
 	Delete(string) (*Query, error)
 	Update(string, *UpdateQuery) (*Query, error)
 }
 
 type InMemoryQueryStore struct {
-	Queries     map[string]Query
+	Queries     map[string]*Query
 	clock       Clock
 	idGenerator IdGenerator
 	lock        sync.RWMutex
@@ -86,7 +86,7 @@ func NewInMemoryQueryStore(clock Clock, idGenerator IdGenerator) *InMemoryQueryS
 	return &InMemoryQueryStore{
 		clock:       clock,
 		idGenerator: idGenerator,
-		Queries:     map[string]Query{},
+		Queries:     map[string]*Query{},
 	}
 }
 
@@ -108,7 +108,7 @@ func (store *InMemoryQueryStore) Create(createQuery *CreateQuery) (*Query, error
 	store.lock.Lock()
 	defer store.lock.Unlock()
 
-	store.Queries[id] = query
+	store.Queries[id] = &query
 
 	return &query, nil
 }
@@ -122,7 +122,7 @@ func (store *InMemoryQueryStore) Get(id string) (*Query, error) {
 		return nil, fmt.Errorf("Query (id: %v) not found", id)
 	}
 
-	return &query, nil
+	return query, nil
 }
 
 func (store *InMemoryQueryStore) Delete(id string) (*Query, error) {
@@ -136,7 +136,7 @@ func (store *InMemoryQueryStore) Delete(id string) (*Query, error) {
 
 	delete(store.Queries, id)
 
-	return &query, nil
+	return query, nil
 }
 
 func (store *InMemoryQueryStore) Update(id string, update *UpdateQuery) (*Query, error) {
@@ -164,20 +164,20 @@ func (store *InMemoryQueryStore) Update(id string, update *UpdateQuery) (*Query,
 		query.LastRefresh = update.LastRefresh
 	}
 
-	store.Queries[id] = query
-
-	return &query, nil
+	return query, nil
 }
 
-func (store *InMemoryQueryStore) List(page, per int) ([]Query, error) {
+func (store *InMemoryQueryStore) List(page, per int) ([]*Query, error) {
 	store.lock.RLock()
 	defer store.lock.RUnlock()
 
-	if page < 1 {
-		return nil, fmt.Errorf("page must be greater than 0 (is %v)", page)
+	if page < 1 || per < 1 {
+		return nil,
+			fmt.Errorf("page and per must be greater than 0 (page %v) (per %v)",
+				page, per)
 	}
 
-	queries := []Query{}
+	queries := []*Query{}
 	for _, query := range store.Queries {
 		queries = append(queries, query)
 	}
@@ -197,7 +197,7 @@ func (store *InMemoryQueryStore) List(page, per int) ([]Query, error) {
 	endIndex := startIndex + per
 
 	if startIndex > queryCount-1 {
-		return []Query{}, nil
+		return []*Query{}, nil
 	}
 
 	if endIndex > queryCount {

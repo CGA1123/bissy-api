@@ -16,6 +16,7 @@ import (
 	"github.com/honeycombio/beeline-go"
 	"github.com/honeycombio/beeline-go/wrappers/hnygorilla"
 	"github.com/honeycombio/beeline-go/wrappers/hnynethttp"
+	"github.com/jmoiron/sqlx"
 )
 
 func initRedis() (*redis.Client, error) {
@@ -37,6 +38,24 @@ func initRedis() (*redis.Client, error) {
 	return redisClient, nil
 }
 
+func initDb() (*sqlx.DB, error) {
+	databaseUrl, ok := os.LookupEnv("DATABASE_URL")
+	if !ok {
+		databaseUrl = "postgres://localhost:5432"
+	}
+
+	db, err := sqlx.Open("postgres", databaseUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
 func main() {
 	port, ok := os.LookupEnv("PORT")
 	if !ok {
@@ -55,6 +74,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	db, err := initDb()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	cache := &querycache.RedisCache{Client: redisClient, Prefix: "querycache"}
 
 	router := mux.NewRouter()
@@ -65,8 +89,8 @@ func main() {
 	clock := &querycache.RealClock{}
 	generator := &querycache.UUIDGenerator{}
 	config := querycache.Config{
-		QueryStore:   querycache.NewInMemoryQueryStore(clock, generator),
-		AdapterStore: querycache.NewInMemoryAdapterStore(clock, generator),
+		QueryStore:   querycache.NewSQLQueryStore(db, clock, generator),
+		AdapterStore: querycache.NewSQLAdapterStore(db, clock, generator),
 		Cache:        cache,
 		Clock:        clock,
 	}
