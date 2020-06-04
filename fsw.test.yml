@@ -3,7 +3,7 @@ triggers:
 - name: ""
   pattens:
   - '**/*.go'
-  cmd: clear; cd /go/src/app; go test -v ./...; echo "DONE"
+  cmd: clear; go test ./... -parallel 4
   shell: true
   delay: 100ms
   stop_timeout: 500ms

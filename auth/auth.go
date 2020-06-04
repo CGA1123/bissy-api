@@ -56,12 +56,6 @@ func (generator *UUIDGenerator) Generate() string {
 	return uuid.New().String()
 }
 
-type RealClock struct{}
-
-func (c *RealClock) Now() time.Time {
-	return time.Now()
-}
-
 type SQLUserStore struct {
 	db          *sqlx.DB
 	idGenerator IdGenerator
