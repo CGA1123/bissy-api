@@ -1,0 +1,8 @@
+1
+/var/postgres_data
+1591309196
+5432
+/var/run/postgresql
+*
+  5432001    163840
+stopping
