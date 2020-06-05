@@ -24,6 +24,7 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_development?sslmode=disable
+      - JWT_SIGNING_KEY=8bb1f10acd560f472b9eaaeb3ffd092d
       - PORT=1123
     ports:
       - 1123:1123

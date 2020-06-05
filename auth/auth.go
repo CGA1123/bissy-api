@@ -140,6 +140,7 @@ func authenticate(c *Config, r *http.Request) (*User, error) {
 		return nil, fmt.Errorf("could not verify token")
 	}
 
+	// TODO: do we need to get the user?
 	user, err := c.userStore.Get(claims.UserId)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching user (%v) %v", claims.UserId, err)
@@ -154,8 +155,8 @@ func (c *Config) WithAuth(next http.Handler) http.Handler {
 		if err != nil {
 			code := http.StatusUnauthorized
 
-			http.Error(w, http.StatusText(code), code)
 			w.Header().Set("WWW-Authenticate", `Bearer realm="bissy-api" charset="UTF-8"`)
+			http.Error(w, http.StatusText(code), code)
 
 			return
 		}

@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/ping"
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/go-redis/redis/v8"
@@ -18,6 +20,25 @@ import (
 	"github.com/honeycombio/beeline-go/wrappers/hnynethttp"
 	"github.com/jmoiron/sqlx"
 )
+
+func initAuth(db *sqlx.DB) (*auth.Config, error) {
+	signingKey, ok := os.LookupEnv("JWT_SIGNING_KEY")
+	if !ok {
+		return nil, fmt.Errorf("JWT_SIGNING_KEY not set")
+	}
+
+	clock := &auth.RealClock{}
+	idGen := &auth.UUIDGenerator{}
+
+	store := auth.NewSQLUserStore(db, clock, idGen)
+
+	return auth.NewConfig(
+		[]byte(signingKey),
+		time.Hour*12,
+		store,
+		clock,
+	), nil
+}
 
 func initRedis() (*redis.Client, error) {
 	redisUrl, ok := os.LookupEnv("REDIS_URL")
@@ -80,10 +101,15 @@ func main() {
 	}
 
 	cache := &querycache.RedisCache{Client: redisClient, Prefix: "querycache"}
+	authConfig, err := initAuth(db)
+	if err != nil {
+		log.Fatal("could not init auth:", err)
+	}
 
 	router := mux.NewRouter()
 	router.Use(hnygorilla.Middleware)
 	router.HandleFunc("/ping", ping.Handler)
+	router.Handle("/authping", authConfig.WithAuth(http.HandlerFunc(ping.Handler)))
 
 	querycacheMux := router.PathPrefix("/querycache").Subrouter()
 	clock := &querycache.RealClock{}
