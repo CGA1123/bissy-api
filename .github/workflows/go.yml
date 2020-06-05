@@ -7,11 +7,28 @@ on:
     branches: [ master ]
 
 jobs:
+
   build:
     name: Build
     runs-on: ubuntu-latest
-    steps:
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: bissy
+          POSTGRES_USER: bissy
+          POSTGRES_DB: bissy_test
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
+    steps:
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
       with:
@@ -30,3 +47,5 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+      env:
+        - DATABASE_URL: postgres://bissy:bissy@postgres:5432/bissy_test
