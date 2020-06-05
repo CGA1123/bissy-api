@@ -122,6 +122,7 @@ func main() {
 		Clock:        clock,
 	}
 
+	querycacheMux.Use(authConfig.WithAuth)
 	config.SetupHandlers(querycacheMux)
 
 	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
