@@ -4,16 +4,17 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/jmoiron/sqlx"
 )
 
 type SQLQueryStore struct {
 	db          *sqlx.DB
-	clock       Clock
-	idGenerator IdGenerator
+	clock       utils.Clock
+	idGenerator utils.IdGenerator
 }
 
-func NewSQLQueryStore(db *sqlx.DB, clock Clock, generator IdGenerator) *SQLQueryStore {
+func NewSQLQueryStore(db *sqlx.DB, clock utils.Clock, generator utils.IdGenerator) *SQLQueryStore {
 	return &SQLQueryStore{db: db, clock: clock, idGenerator: generator}
 }
 

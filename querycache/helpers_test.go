@@ -8,36 +8,21 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/querycache"
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
-type testClock struct {
-	time time.Time
-}
-
-func (clock *testClock) Now() time.Time {
-	return clock.time
-}
-
-type testIdGenerator struct {
-	id string
-}
-
-func (generator *testIdGenerator) Generate() string {
-	return generator.id
-}
-
 func newTestQueryStore(now time.Time, id string) *querycache.InMemoryQueryStore {
 	return querycache.NewInMemoryQueryStore(
-		&testClock{time: now},
-		&testIdGenerator{id: id})
+		&utils.TestClock{Time: now},
+		&utils.TestIdGenerator{Id: id})
 }
 
 func newTestAdapterStore(now time.Time, id string) *querycache.InMemoryAdapterStore {
 	return querycache.NewInMemoryAdapterStore(
-		&testClock{time: now},
-		&testIdGenerator{id: id})
+		&utils.TestClock{Time: now},
+		&utils.TestIdGenerator{Id: id})
 }
 
 func testCachedExecutor() *querycache.CachedExecutor {
@@ -48,7 +33,7 @@ func testCachedExecutor() *querycache.CachedExecutor {
 		Cache:    querycache.NewInMemoryCache(),
 		Store:    store,
 		Executor: &querycache.TestExecutor{},
-		Clock:    &testClock{time: now},
+		Clock:    &utils.TestClock{Time: now},
 	}
 }
 

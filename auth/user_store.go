@@ -3,20 +3,10 @@ package auth
 import (
 	"time"
 
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
-
-type IdGenerator interface {
-	Generate() string
-}
-
-type UUIDGenerator struct{}
-
-func (generator *UUIDGenerator) Generate() string {
-	return uuid.New().String()
-}
 
 type User struct {
 	Id        string    `json:"id"`
@@ -45,11 +35,11 @@ func (u *User) NewToken(exp time.Time) *jwt.Token {
 
 type SQLUserStore struct {
 	db          *sqlx.DB
-	idGenerator IdGenerator
-	clock       Clock
+	idGenerator utils.IdGenerator
+	clock       utils.Clock
 }
 
-func NewSQLUserStore(db *sqlx.DB, clock Clock, gen IdGenerator) *SQLUserStore {
+func NewSQLUserStore(db *sqlx.DB, clock utils.Clock, gen utils.IdGenerator) *SQLUserStore {
 	return &SQLUserStore{db: db, idGenerator: gen, clock: clock}
 }
 

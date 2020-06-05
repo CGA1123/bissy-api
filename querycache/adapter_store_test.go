@@ -10,6 +10,7 @@ import (
 	"github.com/DATA-DOG/go-txdb"
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/querycache"
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -209,7 +210,7 @@ func TestInMemoryAdapterList(t *testing.T) {
 	t.Parallel()
 
 	testAdapterList(t,
-		querycache.NewInMemoryAdapterStore(&querycache.RealClock{}, &querycache.UUIDGenerator{}))
+		querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{}))
 }
 
 func TestInMemoryAdapterGet(t *testing.T) {
@@ -238,8 +239,8 @@ func testDb(id string) (*sqlx.DB, error) {
 func testSQLAdapterStore(now time.Time, id string, db *sqlx.DB) *querycache.SQLAdapterStore {
 	return querycache.NewSQLAdapterStore(
 		db,
-		&testClock{time: now},
-		&testIdGenerator{id: id},
+		&utils.TestClock{Time: now},
+		&utils.TestIdGenerator{Id: id},
 	)
 }
 
@@ -284,7 +285,7 @@ func TestSQLAdapterList(t *testing.T) {
 	defer db.Close()
 
 	store := querycache.NewSQLAdapterStore(db,
-		&querycache.RealClock{}, &querycache.UUIDGenerator{})
+		&utils.RealClock{}, &utils.UUIDGenerator{})
 
 	testAdapterList(t, store)
 }

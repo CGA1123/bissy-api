@@ -9,6 +9,7 @@ import (
 	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/expecthttp"
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -53,7 +54,7 @@ func TestAuthHandler(t *testing.T) {
 	expect.Ok(t, err)
 
 	signingKey := []byte("test-key")
-	clock := &testClock{time: now}
+	clock := &utils.TestClock{Time: now}
 	config := auth.NewConfig(signingKey, time.Hour, store, clock)
 
 	request, err := http.NewRequest("GET", "/", nil)

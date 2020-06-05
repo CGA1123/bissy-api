@@ -12,6 +12,7 @@ import (
 	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/ping"
 	"github.com/cga1123/bissy-api/querycache"
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -27,8 +28,8 @@ func initAuth(db *sqlx.DB) (*auth.Config, error) {
 		return nil, fmt.Errorf("JWT_SIGNING_KEY not set")
 	}
 
-	clock := &auth.RealClock{}
-	idGen := &auth.UUIDGenerator{}
+	clock := &utils.RealClock{}
+	idGen := &utils.UUIDGenerator{}
 
 	store := auth.NewSQLUserStore(db, clock, idGen)
 
@@ -111,9 +112,9 @@ func main() {
 	router.HandleFunc("/ping", ping.Handler)
 	router.Handle("/authping", authConfig.WithAuth(http.HandlerFunc(ping.Handler)))
 
+	clock := &utils.RealClock{}
+	generator := &utils.UUIDGenerator{}
 	querycacheMux := router.PathPrefix("/querycache").Subrouter()
-	clock := &querycache.RealClock{}
-	generator := &querycache.UUIDGenerator{}
 	config := querycache.Config{
 		QueryStore:   querycache.NewSQLQueryStore(db, clock, generator),
 		AdapterStore: querycache.NewSQLAdapterStore(db, clock, generator),

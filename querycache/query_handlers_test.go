@@ -12,6 +12,7 @@ import (
 	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/querycache"
+	"github.com/cga1123/bissy-api/utils"
 	_ "github.com/lib/pq"
 )
 
@@ -190,8 +191,8 @@ func TestQueryList(t *testing.T) {
 
 	queries := []querycache.Query{}
 	config := &querycache.Config{
-		QueryStore: querycache.NewInMemoryQueryStore(&querycache.RealClock{},
-			&querycache.UUIDGenerator{})}
+		QueryStore: querycache.NewInMemoryQueryStore(&utils.RealClock{},
+			&utils.UUIDGenerator{})}
 
 	for i := 0; i < 30; i++ {
 		query, err := config.QueryStore.Create(&querycache.CreateQuery{
@@ -222,8 +223,8 @@ func TestQueryList(t *testing.T) {
 func TestQueryResult(t *testing.T) {
 	t.Parallel()
 
-	clock := &querycache.RealClock{}
-	generator := &querycache.UUIDGenerator{}
+	clock := &utils.RealClock{}
+	generator := &utils.UUIDGenerator{}
 	config := &querycache.Config{
 		QueryStore:   querycache.NewInMemoryQueryStore(clock, generator),
 		AdapterStore: querycache.NewInMemoryAdapterStore(clock, generator),

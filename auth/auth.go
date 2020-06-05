@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -15,24 +16,14 @@ type BissyClaims struct {
 	jwt.StandardClaims
 }
 
-type Clock interface {
-	Now() time.Time
-}
-
-type RealClock struct{}
-
-func (c *RealClock) Now() time.Time {
-	return time.Now()
-}
-
 type Config struct {
 	signingKey []byte
 	expiryTime time.Duration
 	userStore  UserStore
-	clock      Clock
+	clock      utils.Clock
 }
 
-func NewConfig(key []byte, duration time.Duration, store UserStore, clock Clock) *Config {
+func NewConfig(key []byte, duration time.Duration, store UserStore, clock utils.Clock) *Config {
 	return &Config{signingKey: key, expiryTime: duration, userStore: store, clock: clock}
 }
 

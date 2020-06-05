@@ -7,6 +7,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/cga1123/bissy-api/utils"
 )
 
 type Query struct {
@@ -77,12 +79,12 @@ type QueryStore interface {
 
 type InMemoryQueryStore struct {
 	Queries     map[string]*Query
-	clock       Clock
-	idGenerator IdGenerator
+	clock       utils.Clock
+	idGenerator utils.IdGenerator
 	lock        sync.RWMutex
 }
 
-func NewInMemoryQueryStore(clock Clock, idGenerator IdGenerator) *InMemoryQueryStore {
+func NewInMemoryQueryStore(clock utils.Clock, idGenerator utils.IdGenerator) *InMemoryQueryStore {
 	return &InMemoryQueryStore{
 		clock:       clock,
 		idGenerator: idGenerator,

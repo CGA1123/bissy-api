@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -77,7 +78,7 @@ type CachedExecutor struct {
 	Cache    QueryCache
 	Executor Executor
 	Store    QueryStore
-	Clock    Clock
+	Clock    utils.Clock
 }
 
 type TestExecutor struct{}
@@ -98,7 +99,7 @@ func updateCache(cache *CachedExecutor, query *Query, result string) {
 	cache.Store.Update(query.Id, &UpdateQuery{LastRefresh: time.Now()})
 }
 
-func NewCachedExecutor(cache QueryCache, store QueryStore, clock Clock, executor Executor) *CachedExecutor {
+func NewCachedExecutor(cache QueryCache, store QueryStore, clock utils.Clock, executor Executor) *CachedExecutor {
 	return &CachedExecutor{
 		Cache:    cache,
 		Store:    store,

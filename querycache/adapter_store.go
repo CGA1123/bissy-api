@@ -5,6 +5,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/cga1123/bissy-api/utils"
 )
 
 type Adapter struct {
@@ -38,8 +40,8 @@ type AdapterStore interface {
 
 type InMemoryAdapterStore struct {
 	Store       map[string]*Adapter
-	clock       Clock
-	idGenerator IdGenerator
+	clock       utils.Clock
+	idGenerator utils.IdGenerator
 	lock        sync.RWMutex
 }
 
@@ -53,7 +55,7 @@ func (a *Adapter) NewExecutor() (Executor, error) {
 	}
 }
 
-func NewInMemoryAdapterStore(clock Clock, idGenerator IdGenerator) *InMemoryAdapterStore {
+func NewInMemoryAdapterStore(clock utils.Clock, idGenerator utils.IdGenerator) *InMemoryAdapterStore {
 	return &InMemoryAdapterStore{
 		clock:       clock,
 		idGenerator: idGenerator,

@@ -7,6 +7,7 @@ import (
 
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/querycache"
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -268,7 +269,7 @@ func TestInMemoryQueryCreate(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
-	adapterStore := querycache.NewInMemoryAdapterStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
 	testQueryCreate(t, adapterStore, store, id, now)
 }
@@ -279,7 +280,7 @@ func TestInMemoryQueryGet(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
-	adapterStore := querycache.NewInMemoryAdapterStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
 	testQueryGet(t, adapterStore, store, id, now)
 }
@@ -290,7 +291,7 @@ func TestInMemoryQueryDelete(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
-	adapterStore := querycache.NewInMemoryAdapterStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
 	testQueryDelete(t, adapterStore, store, id, now)
 }
@@ -301,7 +302,7 @@ func TestInMemoryQueryUpdate(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
-	adapterStore := querycache.NewInMemoryAdapterStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
 	testQueryUpdate(t, adapterStore, store, id, now)
 }
@@ -309,8 +310,8 @@ func TestInMemoryQueryUpdate(t *testing.T) {
 func TestInMemoryQueryList(t *testing.T) {
 	t.Parallel()
 
-	store := querycache.NewInMemoryQueryStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
-	adapterStore := querycache.NewInMemoryAdapterStore(&querycache.RealClock{}, &querycache.UUIDGenerator{})
+	store := querycache.NewInMemoryQueryStore(&utils.RealClock{}, &utils.UUIDGenerator{})
+	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
 	testQueryList(t, adapterStore, store)
 }
@@ -318,8 +319,8 @@ func TestInMemoryQueryList(t *testing.T) {
 func testSQLQueryStore(now time.Time, id string, db *sqlx.DB) *querycache.SQLQueryStore {
 	return querycache.NewSQLQueryStore(
 		db,
-		&testClock{time: now},
-		&testIdGenerator{id: id},
+		&utils.TestClock{Time: now},
+		&utils.TestIdGenerator{Id: id},
 	)
 }
 
@@ -334,7 +335,7 @@ func withTestSQLQueryStore(t *testing.T, f func(*testing.T, querycache.AdapterSt
 	now := time.Now().Truncate(time.Millisecond)
 	id := uuid.New().String()
 	store := testSQLQueryStore(now, id, db)
-	adapterStore := querycache.NewSQLAdapterStore(db, &querycache.RealClock{}, &querycache.UUIDGenerator{})
+	adapterStore := querycache.NewSQLAdapterStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
 
 	f(t, adapterStore, store, id, now)
 }
@@ -372,8 +373,8 @@ func TestSQLQueryList(t *testing.T) {
 
 	err = db.Ping()
 	expect.Ok(t, err)
-	store := querycache.NewSQLQueryStore(db, &querycache.RealClock{}, &querycache.UUIDGenerator{})
-	adapterStore := querycache.NewSQLAdapterStore(db, &querycache.RealClock{}, &querycache.UUIDGenerator{})
+	store := querycache.NewSQLQueryStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
+	adapterStore := querycache.NewSQLAdapterStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
 
 	testQueryList(t, adapterStore, store)
 }

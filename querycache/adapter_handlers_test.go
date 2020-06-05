@@ -9,6 +9,7 @@ import (
 	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/querycache"
+	"github.com/cga1123/bissy-api/utils"
 )
 
 func TestAdapterCreate(t *testing.T) {
@@ -129,8 +130,8 @@ func TestAdapterList(t *testing.T) {
 
 	adapters := []*querycache.Adapter{}
 	config := &querycache.Config{
-		AdapterStore: querycache.NewInMemoryAdapterStore(&querycache.RealClock{},
-			&querycache.UUIDGenerator{})}
+		AdapterStore: querycache.NewInMemoryAdapterStore(&utils.RealClock{},
+			&utils.UUIDGenerator{})}
 
 	for i := 0; i < 30; i++ {
 		adapter, err := config.AdapterStore.Create(&querycache.CreateAdapter{

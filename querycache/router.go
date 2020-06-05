@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/cga1123/bissy-api/handlerutils"
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -13,7 +14,7 @@ type Config struct {
 	AdapterStore AdapterStore
 	Executor     Executor
 	Cache        QueryCache
-	Clock        Clock
+	Clock        utils.Clock
 }
 
 func (c *Config) SetupHandlers(router *mux.Router) {

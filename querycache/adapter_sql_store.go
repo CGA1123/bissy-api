@@ -3,16 +3,17 @@ package querycache
 import (
 	"fmt"
 
+	"github.com/cga1123/bissy-api/utils"
 	"github.com/jmoiron/sqlx"
 )
 
 type SQLAdapterStore struct {
 	db          *sqlx.DB
-	clock       Clock
-	idGenerator IdGenerator
+	clock       utils.Clock
+	idGenerator utils.IdGenerator
 }
 
-func NewSQLAdapterStore(db *sqlx.DB, clock Clock, generator IdGenerator) *SQLAdapterStore {
+func NewSQLAdapterStore(db *sqlx.DB, clock utils.Clock, generator utils.IdGenerator) *SQLAdapterStore {
 	return &SQLAdapterStore{db: db, clock: clock, idGenerator: generator}
 }
 
