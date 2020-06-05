@@ -1,0 +1,59 @@
+name: Test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://bissy:bissy@localhost:5432/bissy_test?sslmode=disable
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: bissy
+          POSTGRES_USER: bissy
+          POSTGRES_DB: bissy_test
+        ports:
+        - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.13
+      id: go
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Get dependencies
+      run: |
+        go get -v -t -d ./...
+
+    - name: Install Migrate
+      env:
+        VERSION: v4.11.0
+      run:  |
+        curl -L https://github.com/golang-migrate/migrate/releases/download/$VERSION/migrate.linux-amd64.tar.gz | tar xvz
+        sudo mv migrate.linux-amd64 /bin/migrate
+
+    - name: Run Migrations
+      run: migrate -database $DATABASE_URL -path migrations up
+
+    - name: Build
+      run: go build -v .
+
+    - name: Test
+      run: go test -v ./...
