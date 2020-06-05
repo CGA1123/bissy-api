@@ -11,7 +11,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgres://bissy:bissy@localhost:5432/bissy_test
+      DATABASE_URL: postgres://bissy:bissy@localhost:5432/bissy_test?sslmode=disable
 
     services:
       postgres:
