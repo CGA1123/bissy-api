@@ -41,7 +41,7 @@ jobs:
         VERSION: v4.11.0
       run:  |
         curl -L https://github.com/golang-migrate/migrate/releases/download/$VERSION/migrate.linux-amd64.tar.gz | tar xvz
-        mv migrate.linux-amd64 /bin/migrate
+        sudo mv migrate.linux-amd64 /bin/migrate
 
     - name: Run Migrations
       run: migrate -database $DATABASE_URL -path migrations up
