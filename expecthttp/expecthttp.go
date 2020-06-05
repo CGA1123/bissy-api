@@ -15,6 +15,10 @@ func Status(t *testing.T, expected int, rr *httptest.ResponseRecorder) {
 	expect.Equal(t, expected, rr.Code)
 }
 
+func Header(t *testing.T, key string, val string, rr *httptest.ResponseRecorder) {
+	expect.Equal(t, val, rr.Header().Get(key))
+}
+
 func Ok(t *testing.T, rr *httptest.ResponseRecorder) {
 	t.Helper()
 

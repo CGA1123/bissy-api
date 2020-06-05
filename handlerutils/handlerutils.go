@@ -103,3 +103,6 @@ func (p *requestParams) MaybeInt(k string, fallback int) int {
 
 	return value
 }
+
+// func User(r *http.Request) (auth.User, bool) {
+// }

@@ -24,6 +24,7 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_development?sslmode=disable
+      - JWT_SIGNING_KEY=8bb1f10acd560f472b9eaaeb3ffd092d
       - PORT=1123
     ports:
       - 1123:1123
@@ -37,16 +38,25 @@ services:
       start_period: 10s
     entrypoint: "./scripts/start.sh"
 
+  postgres_test:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: bissy_test
+      POSTGRES_USER: bissy
+      POSTGRES_PASSWORD: bissy
+    ports:
+      - 5433:5432
+
   test:
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - postgres
+      - postgres_test
       - redis
     environment:
       - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_test?sslmode=disable
+      - DATABASE_URL=postgres://bissy:bissy@postgres_test:5432/bissy_test?sslmode=disable
     volumes:
       - .:/go/src/app
     entrypoint: "./scripts/test.sh"
