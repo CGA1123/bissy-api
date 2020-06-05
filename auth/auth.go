@@ -46,14 +46,20 @@ type IdGenerator interface {
 	Generate() string
 }
 
-type Clock interface {
-	Now() time.Time
-}
-
 type UUIDGenerator struct{}
 
 func (generator *UUIDGenerator) Generate() string {
 	return uuid.New().String()
+}
+
+type Clock interface {
+	Now() time.Time
+}
+
+type RealClock struct{}
+
+func (c *RealClock) Now() time.Time {
+	return time.Now()
 }
 
 type SQLUserStore struct {

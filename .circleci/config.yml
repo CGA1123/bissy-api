@@ -22,8 +22,15 @@ jobs:
       - run: |
           curl -L https://github.com/golang-migrate/migrate/releases/download/$MIGRATE_VERSION/migrate.linux-amd64.tar.gz | tar xvz
           sudo mv migrate.linux-amd64 /bin/migrate
+          mkdir /tmp/artifacts
+          migrate -database $DATABASE_URL -path migrations up
+          go get -v -t -d ./...
+          go test -v -parallel=4 -count=1 -timeout=10s -coverprofile=c.out ./...
+          go tool cover -html=c.out -o coverage.html
+          mv coverage.html /tmp/artifacts
+      - store_artifacts:
+          path: /tmp/artifacts
 
-      - run: migrate -database $DATABASE_URL -path migrations up
-      - run: go get -v -t -d ./...
-      - run: go test -v ./... -parallel 4
-      - run: go vet ./...
+
+
+

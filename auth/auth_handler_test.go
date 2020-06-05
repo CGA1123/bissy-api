@@ -41,6 +41,10 @@ func TestAuthHandler(t *testing.T) {
 
 	db, err := sqlx.Open("pgx", uuid.New().String())
 	expect.Ok(t, err)
+	defer db.Close()
+
+	err = db.Ping()
+	expect.Ok(t, err)
 
 	now := time.Now().Truncate(time.Millisecond)
 	id := uuid.New().String()

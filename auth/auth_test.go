@@ -61,8 +61,12 @@ func testUserCreate(t *testing.T, store auth.UserStore, id string, now time.Time
 	user, err = store.Get(id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, user)
+}
 
-	// fail if email already exists
+func testUserEmailDuplicate(t *testing.T, store auth.UserStore) {
+	_, err := store.Create(&auth.CreateUser{Email: "test@bissy.io"})
+	expect.Ok(t, err)
+
 	_, err = store.Create(&auth.CreateUser{Email: "test@bissy.io"})
 	expect.Error(t, err)
 }
@@ -100,4 +104,17 @@ func TestSQLUserCreate(t *testing.T) {
 	t.Parallel()
 
 	withTestSQLUserStore(t, testUserCreate)
+}
+
+func TestSQLUserEmailDuplicate(t *testing.T) {
+	db, err := sqlx.Open("pgx", uuid.New().String())
+	expect.Ok(t, err)
+	defer db.Close()
+
+	err = db.Ping()
+	expect.Ok(t, err)
+
+	store := auth.NewSQLUserStore(db, &auth.RealClock{}, &auth.UUIDGenerator{})
+
+	testUserEmailDuplicate(t, store)
 }
