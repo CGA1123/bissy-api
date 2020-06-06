@@ -55,13 +55,16 @@ func initAuth(db *sqlx.DB, redis *redis.Client) (*auth.Config, error) {
 func initRedis() (*redis.Client, error) {
 	redisUrl, ok := os.LookupEnv("REDISCLOUD_URL")
 	if !ok {
-		redisUrl = "redis://localhost:6379"
+		return nil, fmt.Errorf("REDISCLOUD_URL not set")
 	}
 
 	options, err := redis.ParseURL(redisUrl)
 	if err != nil {
 		return nil, err
 	}
+
+	// rediscloud sets user:password but rediscloud is not ACL AUTH enabled
+	options.Username = ""
 
 	redisClient := redis.NewClient(options)
 	if err := redisClient.Ping(context.TODO()).Err(); err != nil {
