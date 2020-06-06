@@ -1,7 +1,6 @@
 package handlerutils
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -77,27 +76,32 @@ func Params(r *http.Request) *requestParams {
 	return &requestParams{Values: params}
 }
 
-func (p *requestParams) Get(k string) (string, error) {
+func (p *requestParams) Get(k string) (string, bool) {
 	values, ok := p.Values[k]
 	if !ok || len(values) == 0 {
-		return "", fmt.Errorf("no value for: %v", k)
+		return "", false
 	}
 
-	return values[0], nil
+	return values[0], true
 }
 
-func (p *requestParams) Int(k string) (int, error) {
-	value, err := p.Get(k)
-	if err != nil {
-		return -1, err
+func (p *requestParams) Int(k string) (int, bool) {
+	value, ok := p.Get(k)
+	if !ok {
+		return -1, false
 	}
 
-	return strconv.Atoi(value)
+	i, err := strconv.Atoi(value)
+	if err != nil {
+		return -1, false
+	}
+
+	return i, true
 }
 
 func (p *requestParams) MaybeInt(k string, fallback int) int {
-	value, err := p.Int(k)
-	if err != nil {
+	value, ok := p.Int(k)
+	if !ok {
 		return fallback
 	}
 

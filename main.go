@@ -22,10 +22,15 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func initAuth(db *sqlx.DB) (*auth.Config, error) {
+func initAuth(db *sqlx.DB, redis *redis.Client) (*auth.Config, error) {
 	signingKey, ok := os.LookupEnv("JWT_SIGNING_KEY")
 	if !ok {
 		return nil, fmt.Errorf("JWT_SIGNING_KEY not set")
+	}
+
+	githubClientId, ok := os.LookupEnv("GITHUB_CLIENT_ID")
+	if !ok {
+		return nil, fmt.Errorf("GITHUB_CLIENT_ID not set")
 	}
 
 	clock := &utils.RealClock{}
@@ -38,6 +43,9 @@ func initAuth(db *sqlx.DB) (*auth.Config, error) {
 		time.Hour*12,
 		store,
 		clock,
+		&auth.RedisStore{Client: redis},
+		idGen,
+		githubClientId,
 	), nil
 }
 
@@ -101,8 +109,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cache := &querycache.RedisCache{Client: redisClient, Prefix: "querycache"}
-	authConfig, err := initAuth(db)
+	clock := &utils.RealClock{}
+	generator := &utils.UUIDGenerator{}
+	authConfig, err := initAuth(db, redisClient)
 	if err != nil {
 		log.Fatal("could not init auth:", err)
 	}
@@ -112,18 +121,19 @@ func main() {
 	router.HandleFunc("/ping", ping.Handler)
 	router.Handle("/authping", authConfig.WithAuth(http.HandlerFunc(ping.Handler)))
 
-	clock := &utils.RealClock{}
-	generator := &utils.UUIDGenerator{}
+	authMux := router.PathPrefix("/auth").Subrouter()
+	authConfig.SetupHandlers(authMux)
+
 	querycacheMux := router.PathPrefix("/querycache").Subrouter()
-	config := querycache.Config{
+	queryCacheConfig := querycache.Config{
 		QueryStore:   querycache.NewSQLQueryStore(db, clock, generator),
 		AdapterStore: querycache.NewSQLAdapterStore(db, clock, generator),
-		Cache:        cache,
+		Cache:        &querycache.RedisCache{Client: redisClient},
 		Clock:        clock,
 	}
 
 	querycacheMux.Use(authConfig.WithAuth)
-	config.SetupHandlers(querycacheMux)
+	queryCacheConfig.SetupHandlers(querycacheMux)
 
 	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
 

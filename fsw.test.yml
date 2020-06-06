@@ -3,7 +3,7 @@ triggers:
 - name: ""
   pattens:
   - '**/*.go'
-  cmd: clear; go test -v -timeout=10s -parallel=4 ./...; echo "\n* DONE\n"
+  cmd: clear; go test -timeout=10s -parallel=4 ./...; echo " * DONE"
   shell: true
   delay: 100ms
   stop_timeout: 500ms

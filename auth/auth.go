@@ -7,8 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/go-redis/redis/v8"
+	"github.com/gorilla/mux"
 )
 
 type BissyClaims struct {
@@ -16,21 +19,75 @@ type BissyClaims struct {
 	jwt.StandardClaims
 }
 
-type Config struct {
-	signingKey []byte
-	expiryTime time.Duration
-	userStore  UserStore
-	clock      utils.Clock
+type CacheStore interface {
+	Exists(string) (bool, error)
+	Set(string, time.Duration) error
+	Del(string) (bool, error)
 }
 
-func NewConfig(key []byte, duration time.Duration, store UserStore, clock utils.Clock) *Config {
-	return &Config{signingKey: key, expiryTime: duration, userStore: store, clock: clock}
+type RedisStore struct {
+	Client *redis.Client
+}
+
+func (r *RedisStore) Exists(key string) (bool, error) {
+	value, err := r.Client.Exists(context.TODO(), "auth:"+key).Result()
+	if err != nil {
+		return false, err
+	}
+
+	return value == 1, nil
+}
+
+func (r *RedisStore) Set(key string, exp time.Duration) error {
+	_, err := r.Client.Set(
+		context.TODO(),
+		"auth:"+key,
+		key,
+		exp,
+	).Result()
+
+	return err
+}
+
+func (r *RedisStore) Del(key string) (bool, error) {
+	count, err := r.Client.Del(context.TODO(), key).Result()
+	if err != nil {
+		return false, err
+	}
+
+	return count == 1, nil
+}
+
+type Config struct {
+	signingKey     []byte
+	expiryTime     time.Duration
+	userStore      UserStore
+	clock          utils.Clock
+	redis          CacheStore
+	idGenerator    utils.IdGenerator
+	githubClientId string
+}
+
+func NewConfig(key []byte, duration time.Duration, store UserStore, clock utils.Clock, redis CacheStore, gen utils.IdGenerator, githubClientId string) *Config {
+	return &Config{
+		signingKey:     key,
+		expiryTime:     duration,
+		userStore:      store,
+		clock:          clock,
+		redis:          redis,
+		idGenerator:    gen,
+		githubClientId: githubClientId,
+	}
 }
 
 func (c *Config) SignedToken(u *User) (string, error) {
 	token := u.NewToken(c.clock.Now().Add(c.expiryTime))
 
 	return token.SignedString(c.signingKey)
+}
+
+func (c *Config) githubSignup(code string) (*User, error) {
+	return nil, fmt.Errorf("nyi")
 }
 
 func authenticate(c *Config, r *http.Request) (*User, error) {
@@ -84,4 +141,14 @@ func (c *Config) WithAuth(next http.Handler) http.Handler {
 			w.Header().Set("Bissy-Token", token)
 		}
 	})
+}
+
+func (c *Config) SetupHandlers(router *mux.Router) {
+	router.
+		Handle("/github/signin", &handlerutils.Handler{H: c.githubSignin}).
+		Methods("GET")
+
+	router.
+		Handle("/github/callback", &handlerutils.Handler{H: c.githubCallback}).
+		Methods("GET")
 }

@@ -64,8 +64,8 @@ func (c *Config) queryGet(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
-	id, err := params.Get("id")
-	if err != nil {
+	id, ok := params.Get("id")
+	if !ok {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
@@ -82,8 +82,8 @@ func (c *Config) queryDelete(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
-	id, err := params.Get("id")
-	if err != nil {
+	id, ok := params.Get("id")
+	if !ok {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
@@ -100,8 +100,8 @@ func (c *Config) queryUpdate(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
-	id, err := params.Get("id")
-	if err != nil {
+	id, ok := params.Get("id")
+	if !ok {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
@@ -134,8 +134,8 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeCsv)
 
 	params := handlerutils.Params(r)
-	id, err := params.Get("id")
-	if err != nil {
+	id, ok := params.Get("id")
+	if !ok {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}

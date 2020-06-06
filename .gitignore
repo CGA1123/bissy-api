@@ -16,3 +16,4 @@
 bissy-api
 
 .data/
+.env
