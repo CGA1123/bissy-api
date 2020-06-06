@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgres://bissy:bissy@localhost:5432/bissy_test?sslmode=disable
-      REDIS_URL: redis://localhost:6379
+      REDISCLOUD_URL: redis://localhost:6379
     services:
       postgres:
         image: postgres

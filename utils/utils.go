@@ -63,9 +63,9 @@ func TestDB(t *testing.T) (*sqlx.DB, func() error) {
 }
 
 func TestRedis(t *testing.T) (*redis.Client, func() error) {
-	url, ok := os.LookupEnv("REDIS_URL")
+	url, ok := os.LookupEnv("REDISCLOUD_URL")
 	if !ok {
-		t.Fatal("REDIS_URL not set")
+		t.Fatal("REDISCLOUD_URL not set")
 	}
 
 	options, err := redis.ParseURL(url)

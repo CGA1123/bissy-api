@@ -22,7 +22,7 @@ services:
       - postgres
       - redis
     environment:
-      - REDIS_URL=redis://redis:6379
+      - REDISCLOUD_URL=redis://redis:6379
       - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_development?sslmode=disable
       - JWT_SIGNING_KEY=8bb1f10acd560f472b9eaaeb3ffd092d
       - PORT=1123
@@ -57,7 +57,7 @@ services:
       - postgres_test
       - redis
     environment:
-      - REDIS_URL=redis://redis:6379
+      - REDISCLOUD_URL=redis://redis:6379
       - DATABASE_URL=postgres://bissy:bissy@postgres_test:5432/bissy_test?sslmode=disable
     volumes:
       - .:/go/src/app

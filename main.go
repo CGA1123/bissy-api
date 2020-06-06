@@ -53,7 +53,7 @@ func initAuth(db *sqlx.DB, redis *redis.Client) (*auth.Config, error) {
 }
 
 func initRedis() (*redis.Client, error) {
-	redisUrl, ok := os.LookupEnv("REDIS_URL")
+	redisUrl, ok := os.LookupEnv("REDISCLOUD_URL")
 	if !ok {
 		redisUrl = "redis://localhost:6379"
 	}
