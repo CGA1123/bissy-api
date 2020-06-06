@@ -13,6 +13,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
+	"github.com/honeycombio/beeline-go"
 )
 
 type BissyClaims struct {
@@ -145,6 +146,7 @@ func (c *Config) WithAuth(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), "user", user)
+		beeline.AddField(ctx, "user_id", user.Id)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 
