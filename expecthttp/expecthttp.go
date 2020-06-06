@@ -15,8 +15,14 @@ func Status(t *testing.T, expected int, rr *httptest.ResponseRecorder) {
 	expect.Equal(t, expected, rr.Code)
 }
 
-func Header(t *testing.T, key string, val string, rr *httptest.ResponseRecorder) {
-	expect.Equal(t, val, rr.Header().Get(key))
+type hasHeaders interface {
+	Get(string) string
+}
+
+func Header(t *testing.T, key string, val string, headers hasHeaders) {
+	t.Helper()
+
+	expect.Equal(t, val, headers.Get(key))
 }
 
 func Ok(t *testing.T, rr *httptest.ResponseRecorder) {
@@ -37,7 +43,11 @@ func StringBody(t *testing.T, expected string, rr *httptest.ResponseRecorder) {
 	expect.Equal(t, expected, rr.Body.String())
 }
 
-func JSONBody(t *testing.T, expected interface{}, rr *httptest.ResponseRecorder) {
+type hasBytes interface {
+	Bytes() []byte
+}
+
+func JSONBody(t *testing.T, expected interface{}, body hasBytes) {
 	t.Helper()
 
 	var actualBody, expectedBody interface{}
@@ -53,7 +63,7 @@ func JSONBody(t *testing.T, expected interface{}, rr *httptest.ResponseRecorder)
 		return
 	}
 
-	if err := json.Unmarshal(rr.Body.Bytes(), &actualBody); err != nil {
+	if err := json.Unmarshal(body.Bytes(), &actualBody); err != nil {
 		t.Errorf("failed to unmarshal actual %v", err)
 		return
 	}

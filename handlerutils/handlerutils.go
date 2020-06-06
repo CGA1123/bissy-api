@@ -1,6 +1,7 @@
 package handlerutils
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -46,6 +47,7 @@ func ContentType(w http.ResponseWriter, contentType string) {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := h.H(w, r)
 	if err != nil {
+		log.Println("error:", err)
 		switch e := err.(type) {
 		case handlerError:
 			http.Error(w, e.Error(), e.StatusCode())
@@ -107,6 +109,3 @@ func (p *requestParams) MaybeInt(k string, fallback int) int {
 
 	return value
 }
-
-// func User(r *http.Request) (auth.User, bool) {
-// }

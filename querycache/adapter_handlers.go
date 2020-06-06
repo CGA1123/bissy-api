@@ -3,11 +3,10 @@ package querycache
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cga1123/bissy-api/handlerutils"
+	"github.com/cga1123/bissy-api/utils"
 )
 
 func (c *Config) adaptersList(w http.ResponseWriter, r *http.Request) error {
@@ -29,18 +28,8 @@ func (c *Config) adaptersList(w http.ResponseWriter, r *http.Request) error {
 func (c *Config) adaptersCreate(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-	if err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-	if err := r.Body.Close(); err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-
 	var createAdapter CreateAdapter
-	if err := json.Unmarshal(body, &createAdapter); err != nil {
+	if err := utils.ParseJSONBody(r.Body, &createAdapter); err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
@@ -106,18 +95,8 @@ func (c *Config) adapterUpdate(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-	if err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-	if err := r.Body.Close(); err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-
 	var updateAdapter UpdateAdapter
-	if err := json.Unmarshal(body, &updateAdapter); err != nil {
+	if err := utils.ParseJSONBody(r.Body, &updateAdapter); err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}

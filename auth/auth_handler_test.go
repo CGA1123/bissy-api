@@ -1,7 +1,6 @@
 package auth_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,27 +9,27 @@ import (
 	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/expecthttp"
+	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
-func testConfig(t *testing.T, now time.Time, userId, redisId, clientId string) (*auth.Config, *auth.SQLUserStore, *auth.RedisStore, func()) {
+func testConfig(t *testing.T, now time.Time, userId, redisId string, client utils.HTTPClient) (*auth.Config, *auth.SQLUserStore, *auth.RedisStore, func()) {
 	db, dbTeardown := utils.TestDB(t)
 	redisClient, redisTeardown := utils.TestRedis(t)
-	redis := &auth.RedisStore{Client: redisClient}
+	redis := &auth.RedisStore{Client: redisClient, IdGenerator: &utils.TestIdGenerator{Id: redisId}}
+	githubApp := auth.NewGithubApp("client-id", "client-secret", client)
 
 	store := testSQLUserStore(now.Truncate(time.Millisecond), userId, db)
 	signingKey := []byte("test-key")
 	clock := &utils.TestClock{Time: now}
 	config := auth.NewConfig(
 		signingKey,
-		time.Hour,
 		store,
 		clock,
 		redis,
-		&utils.TestIdGenerator{Id: redisId},
-		clientId,
+		githubApp,
 	)
 
 	return config, store, redis, func() {
@@ -77,10 +76,16 @@ func TestAuthHandler(t *testing.T) {
 
 	now := time.Now().Truncate(time.Millisecond)
 	userId := uuid.New().String()
-	config, store, _, teardown := testConfig(t, now, userId, uuid.New().String(), uuid.New().String())
+	config, store, _, teardown := testConfig(
+		t,
+		now,
+		userId,
+		uuid.New().String(),
+		utils.NewTestHTTPClient(t),
+	)
 	defer teardown()
 
-	user, err := store.Create(&auth.CreateUser{Email: "test@bissy.io"})
+	user, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Chritian"})
 	expect.Ok(t, err)
 
 	request, err := http.NewRequest("GET", "/", nil)
@@ -88,7 +93,7 @@ func TestAuthHandler(t *testing.T) {
 
 	r := testHandler(config, request, testingHandler(t, user))
 	expecthttp.Status(t, http.StatusUnauthorized, r)
-	expecthttp.Header(t, "WWW-Authenticate", `Bearer realm="bissy-api" charset="UTF-8"`, r)
+	expecthttp.Header(t, "WWW-Authenticate", `Bearer realm="bissy-api" charset="UTF-8"`, r.Header())
 
 	// with bad auth header
 	request, err = http.NewRequest("GET", "/", nil)
@@ -97,7 +102,7 @@ func TestAuthHandler(t *testing.T) {
 
 	r = testHandler(config, request, testingHandler(t, user))
 	expecthttp.Status(t, http.StatusUnauthorized, r)
-	expecthttp.Header(t, "WWW-Authenticate", `Bearer realm="bissy-api" charset="UTF-8"`, r)
+	expecthttp.Header(t, "WWW-Authenticate", `Bearer realm="bissy-api" charset="UTF-8"`, r.Header())
 
 	// with correct auth header
 	token, err := config.SignedToken(user)
@@ -108,46 +113,31 @@ func TestAuthHandler(t *testing.T) {
 	request.Header.Add("Authorization", "Bearer "+token)
 	r = testHandler(config, request, testingHandler(t, user))
 	expecthttp.Ok(t, r)
-	expecthttp.Header(t, "Bissy-Token", token, r)
+	expecthttp.Header(t, "Bissy-Token", token, r.Header())
 }
 
-func TestGithubSignIn(t *testing.T) {
+func TestTokenHandler(t *testing.T) {
 	now := time.Now().Truncate(time.Millisecond)
 	userId := uuid.New().String()
-	clientId := uuid.New().String()
 	redisId := uuid.New().String()
-	config, _, redis, teardown := testConfig(t, now, userId, redisId, clientId)
+	httpClient := utils.NewTestHTTPClient(t)
+	config, store, redis, teardown := testConfig(t, now, userId, redisId, httpClient)
 	defer teardown()
 
-	request, err := http.NewRequest("GET", "/github/signin", nil)
+	user, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Chritian"})
 	expect.Ok(t, err)
 
-	response := testRouter(config, request)
-
-	githubRedirectUrl := fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%v&state=%v&scope=user",
-		clientId, redisId)
-	expecthttp.Status(t, http.StatusTemporaryRedirect, response)
-	expecthttp.Header(t, "Location", githubRedirectUrl, response)
-
-	exists, err := redis.Exists(redisId)
-	expect.Ok(t, err)
-	expect.True(t, exists)
-}
-
-func TestGithubCallback(t *testing.T) {
-	now := time.Now().Truncate(time.Millisecond)
-	userId := uuid.New().String()
-	clientId := uuid.New().String()
-	redisId := uuid.New().String()
-	config, _, redis, teardown := testConfig(t, now, userId, redisId, clientId)
-	defer teardown()
-
-	err := redis.Set(redisId, time.Hour)
+	_, err = redis.Set(user.Id, time.Minute*5)
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("GET", "/github/callback?code=my-code&state="+redisId, nil)
+	token, err := config.SignedToken(user)
+	expect.Ok(t, err)
+
+	request, err := http.NewRequest("GET", "/token?code="+redisId, nil)
 	expect.Ok(t, err)
 
 	response := testRouter(config, request)
 	expecthttp.Ok(t, response)
+	expecthttp.JSONBody(t, map[string]interface{}{"token": token}, response.Body)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
 }

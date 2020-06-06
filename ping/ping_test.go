@@ -23,5 +23,5 @@ func TestHandler(t *testing.T) {
 
 	expecthttp.Ok(t, rr)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, rr)
-	expecthttp.JSONBody(t, expectedJson, rr)
+	expecthttp.JSONBody(t, expectedJson, rr.Body)
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -16,17 +17,29 @@ import (
 
 type BissyClaims struct {
 	UserId string `json:"user_id"`
+	Name   string
 	jwt.StandardClaims
 }
 
 type CacheStore interface {
 	Exists(string) (bool, error)
-	Set(string, time.Duration) error
+	Set(string, time.Duration) (string, error)
 	Del(string) (bool, error)
+	Get(string) (string, error)
 }
 
 type RedisStore struct {
-	Client *redis.Client
+	Client      *redis.Client
+	IdGenerator utils.IdGenerator
+}
+
+func (r *RedisStore) Get(key string) (string, error) {
+	value, err := r.Client.Get(context.TODO(), "auth:"+key).Result()
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
 }
 
 func (r *RedisStore) Exists(key string) (bool, error) {
@@ -38,15 +51,16 @@ func (r *RedisStore) Exists(key string) (bool, error) {
 	return value == 1, nil
 }
 
-func (r *RedisStore) Set(key string, exp time.Duration) error {
+func (r *RedisStore) Set(url string, exp time.Duration) (string, error) {
+	key := r.IdGenerator.Generate()
 	_, err := r.Client.Set(
 		context.TODO(),
 		"auth:"+key,
-		key,
+		url,
 		exp,
 	).Result()
 
-	return err
+	return key, err
 }
 
 func (r *RedisStore) Del(key string) (bool, error) {
@@ -59,29 +73,26 @@ func (r *RedisStore) Del(key string) (bool, error) {
 }
 
 type Config struct {
-	signingKey     []byte
-	expiryTime     time.Duration
-	userStore      UserStore
-	clock          utils.Clock
-	redis          CacheStore
-	idGenerator    utils.IdGenerator
-	githubClientId string
+	signingKey []byte
+	expiryTime time.Duration
+	userStore  UserStore
+	clock      utils.Clock
+	redis      CacheStore
+	githubApp  *GithubApp
 }
 
-func NewConfig(key []byte, duration time.Duration, store UserStore, clock utils.Clock, redis CacheStore, gen utils.IdGenerator, githubClientId string) *Config {
+func NewConfig(key []byte, store UserStore, clock utils.Clock, redis CacheStore, githubApp *GithubApp) *Config {
 	return &Config{
-		signingKey:     key,
-		expiryTime:     duration,
-		userStore:      store,
-		clock:          clock,
-		redis:          redis,
-		idGenerator:    gen,
-		githubClientId: githubClientId,
+		signingKey: key,
+		userStore:  store,
+		clock:      clock,
+		redis:      redis,
+		githubApp:  githubApp,
 	}
 }
 
 func (c *Config) SignedToken(u *User) (string, error) {
-	token := u.NewToken(c.clock.Now().Add(c.expiryTime))
+	token := u.NewToken(c.clock.Now().Add(12 * time.Hour))
 
 	return token.SignedString(c.signingKey)
 }
@@ -151,4 +162,39 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 	router.
 		Handle("/github/callback", &handlerutils.Handler{H: c.githubCallback}).
 		Methods("GET")
+
+	router.
+		Handle("/token", &handlerutils.Handler{H: c.token}).
+		Methods("GET")
+}
+
+func (c *Config) token(w http.ResponseWriter, r *http.Request) error {
+	code, ok := handlerutils.Params(r).Get("code")
+	if !ok {
+		return &handlerutils.HandlerError{
+			Err: fmt.Errorf("code not set"), Status: http.StatusBadRequest}
+	}
+
+	userId, err := c.redis.Get(code)
+	if err != nil || userId == "" {
+		return &handlerutils.HandlerError{
+			Err: fmt.Errorf("bad token"), Status: http.StatusBadRequest}
+	}
+
+	user, err := c.userStore.Get(userId)
+	if err != nil || userId == "" {
+		return &handlerutils.HandlerError{
+			Err: fmt.Errorf("bad user id"), Status: http.StatusBadRequest}
+	}
+
+	token, err := c.SignedToken(user)
+	if err != nil || userId == "" {
+		return &handlerutils.HandlerError{
+			Err: fmt.Errorf("error signing token"), Status: http.StatusInternalServerError}
+	}
+
+	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	return json.NewEncoder(w).Encode(struct {
+		Token string `json:"token"`
+	}{Token: token})
 }

@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -72,4 +76,60 @@ func TestRedis(t *testing.T) (*redis.Client, func() error) {
 	expect.Ok(t, client.Ping(context.TODO()).Err())
 
 	return client, client.FlushAll(context.TODO()).Err
+}
+
+type HTTPClient interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
+type requestHandler = func(*http.Request) (*http.Response, error)
+
+type testHTTPRequest struct {
+	method string
+	url    string
+}
+
+type testHTTPMock struct {
+	r *http.Response
+	e error
+}
+
+type TestHTTPClient struct {
+	Mocks map[string]requestHandler
+	T     *testing.T
+}
+
+func NewTestHTTPClient(t *testing.T) *TestHTTPClient {
+	return &TestHTTPClient{
+		T:     t,
+		Mocks: map[string]requestHandler{},
+	}
+}
+
+func (c *TestHTTPClient) Do(r *http.Request) (*http.Response, error) {
+	responseFunc, ok := c.Mocks[r.Method+"|"+r.URL.String()]
+	if !ok {
+		c.T.Fatalf("no mock for: %v", r)
+	}
+
+	return responseFunc(r)
+}
+
+func (c *TestHTTPClient) Mock(method, url string, handler requestHandler) {
+	c.Mocks[method+"|"+url] = handler
+}
+
+func JSONBody(v interface{}) (*bytes.Reader, error) {
+	body, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(body), nil
+}
+
+func ParseJSONBody(body io.ReadCloser, target interface{}) error {
+	defer body.Close()
+
+	return json.NewDecoder(body).Decode(target)
 }

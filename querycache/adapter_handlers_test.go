@@ -37,7 +37,7 @@ func TestAdapterCreate(t *testing.T) {
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.JSONBody(t, expected, response)
+	expecthttp.JSONBody(t, expected, response.Body)
 
 	actual, err := config.AdapterStore.Get(id)
 
@@ -62,7 +62,7 @@ func TestAdapterGet(t *testing.T) {
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapter, response)
+	expecthttp.JSONBody(t, adapter, response.Body)
 }
 
 func TestAdapterDelete(t *testing.T) {
@@ -82,7 +82,7 @@ func TestAdapterDelete(t *testing.T) {
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapter, response)
+	expecthttp.JSONBody(t, adapter, response.Body)
 
 	adapters, err := config.AdapterStore.List(1, 1)
 	expect.Ok(t, err)
@@ -115,7 +115,7 @@ func TestAdapterUpdate(t *testing.T) {
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapter, response)
+	expecthttp.JSONBody(t, adapter, response.Body)
 
 	adapter, err = config.AdapterStore.Get(id)
 	expect.Ok(t, err)
@@ -147,7 +147,7 @@ func TestAdapterList(t *testing.T) {
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapters[:25], response)
+	expecthttp.JSONBody(t, adapters[:25], response.Body)
 
 	// pagination
 	request, err = http.NewRequest("GET", "/adapters?page=2&per=5", nil)
@@ -156,5 +156,5 @@ func TestAdapterList(t *testing.T) {
 	response = testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapters[5:10], response)
+	expecthttp.JSONBody(t, adapters[5:10], response.Body)
 }

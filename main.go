@@ -40,12 +40,10 @@ func initAuth(db *sqlx.DB, redis *redis.Client) (*auth.Config, error) {
 
 	return auth.NewConfig(
 		[]byte(signingKey),
-		time.Hour*12,
 		store,
 		clock,
-		&auth.RedisStore{Client: redis},
-		idGen,
-		githubClientId,
+		&auth.RedisStore{Client: redis, IdGenerator: idGen},
+		auth.NewGithubApp(githubClientId, "", &http.Client{}),
 	), nil
 }
 

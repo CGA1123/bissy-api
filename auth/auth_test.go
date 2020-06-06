@@ -25,7 +25,7 @@ func init() {
 }
 
 func testUserGet(t *testing.T, store auth.UserStore, id string, now time.Time) {
-	expected, err := store.Create(&auth.CreateUser{Email: "test@bissy.io"})
+	expected, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
 	expect.Ok(t, err)
 
 	user, err := store.Get(expected.Id)
@@ -37,10 +37,10 @@ func testUserGet(t *testing.T, store auth.UserStore, id string, now time.Time) {
 }
 
 func testUserCreate(t *testing.T, store auth.UserStore, id string, now time.Time) {
-	user, err := store.Create(&auth.CreateUser{Email: "test@bissy.io"})
+	user, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
 	expect.Ok(t, err)
 
-	expected := &auth.User{Id: id, Email: "test@bissy.io", CreatedAt: now}
+	expected := &auth.User{Id: id, GithubId: "github-id", Name: "Test", CreatedAt: now}
 	expect.Equal(t, expected, user)
 
 	user, err = store.Get(id)
@@ -49,10 +49,10 @@ func testUserCreate(t *testing.T, store auth.UserStore, id string, now time.Time
 }
 
 func testUserEmailDuplicate(t *testing.T, store auth.UserStore) {
-	_, err := store.Create(&auth.CreateUser{Email: "test@bissy.io"})
+	_, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
 	expect.Ok(t, err)
 
-	_, err = store.Create(&auth.CreateUser{Email: "test@bissy.io"})
+	_, err = store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
 	expect.Error(t, err)
 }
 
