@@ -1,0 +1,4 @@
+ALTER TABLE auth_users
+DROP COLUMN IF EXISTS name,
+DROP COLUMN IF EXISTS github_id
+;

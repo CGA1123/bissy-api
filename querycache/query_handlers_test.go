@@ -77,7 +77,7 @@ func TestQueryGet(t *testing.T) {
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, query, response)
+	expecthttp.JSONBody(t, query, response.Body)
 }
 
 // TODO: Handle not found errors, add custom errors to store and switch?
@@ -110,7 +110,7 @@ func TestQueryDelete(t *testing.T) {
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, query, response)
+	expecthttp.JSONBody(t, query, response.Body)
 
 	queries, err := config.QueryStore.List(1, 1)
 	expect.Ok(t, err)
@@ -160,7 +160,7 @@ func TestQueryUpdate(t *testing.T) {
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, query, response)
+	expecthttp.JSONBody(t, query, response.Body)
 
 	query, err = config.QueryStore.Get(id)
 	expect.Ok(t, err)
@@ -208,7 +208,7 @@ func TestQueryList(t *testing.T) {
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, queries[:25], response)
+	expecthttp.JSONBody(t, queries[:25], response.Body)
 
 	// pagination
 	request, err = http.NewRequest("GET", "/queries?page=2&per=5", nil)
@@ -217,7 +217,7 @@ func TestQueryList(t *testing.T) {
 	response = testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, queries[5:10], response)
+	expecthttp.JSONBody(t, queries[5:10], response.Body)
 }
 
 func TestQueryResult(t *testing.T) {

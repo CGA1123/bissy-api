@@ -3,11 +3,10 @@ package querycache
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cga1123/bissy-api/handlerutils"
+	"github.com/cga1123/bissy-api/utils"
 )
 
 func (c *Config) queriesList(w http.ResponseWriter, r *http.Request) error {
@@ -29,18 +28,8 @@ func (c *Config) queriesList(w http.ResponseWriter, r *http.Request) error {
 func (c *Config) queriesCreate(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-	if err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-	if err := r.Body.Close(); err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-
 	var createQuery CreateQuery
-	if err := json.Unmarshal(body, &createQuery); err != nil {
+	if err := utils.ParseJSONBody(r.Body, &createQuery); err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
@@ -64,8 +53,8 @@ func (c *Config) queryGet(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
-	id, err := params.Get("id")
-	if err != nil {
+	id, ok := params.Get("id")
+	if !ok {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
@@ -82,8 +71,8 @@ func (c *Config) queryDelete(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
-	id, err := params.Get("id")
-	if err != nil {
+	id, ok := params.Get("id")
+	if !ok {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
@@ -100,24 +89,14 @@ func (c *Config) queryUpdate(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
-	id, err := params.Get("id")
-	if err != nil {
+	id, ok := params.Get("id")
+	if !ok {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-	if err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-	if err := r.Body.Close(); err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-
 	var updateQuery UpdateQuery
-	if err := json.Unmarshal(body, &updateQuery); err != nil {
+	if err := utils.ParseJSONBody(r.Body, &updateQuery); err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
@@ -134,8 +113,8 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeCsv)
 
 	params := handlerutils.Params(r)
-	id, err := params.Get("id")
-	if err != nil {
+	id, ok := params.Get("id")
+	if !ok {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
