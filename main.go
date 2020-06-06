@@ -92,6 +92,10 @@ func initDb() (*sqlx.DB, error) {
 	return db, nil
 }
 
+func homeHandler(w http.ResponseWriter, h *http.Request) {
+	fmt.Fprintf(w, "bissy-api")
+}
+
 func main() {
 	port, ok := os.LookupEnv("PORT")
 	if !ok {
@@ -124,6 +128,7 @@ func main() {
 
 	router := mux.NewRouter()
 	router.Use(hnygorilla.Middleware)
+	router.HandleFunc("/", homeHandler)
 	router.HandleFunc("/ping", ping.Handler)
 	router.Handle("/authping", authConfig.WithAuth(http.HandlerFunc(ping.Handler)))
 
