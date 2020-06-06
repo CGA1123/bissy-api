@@ -33,6 +33,11 @@ func initAuth(db *sqlx.DB, redis *redis.Client) (*auth.Config, error) {
 		return nil, fmt.Errorf("GITHUB_CLIENT_ID not set")
 	}
 
+	githubClientSecret, ok := os.LookupEnv("GITHUB_CLIENT_SECRET")
+	if !ok {
+		return nil, fmt.Errorf("GITHUB_CLIENT_ID not set")
+	}
+
 	clock := &utils.RealClock{}
 	idGen := &utils.UUIDGenerator{}
 
@@ -43,7 +48,7 @@ func initAuth(db *sqlx.DB, redis *redis.Client) (*auth.Config, error) {
 		store,
 		clock,
 		&auth.RedisStore{Client: redis, IdGenerator: idGen},
-		auth.NewGithubApp(githubClientId, "", &http.Client{}),
+		auth.NewGithubApp(githubClientId, githubClientSecret, &http.Client{}),
 	), nil
 }
 
