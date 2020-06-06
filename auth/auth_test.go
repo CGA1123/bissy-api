@@ -24,6 +24,18 @@ func init() {
 	txdb.Register("pgx", "postgres", url)
 }
 
+func testUserGetByGithubId(t *testing.T, store auth.UserStore, id string, now time.Time) {
+	expected, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
+	expect.Ok(t, err)
+
+	user, err := store.GetByGithubId(expected.GithubId)
+	expect.Ok(t, err)
+	expect.Equal(t, expected, user)
+
+	_, err = store.GetByGithubId(uuid.New().String())
+	expect.Error(t, err)
+}
+
 func testUserGet(t *testing.T, store auth.UserStore, id string, now time.Time) {
 	expected, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
 	expect.Ok(t, err)
@@ -83,6 +95,12 @@ func TestSQLUserGet(t *testing.T) {
 	t.Parallel()
 
 	withTestSQLUserStore(t, testUserGet)
+}
+
+func TestSQLUserGetByGithubId(t *testing.T) {
+	t.Parallel()
+
+	withTestSQLUserStore(t, testUserGetByGithubId)
 }
 
 func TestSQLUserCreate(t *testing.T) {
