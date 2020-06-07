@@ -27,7 +27,7 @@ type UserStore interface {
 }
 
 func (u *User) NewToken(exp time.Time) *jwt.Token {
-	return jwt.NewWithClaims(jwt.SigningMethodHS512, BissyClaims{
+	return jwt.NewWithClaims(jwt.SigningMethodHS512, Claims{
 		u.Id,
 		u.Name,
 		jwt.StandardClaims{
