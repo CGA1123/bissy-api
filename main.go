@@ -19,6 +19,7 @@ import (
 	"github.com/honeycombio/beeline-go"
 	"github.com/honeycombio/beeline-go/wrappers/hnygorilla"
 	"github.com/honeycombio/beeline-go/wrappers/hnynethttp"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -89,7 +90,7 @@ func initDb() (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	return db, nil
+	return hnysqlx.WrapDB(db), nil
 }
 
 func homeHandler(w http.ResponseWriter, h *http.Request) {
