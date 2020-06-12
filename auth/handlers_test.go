@@ -68,7 +68,7 @@ func testHandler(c *auth.Config, r *http.Request, h http.Handler) *httptest.Resp
 		Handle("/", h).
 		Methods("GET")
 
-	c.WithAuth(router).ServeHTTP(recorder, r)
+	c.Middleware(router).ServeHTTP(recorder, r)
 
 	return recorder
 }
