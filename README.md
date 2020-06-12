@@ -1,6 +1,8 @@
 # :robot: bissy-api
 
 ![CI](https://github.com/CGA1123/bissy-api/workflows/CI/badge.svg)
+[![Maintainability](https://api.codeclimate.com/v1/badges/d42cd3823b699de16259/maintainability)](https://codeclimate.com/github/CGA1123/bissy-api/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/d42cd3823b699de16259/test_coverage)](https://codeclimate.com/github/CGA1123/bissy-api/test_coverage)
 
 Some toy APIs to learn go!
 
