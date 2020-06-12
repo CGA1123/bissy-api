@@ -32,7 +32,7 @@ const (
 	PORT                 = "PORT"
 )
 
-func initAuth(env map[string]string, db *hnysqlx.DB, redis *redis.Client) (*auth.Config, error) {
+func initAuth(env map[string]string, db *hnysqlx.DB, redis *redis.Client) *auth.Config {
 	clock := &utils.RealClock{}
 	idGen := &utils.UUIDGenerator{}
 
@@ -44,13 +44,13 @@ func initAuth(env map[string]string, db *hnysqlx.DB, redis *redis.Client) (*auth
 		clock,
 		&auth.RedisStore{Client: redis, IdGenerator: idGen},
 		auth.NewGithubApp(env[GITHUB_CLIENT_ID], env[GITHUB_CLIENT_SECRET], &http.Client{}),
-	), nil
+	)
 }
 
-func initRedis(vars map[string]string) (*redis.Client, error) {
+func initRedis(vars map[string]string) *redis.Client {
 	options, err := redis.ParseURL(vars[REDIS_URL])
 	if err != nil {
-		return nil, err
+		log.Fatalf("failed to parse redis url %v", err)
 	}
 
 	// rediscloud sets user:password but rediscloud is not ACL AUTH enabled
@@ -58,10 +58,10 @@ func initRedis(vars map[string]string) (*redis.Client, error) {
 
 	redisClient := redis.NewClient(options)
 	if err := redisClient.Ping(context.TODO()).Err(); err != nil {
-		return nil, err
+		log.Fatalf("failed to ping redis %v", err)
 	}
 
-	return redisClient, nil
+	return redisClient
 }
 
 func initHoneycomb() {
@@ -73,17 +73,17 @@ func initHoneycomb() {
 
 }
 
-func initDb(env map[string]string) (*hnysqlx.DB, error) {
+func initDb(env map[string]string) *hnysqlx.DB {
 	db, err := sqlx.Open("postgres", env[DATABASE_URL])
 	if err != nil {
-		return nil, err
+		log.Fatalf("failed to open db %v", err)
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil, err
+		log.Fatalf("failed to ping db %v", err)
 	}
 
-	return hnysqlx.WrapDB(db), nil
+	return hnysqlx.WrapDB(db)
 }
 
 func homeHandler(w http.ResponseWriter, h *http.Request) {
@@ -103,23 +103,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	initHoneycomb()
-	redisClient, err := initRedis(env)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	db, err := initDb(env)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	clock := &utils.RealClock{}
 	generator := &utils.UUIDGenerator{}
-	authConfig, err := initAuth(env, db, redisClient)
-	if err != nil {
-		log.Fatal("could not init auth:", err)
-	}
+	initHoneycomb()
+	redisClient := initRedis(env)
+	db := initDb(env)
+	authConfig := initAuth(env, db, redisClient)
 
 	router := mux.NewRouter()
 	router.Use(hnygorilla.Middleware)
