@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -132,4 +133,19 @@ func ParseJSONBody(body io.ReadCloser, target interface{}) error {
 	defer body.Close()
 
 	return json.NewDecoder(body).Decode(target)
+}
+
+func RequireEnv(envVars ...string) (map[string]string, error) {
+	vars := map[string]string{}
+
+	for _, variableName := range envVars {
+		value, ok := os.LookupEnv(variableName)
+		if !ok {
+			return map[string]string{}, fmt.Errorf("%v not set", variableName)
+		}
+
+		vars[variableName] = value
+	}
+
+	return vars, nil
 }

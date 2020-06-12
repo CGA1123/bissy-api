@@ -23,43 +23,32 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func initAuth(db *hnysqlx.DB, redis *redis.Client) (*auth.Config, error) {
-	signingKey, ok := os.LookupEnv("JWT_SIGNING_KEY")
-	if !ok {
-		return nil, fmt.Errorf("JWT_SIGNING_KEY not set")
-	}
+const (
+	REDIS_URL            = "REDISCLOUD_URL"
+	JWT_SIGNING_KEY      = "JWT_SIGNING_KEY"
+	GITHUB_CLIENT_ID     = "GITHUB_CLIENT_ID"
+	GITHUB_CLIENT_SECRET = "GITHUB_CLIENT_SECRET"
+	DATABASE_URL         = "DATABASE_URL"
+	PORT                 = "PORT"
+)
 
-	githubClientId, ok := os.LookupEnv("GITHUB_CLIENT_ID")
-	if !ok {
-		return nil, fmt.Errorf("GITHUB_CLIENT_ID not set")
-	}
-
-	githubClientSecret, ok := os.LookupEnv("GITHUB_CLIENT_SECRET")
-	if !ok {
-		return nil, fmt.Errorf("GITHUB_CLIENT_ID not set")
-	}
-
+func initAuth(env map[string]string, db *hnysqlx.DB, redis *redis.Client) (*auth.Config, error) {
 	clock := &utils.RealClock{}
 	idGen := &utils.UUIDGenerator{}
 
 	store := auth.NewSQLUserStore(db, clock, idGen)
 
 	return auth.NewConfig(
-		[]byte(signingKey),
+		[]byte(env[JWT_SIGNING_KEY]),
 		store,
 		clock,
 		&auth.RedisStore{Client: redis, IdGenerator: idGen},
-		auth.NewGithubApp(githubClientId, githubClientSecret, &http.Client{}),
+		auth.NewGithubApp(env[GITHUB_CLIENT_ID], env[GITHUB_CLIENT_SECRET], &http.Client{}),
 	), nil
 }
 
-func initRedis() (*redis.Client, error) {
-	redisUrl, ok := os.LookupEnv("REDISCLOUD_URL")
-	if !ok {
-		return nil, fmt.Errorf("REDISCLOUD_URL not set")
-	}
-
-	options, err := redis.ParseURL(redisUrl)
+func initRedis(vars map[string]string) (*redis.Client, error) {
+	options, err := redis.ParseURL(vars[REDIS_URL])
 	if err != nil {
 		return nil, err
 	}
@@ -75,13 +64,17 @@ func initRedis() (*redis.Client, error) {
 	return redisClient, nil
 }
 
-func initDb() (*hnysqlx.DB, error) {
-	databaseUrl, ok := os.LookupEnv("DATABASE_URL")
-	if !ok {
-		databaseUrl = "postgres://localhost:5432"
-	}
+func initHoneycomb() {
+	beeline.Init(beeline.Config{
+		WriteKey:    os.Getenv("HONEYCOMB_WRITEKEY"),
+		Dataset:     "bissy-api",
+		ServiceName: "bissy-api",
+	})
 
-	db, err := sqlx.Open("postgres", databaseUrl)
+}
+
+func initDb(env map[string]string) (*hnysqlx.DB, error) {
+	db, err := sqlx.Open("postgres", env[DATABASE_URL])
 	if err != nil {
 		return nil, err
 	}
@@ -98,31 +91,32 @@ func homeHandler(w http.ResponseWriter, h *http.Request) {
 }
 
 func main() {
-	port, ok := os.LookupEnv("PORT")
-	if !ok {
-		port = "8080"
-	}
-
-	hcWrite := os.Getenv("HONEYCOMB_WRITEKEY")
-	beeline.Init(beeline.Config{
-		WriteKey:    hcWrite,
-		Dataset:     "bissy-api",
-		ServiceName: "bissy-api",
-	})
-
-	redisClient, err := initRedis()
+	env, err := utils.RequireEnv(
+		PORT,
+		DATABASE_URL,
+		JWT_SIGNING_KEY,
+		GITHUB_CLIENT_ID,
+		GITHUB_CLIENT_SECRET,
+		REDIS_URL,
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db, err := initDb()
+	initHoneycomb()
+	redisClient, err := initRedis(env)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db, err := initDb(env)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	clock := &utils.RealClock{}
 	generator := &utils.UUIDGenerator{}
-	authConfig, err := initAuth(db, redisClient)
+	authConfig, err := initAuth(env, db, redisClient)
 	if err != nil {
 		log.Fatal("could not init auth:", err)
 	}
@@ -150,7 +144,7 @@ func main() {
 	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
 
 	server := &http.Server{
-		Addr:         "0.0.0.0:" + port,
+		Addr:         "0.0.0.0:" + env[PORT],
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
