@@ -53,7 +53,7 @@ func UserFromContext(ctx context.Context) (*Claims, bool) {
 	return claim, ok
 }
 
-func (c *Config) WithAuth(next http.Handler) http.Handler {
+func (c *Config) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claim, err := authenticate(c, r)
 		if err != nil {

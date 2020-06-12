@@ -114,7 +114,7 @@ func main() {
 	router.Use(hnygorilla.Middleware)
 	router.HandleFunc("/", homeHandler)
 	router.HandleFunc("/ping", ping.Handler)
-	router.Handle("/authping", authConfig.WithAuth(http.HandlerFunc(ping.Handler)))
+	router.Handle("/authping", authConfig.Middleware(http.HandlerFunc(ping.Handler)))
 
 	authMux := router.PathPrefix("/auth").Subrouter()
 	authConfig.SetupHandlers(authMux)
@@ -127,7 +127,7 @@ func main() {
 		Clock:           clock,
 	}
 
-	querycacheMux.Use(authConfig.WithAuth)
+	querycacheMux.Use(authConfig.Middleware)
 	queryCacheConfig.SetupHandlers(querycacheMux)
 
 	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
