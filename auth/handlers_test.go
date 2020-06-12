@@ -41,10 +41,11 @@ func testConfig(t *testing.T, now time.Time, userId, redisId string, client util
 
 func testingHandler(t *testing.T, expected *auth.User) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, ok := r.Context().Value("user").(*auth.User)
+		claim, ok := auth.UserFromContext(r.Context())
 
 		expect.True(t, ok)
-		expect.Equal(t, expected, user)
+		expect.Equal(t, expected.Id, claim.UserId)
+		expect.Equal(t, expected.Name, claim.Name)
 	})
 }
 
@@ -114,7 +115,6 @@ func TestAuthHandler(t *testing.T) {
 	request.Header.Add("Authorization", "Bearer "+token)
 	r = testHandler(config, request, testingHandler(t, user))
 	expecthttp.Ok(t, r)
-	expecthttp.Header(t, "Bissy-Token", token, r.Header())
 }
 
 func TestTokenHandler(t *testing.T) {
