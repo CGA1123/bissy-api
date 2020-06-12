@@ -5,16 +5,16 @@ import (
 	"fmt"
 
 	"github.com/cga1123/bissy-api/utils"
-	"github.com/jmoiron/sqlx"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
 type SQLQueryStore struct {
-	db          *sqlx.DB
+	db          *hnysqlx.DB
 	clock       utils.Clock
 	idGenerator utils.IdGenerator
 }
 
-func NewSQLQueryStore(db *sqlx.DB, clock utils.Clock, generator utils.IdGenerator) *SQLQueryStore {
+func NewSQLQueryStore(db *hnysqlx.DB, clock utils.Clock, generator utils.IdGenerator) *SQLQueryStore {
 	return &SQLQueryStore{db: db, clock: clock, idGenerator: generator}
 }
 

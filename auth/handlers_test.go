@@ -13,6 +13,7 @@ import (
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
 func testConfig(t *testing.T, now time.Time, userId, redisId string, client utils.HTTPClient) (*auth.Config, *auth.SQLUserStore, *auth.RedisStore, func()) {
@@ -21,7 +22,7 @@ func testConfig(t *testing.T, now time.Time, userId, redisId string, client util
 	redis := &auth.RedisStore{Client: redisClient, IdGenerator: &utils.TestIdGenerator{Id: redisId}}
 	githubApp := auth.NewGithubApp("client-id", "client-secret", client)
 
-	store := testSQLUserStore(now.Truncate(time.Millisecond), userId, db)
+	store := testSQLUserStore(now.Truncate(time.Millisecond), userId, hnysqlx.WrapDB(db))
 	signingKey := []byte("test-key")
 	clock := &utils.TestClock{Time: now}
 	config := auth.NewConfig(

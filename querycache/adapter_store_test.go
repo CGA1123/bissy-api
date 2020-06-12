@@ -12,6 +12,7 @@ import (
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -232,11 +233,12 @@ func init() {
 	txdb.Register("pgx", "postgres", url)
 }
 
-func testDb(id string) (*sqlx.DB, error) {
-	return sqlx.Open("pgx", id)
+func testDb(id string) (*hnysqlx.DB, error) {
+	db, err := sqlx.Open("pgx", id)
+	return hnysqlx.WrapDB(db), err
 }
 
-func testSQLAdapterStore(now time.Time, id string, db *sqlx.DB) *querycache.SQLAdapterStore {
+func testSQLAdapterStore(now time.Time, id string, db *hnysqlx.DB) *querycache.SQLAdapterStore {
 	return querycache.NewSQLAdapterStore(
 		db,
 		&utils.TestClock{Time: now},

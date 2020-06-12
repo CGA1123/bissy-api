@@ -11,6 +11,7 @@ import (
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -68,7 +69,7 @@ func testUserEmailDuplicate(t *testing.T, store auth.UserStore) {
 	expect.Error(t, err)
 }
 
-func testSQLUserStore(now time.Time, id string, db *sqlx.DB) *auth.SQLUserStore {
+func testSQLUserStore(now time.Time, id string, db *hnysqlx.DB) *auth.SQLUserStore {
 	return auth.NewSQLUserStore(
 		db,
 		&utils.TestClock{Time: now},
@@ -86,7 +87,7 @@ func withTestSQLUserStore(t *testing.T, f func(*testing.T, auth.UserStore, strin
 
 	now := time.Now().Truncate(time.Millisecond)
 	id := uuid.New().String()
-	store := testSQLUserStore(now, id, db)
+	store := testSQLUserStore(now, id, hnysqlx.WrapDB(db))
 
 	f(t, store, id, now)
 }
@@ -117,7 +118,7 @@ func TestSQLUserEmailDuplicate(t *testing.T) {
 	err = db.Ping()
 	expect.Ok(t, err)
 
-	store := auth.NewSQLUserStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
+	store := auth.NewSQLUserStore(hnysqlx.WrapDB(db), &utils.RealClock{}, &utils.UUIDGenerator{})
 
 	testUserEmailDuplicate(t, store)
 }

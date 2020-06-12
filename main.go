@@ -23,7 +23,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func initAuth(db *sqlx.DB, redis *redis.Client) (*auth.Config, error) {
+func initAuth(db *hnysqlx.DB, redis *redis.Client) (*auth.Config, error) {
 	signingKey, ok := os.LookupEnv("JWT_SIGNING_KEY")
 	if !ok {
 		return nil, fmt.Errorf("JWT_SIGNING_KEY not set")
@@ -75,7 +75,7 @@ func initRedis() (*redis.Client, error) {
 	return redisClient, nil
 }
 
-func initDb() (*sqlx.DB, error) {
+func initDb() (*hnysqlx.DB, error) {
 	databaseUrl, ok := os.LookupEnv("DATABASE_URL")
 	if !ok {
 		databaseUrl = "postgres://localhost:5432"

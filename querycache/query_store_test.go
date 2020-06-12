@@ -9,7 +9,7 @@ import (
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
 func freshQuery(now time.Time) *querycache.Query {
@@ -316,7 +316,7 @@ func TestInMemoryQueryList(t *testing.T) {
 	testQueryList(t, adapterStore, store)
 }
 
-func testSQLQueryStore(now time.Time, id string, db *sqlx.DB) *querycache.SQLQueryStore {
+func testSQLQueryStore(now time.Time, id string, db *hnysqlx.DB) *querycache.SQLQueryStore {
 	return querycache.NewSQLQueryStore(
 		db,
 		&utils.TestClock{Time: now},

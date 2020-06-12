@@ -5,7 +5,7 @@ import (
 
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/jmoiron/sqlx"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
 type User struct {
@@ -38,12 +38,12 @@ func (u *User) NewToken(exp time.Time) *jwt.Token {
 }
 
 type SQLUserStore struct {
-	db          *sqlx.DB
+	db          *hnysqlx.DB
 	idGenerator utils.IdGenerator
 	clock       utils.Clock
 }
 
-func NewSQLUserStore(db *sqlx.DB, clock utils.Clock, gen utils.IdGenerator) *SQLUserStore {
+func NewSQLUserStore(db *hnysqlx.DB, clock utils.Clock, gen utils.IdGenerator) *SQLUserStore {
 	return &SQLUserStore{db: db, idGenerator: gen, clock: clock}
 }
 

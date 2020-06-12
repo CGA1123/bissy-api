@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/cga1123/bissy-api/utils"
-	"github.com/jmoiron/sqlx"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
 type SQLAdapterStore struct {
-	db          *sqlx.DB
+	db          *hnysqlx.DB
 	clock       utils.Clock
 	idGenerator utils.IdGenerator
 }
 
-func NewSQLAdapterStore(db *sqlx.DB, clock utils.Clock, generator utils.IdGenerator) *SQLAdapterStore {
+func NewSQLAdapterStore(db *hnysqlx.DB, clock utils.Clock, generator utils.IdGenerator) *SQLAdapterStore {
 	return &SQLAdapterStore{db: db, clock: clock, idGenerator: generator}
 }
 
