@@ -13,6 +13,9 @@ jobs:
     env:
       DATABASE_URL: postgres://bissy:bissy@localhost:5432/bissy_test?sslmode=disable
       REDISCLOUD_URL: redis://localhost:6379
+      GIT_BRANCH: ${{ github.ref }}
+      GIT_COMMIT_SHA: ${{ github.sha }}
+      CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_COVERAGE_KEY }}
     services:
       postgres:
         image: postgres
@@ -40,6 +43,15 @@ jobs:
 
 
     steps:
+    - name: Install CodeClimate
+      run: |
+        curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 -O
+        chmod +x test-reporter-latest-linux-amd64
+        sudo mv test-reporter-latest-linux-amd64 /bin/codeclimate
+
+    - name: Notify CodeClimate of build start
+      run: codeclimate before-build
+
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
       with:
@@ -67,4 +79,10 @@ jobs:
       run: go build -v .
 
     - name: Test
-      run: go test -v ./...
+      run: go test -coverprofile=cover.out -v ./...
+
+    - name: Notify CodeClimate of build end
+      if: ${{ success() }}
+      run: |
+        codeclimate format-coverage -t gocov -o codeclimate.json -p github.com/cga1123/bissy-api cover.out
+        codeclimate upload-coverage -i codeclimate.json
