@@ -19,8 +19,8 @@ func newTestQueryStore(now time.Time, id string) *querycache.InMemoryQueryStore 
 		&utils.TestIdGenerator{Id: id})
 }
 
-func newTestAdapterStore(now time.Time, id string) *querycache.InMemoryAdapterStore {
-	return querycache.NewInMemoryAdapterStore(
+func newTestDatasourceStore(now time.Time, id string) *querycache.InMemoryDatasourceStore {
+	return querycache.NewInMemoryDatasourceStore(
 		&utils.TestClock{Time: now},
 		&utils.TestIdGenerator{Id: id})
 }
@@ -42,9 +42,9 @@ func testConfig() (time.Time, string, *querycache.Config) {
 	id := uuid.New().String()
 
 	return now, id, &querycache.Config{
-		QueryStore:   newTestQueryStore(now, id),
-		AdapterStore: newTestAdapterStore(now, id),
-		Executor:     &querycache.TestExecutor{}}
+		QueryStore:      newTestQueryStore(now, id),
+		DatasourceStore: newTestDatasourceStore(now, id),
+		Executor:        &querycache.TestExecutor{}}
 }
 
 func testHandler(c *querycache.Config, r *http.Request) *httptest.ResponseRecorder {

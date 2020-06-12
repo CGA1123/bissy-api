@@ -10,11 +10,11 @@ import (
 )
 
 type Config struct {
-	QueryStore   QueryStore
-	AdapterStore AdapterStore
-	Executor     Executor
-	Cache        QueryCache
-	Clock        utils.Clock
+	QueryStore      QueryStore
+	DatasourceStore DatasourceStore
+	Executor        Executor
+	Cache           QueryCache
+	Clock           utils.Clock
 }
 
 func (c *Config) SetupHandlers(router *mux.Router) {
@@ -45,23 +45,23 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 		Methods("GET")
 
 	router.
-		Handle("/adapters", &handlerutils.Handler{H: c.adaptersList}).
+		Handle("/datasources", &handlerutils.Handler{H: c.datasourcesList}).
 		Methods("GET")
 
 	router.
-		Handle("/adapters", &handlerutils.Handler{H: c.adaptersCreate}).
+		Handle("/datasources", &handlerutils.Handler{H: c.datasourcesCreate}).
 		Methods("POST")
 
 	router.
-		Handle("/adapters/{id}", &handlerutils.Handler{H: c.adapterGet}).
+		Handle("/datasources/{id}", &handlerutils.Handler{H: c.datasourceGet}).
 		Methods("GET")
 
 	router.
-		Handle("/adapters/{id}", &handlerutils.Handler{H: c.adapterDelete}).
+		Handle("/datasources/{id}", &handlerutils.Handler{H: c.datasourceDelete}).
 		Methods("DELETE")
 
 	router.
-		Handle("/adapters/{id}", &handlerutils.Handler{H: c.adapterUpdate}).
+		Handle("/datasources/{id}", &handlerutils.Handler{H: c.datasourceUpdate}).
 		Methods("PATCH")
 }
 

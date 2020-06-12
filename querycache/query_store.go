@@ -12,13 +12,13 @@ import (
 )
 
 type Query struct {
-	Id          string    `json:"id"`
-	Query       string    `json:"query"`
-	AdapterId   string    `json:"adapterId" db:"adapter_id"`
-	Lifetime    Duration  `json:"lifetime"`
-	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
-	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
-	LastRefresh time.Time `json:"lastRefresh" db:"last_refresh"`
+	Id           string    `json:"id"`
+	Query        string    `json:"query"`
+	DatasourceId string    `json:"datasourceId" db:"datasource_id"`
+	Lifetime     Duration  `json:"lifetime"`
+	CreatedAt    time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt    time.Time `json:"updatedAt" db:"updated_at"`
+	LastRefresh  time.Time `json:"lastRefresh" db:"last_refresh"`
 }
 
 func (query *Query) Fresh(now time.Time) bool {
@@ -30,16 +30,16 @@ func (query *Query) Fresh(now time.Time) bool {
 }
 
 type CreateQuery struct {
-	Query     string   `json:"query"`
-	Lifetime  Duration `json:"lifetime"`
-	AdapterId string   `json:"adapterId"`
+	Query        string   `json:"query"`
+	Lifetime     Duration `json:"lifetime"`
+	DatasourceId string   `json:"datasourceId"`
 }
 
 type UpdateQuery struct {
-	Query       *string   `json:"query"`
-	AdapterId   *string   `json:"adapterId"`
-	Lifetime    *Duration `json:"lifetime"`
-	LastRefresh time.Time `json:"lastRefresh"`
+	Query        *string   `json:"query"`
+	DatasourceId *string   `json:"datasourceId"`
+	Lifetime     *Duration `json:"lifetime"`
+	LastRefresh  time.Time `json:"lastRefresh"`
 }
 
 type Duration time.Duration
@@ -98,13 +98,13 @@ func (store *InMemoryQueryStore) Create(createQuery *CreateQuery) (*Query, error
 	now := store.clock.Now()
 
 	query := Query{
-		Id:          id,
-		Query:       createQuery.Query,
-		Lifetime:    createQuery.Lifetime,
-		AdapterId:   createQuery.AdapterId,
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		LastRefresh: now,
+		Id:           id,
+		Query:        createQuery.Query,
+		Lifetime:     createQuery.Lifetime,
+		DatasourceId: createQuery.DatasourceId,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		LastRefresh:  now,
 	}
 
 	store.lock.Lock()
@@ -158,8 +158,8 @@ func (store *InMemoryQueryStore) Update(id string, update *UpdateQuery) (*Query,
 		query.Lifetime = *update.Lifetime
 	}
 
-	if update.AdapterId != nil {
-		query.AdapterId = *update.AdapterId
+	if update.DatasourceId != nil {
+		query.DatasourceId = *update.DatasourceId
 	}
 
 	if !update.LastRefresh.IsZero() {

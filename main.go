@@ -121,10 +121,10 @@ func main() {
 
 	querycacheMux := router.PathPrefix("/querycache").Subrouter()
 	queryCacheConfig := querycache.Config{
-		QueryStore:   querycache.NewSQLQueryStore(db, clock, generator),
-		AdapterStore: querycache.NewSQLAdapterStore(db, clock, generator),
-		Cache:        &querycache.RedisCache{Client: redisClient},
-		Clock:        clock,
+		QueryStore:      querycache.NewSQLQueryStore(db, clock, generator),
+		DatasourceStore: querycache.NewSQLDatasourceStore(db, clock, generator),
+		Cache:           &querycache.RedisCache{Client: redisClient},
+		Clock:           clock,
 	}
 
 	querycacheMux.Use(authConfig.WithAuth)

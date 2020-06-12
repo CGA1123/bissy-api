@@ -49,24 +49,24 @@ func TestFresh(t *testing.T) {
 	expect.False(t, query.Fresh(now))
 }
 
-func testQueryCreate(t *testing.T, adapterStore querycache.AdapterStore, store querycache.QueryStore, id string, now time.Time) {
-	adapter, err := adapterStore.Create(&querycache.CreateAdapter{})
+func testQueryCreate(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore, id string, now time.Time) {
+	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	createQuery := querycache.CreateQuery{
-		Query:     "SELECT 1;",
-		Lifetime:  3 * querycache.Duration(time.Hour),
-		AdapterId: adapter.Id,
+		Query:        "SELECT 1;",
+		Lifetime:     3 * querycache.Duration(time.Hour),
+		DatasourceId: datasource.Id,
 	}
 
 	expected := &querycache.Query{
-		Id:          id,
-		Query:       "SELECT 1;",
-		AdapterId:   adapter.Id,
-		Lifetime:    3 * querycache.Duration(time.Hour),
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		LastRefresh: now,
+		Id:           id,
+		Query:        "SELECT 1;",
+		DatasourceId: datasource.Id,
+		Lifetime:     3 * querycache.Duration(time.Hour),
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		LastRefresh:  now,
 	}
 
 	query, err := store.Create(&createQuery)
@@ -79,24 +79,24 @@ func testQueryCreate(t *testing.T, adapterStore querycache.AdapterStore, store q
 	expect.Equal(t, expected, query)
 }
 
-func testQueryGet(t *testing.T, adapterStore querycache.AdapterStore, store querycache.QueryStore, id string, now time.Time) {
-	adapter, err := adapterStore.Create(&querycache.CreateAdapter{})
+func testQueryGet(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore, id string, now time.Time) {
+	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	createQuery := querycache.CreateQuery{
-		Query:     "SELECT 1;",
-		Lifetime:  3 * querycache.Duration(time.Hour),
-		AdapterId: adapter.Id,
+		Query:        "SELECT 1;",
+		Lifetime:     3 * querycache.Duration(time.Hour),
+		DatasourceId: datasource.Id,
 	}
 
 	expected := querycache.Query{
-		Id:          id,
-		Query:       "SELECT 1;",
-		AdapterId:   adapter.Id,
-		Lifetime:    3 * querycache.Duration(time.Hour),
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		LastRefresh: now,
+		Id:           id,
+		Query:        "SELECT 1;",
+		DatasourceId: datasource.Id,
+		Lifetime:     3 * querycache.Duration(time.Hour),
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		LastRefresh:  now,
 	}
 
 	_, err = store.Create(&createQuery)
@@ -112,17 +112,17 @@ func testQueryGet(t *testing.T, adapterStore querycache.AdapterStore, store quer
 	expect.Error(t, err)
 }
 
-func testQueryList(t *testing.T, adapterStore querycache.AdapterStore, store querycache.QueryStore) {
-	adapter, err := adapterStore.Create(&querycache.CreateAdapter{})
+func testQueryList(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore) {
+	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	expectedQueries := []*querycache.Query{}
 
 	for i := 0; i < 10; i++ {
 		q := &querycache.CreateQuery{
-			Query:     fmt.Sprintf("SELECT %v;", i),
-			Lifetime:  querycache.Duration(time.Duration(i) * time.Hour),
-			AdapterId: adapter.Id,
+			Query:        fmt.Sprintf("SELECT %v;", i),
+			Lifetime:     querycache.Duration(time.Duration(i) * time.Hour),
+			DatasourceId: datasource.Id,
 		}
 		query, err := store.Create(q)
 		expect.Ok(t, err)
@@ -157,24 +157,24 @@ func testQueryList(t *testing.T, adapterStore querycache.AdapterStore, store que
 	expect.Equal(t, expectedQueries, queries)
 }
 
-func testQueryDelete(t *testing.T, adapterStore querycache.AdapterStore, store querycache.QueryStore, id string, now time.Time) {
-	adapter, err := adapterStore.Create(&querycache.CreateAdapter{})
+func testQueryDelete(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore, id string, now time.Time) {
+	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	createQuery := querycache.CreateQuery{
-		Query:     "SELECT 1;",
-		Lifetime:  3 * querycache.Duration(time.Hour),
-		AdapterId: adapter.Id,
+		Query:        "SELECT 1;",
+		Lifetime:     3 * querycache.Duration(time.Hour),
+		DatasourceId: datasource.Id,
 	}
 
 	expected := querycache.Query{
-		Id:          id,
-		Query:       "SELECT 1;",
-		AdapterId:   adapter.Id,
-		Lifetime:    3 * querycache.Duration(time.Hour),
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		LastRefresh: now,
+		Id:           id,
+		Query:        "SELECT 1;",
+		DatasourceId: datasource.Id,
+		Lifetime:     3 * querycache.Duration(time.Hour),
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		LastRefresh:  now,
 	}
 
 	_, err = store.Create(&createQuery)
@@ -193,36 +193,36 @@ func testQueryDelete(t *testing.T, adapterStore querycache.AdapterStore, store q
 	expect.Error(t, err)
 }
 
-func testQueryUpdate(t *testing.T, adapterStore querycache.AdapterStore, store querycache.QueryStore, id string, now time.Time) {
-	adapter, err := adapterStore.Create(&querycache.CreateAdapter{})
+func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore, id string, now time.Time) {
+	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	createQuery := querycache.CreateQuery{
-		Query:     "SELECT 1;",
-		AdapterId: adapter.Id,
-		Lifetime:  3 * querycache.Duration(time.Hour),
+		Query:        "SELECT 1;",
+		DatasourceId: datasource.Id,
+		Lifetime:     3 * querycache.Duration(time.Hour),
 	}
 
-	adapterTwo, err := adapterStore.Create(&querycache.CreateAdapter{})
+	datasourceTwo, err := datasourceStore.Create(&querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	newQuery := "SELECT 2;"
 	newLifetime := querycache.Duration(time.Hour)
-	newAdapterId := adapterTwo.Id
+	newDatasourceId := datasourceTwo.Id
 	updateQuery := querycache.UpdateQuery{
-		Query:     &newQuery,
-		Lifetime:  &newLifetime,
-		AdapterId: &newAdapterId,
+		Query:        &newQuery,
+		Lifetime:     &newLifetime,
+		DatasourceId: &newDatasourceId,
 	}
 
 	expected := querycache.Query{
-		Id:          id,
-		Query:       "SELECT 2;",
-		AdapterId:   adapterTwo.Id,
-		Lifetime:    querycache.Duration(time.Hour),
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		LastRefresh: now,
+		Id:           id,
+		Query:        "SELECT 2;",
+		DatasourceId: datasourceTwo.Id,
+		Lifetime:     querycache.Duration(time.Hour),
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		LastRefresh:  now,
 	}
 
 	_, err = store.Create(&createQuery)
@@ -269,9 +269,9 @@ func TestInMemoryQueryCreate(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
-	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
+	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
-	testQueryCreate(t, adapterStore, store, id, now)
+	testQueryCreate(t, datasourceStore, store, id, now)
 }
 
 func TestInMemoryQueryGet(t *testing.T) {
@@ -280,9 +280,9 @@ func TestInMemoryQueryGet(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
-	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
+	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
-	testQueryGet(t, adapterStore, store, id, now)
+	testQueryGet(t, datasourceStore, store, id, now)
 }
 
 func TestInMemoryQueryDelete(t *testing.T) {
@@ -291,9 +291,9 @@ func TestInMemoryQueryDelete(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
-	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
+	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
-	testQueryDelete(t, adapterStore, store, id, now)
+	testQueryDelete(t, datasourceStore, store, id, now)
 }
 
 func TestInMemoryQueryUpdate(t *testing.T) {
@@ -302,18 +302,18 @@ func TestInMemoryQueryUpdate(t *testing.T) {
 	now := time.Now()
 	id := uuid.New().String()
 	store := newTestQueryStore(now, id)
-	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
+	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
-	testQueryUpdate(t, adapterStore, store, id, now)
+	testQueryUpdate(t, datasourceStore, store, id, now)
 }
 
 func TestInMemoryQueryList(t *testing.T) {
 	t.Parallel()
 
 	store := querycache.NewInMemoryQueryStore(&utils.RealClock{}, &utils.UUIDGenerator{})
-	adapterStore := querycache.NewInMemoryAdapterStore(&utils.RealClock{}, &utils.UUIDGenerator{})
+	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
 
-	testQueryList(t, adapterStore, store)
+	testQueryList(t, datasourceStore, store)
 }
 
 func testSQLQueryStore(now time.Time, id string, db *hnysqlx.DB) *querycache.SQLQueryStore {
@@ -324,7 +324,7 @@ func testSQLQueryStore(now time.Time, id string, db *hnysqlx.DB) *querycache.SQL
 	)
 }
 
-func withTestSQLQueryStore(t *testing.T, f func(*testing.T, querycache.AdapterStore, querycache.QueryStore, string, time.Time)) {
+func withTestSQLQueryStore(t *testing.T, f func(*testing.T, querycache.DatasourceStore, querycache.QueryStore, string, time.Time)) {
 	db, err := testDb(uuid.New().String())
 	expect.Ok(t, err)
 	defer db.Close()
@@ -335,9 +335,9 @@ func withTestSQLQueryStore(t *testing.T, f func(*testing.T, querycache.AdapterSt
 	now := time.Now().Truncate(time.Millisecond)
 	id := uuid.New().String()
 	store := testSQLQueryStore(now, id, db)
-	adapterStore := querycache.NewSQLAdapterStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
+	datasourceStore := querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
 
-	f(t, adapterStore, store, id, now)
+	f(t, datasourceStore, store, id, now)
 }
 
 func TestSQLQueryCreate(t *testing.T) {
@@ -374,7 +374,7 @@ func TestSQLQueryList(t *testing.T) {
 	err = db.Ping()
 	expect.Ok(t, err)
 	store := querycache.NewSQLQueryStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
-	adapterStore := querycache.NewSQLAdapterStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
+	datasourceStore := querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
 
-	testQueryList(t, adapterStore, store)
+	testQueryList(t, datasourceStore, store)
 }
