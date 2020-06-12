@@ -21,9 +21,9 @@ func TestQueryCreate(t *testing.T) {
 
 	now, id, config := testConfig()
 	json, err := jsonBody(map[string]string{
-		"lifetime":  "1h01m",
-		"query":     "SELECT 1;",
-		"adapterId": "adapter-id",
+		"lifetime":     "1h01m",
+		"query":        "SELECT 1;",
+		"datasourceId": "datasource-id",
 	})
 	expect.Ok(t, err)
 
@@ -35,13 +35,13 @@ func TestQueryCreate(t *testing.T) {
 
 	actual, err := config.QueryStore.Get(id)
 	expected := &querycache.Query{
-		Id:          id,
-		Lifetime:    querycache.Duration(time.Hour + time.Minute),
-		Query:       "SELECT 1;",
-		AdapterId:   "adapter-id",
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		LastRefresh: now,
+		Id:           id,
+		Lifetime:     querycache.Duration(time.Hour + time.Minute),
+		Query:        "SELECT 1;",
+		DatasourceId: "datasource-id",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		LastRefresh:  now,
 	}
 
 	expect.Ok(t, err)
@@ -143,10 +143,10 @@ func TestQueryUpdate(t *testing.T) {
 
 	oneHourAgo := now.Add(-time.Hour)
 	json, err := jsonBody(map[string]string{
-		"lifetime":    "1h01m",
-		"query":       "SELECT 2;",
-		"adapterId":   "adapter-id",
-		"lastRefresh": oneHourAgo.Format(time.RFC3339Nano)})
+		"lifetime":     "1h01m",
+		"query":        "SELECT 2;",
+		"datasourceId": "datasource-id",
+		"lastRefresh":  oneHourAgo.Format(time.RFC3339Nano)})
 	expect.Ok(t, err)
 
 	request, err := http.NewRequest("PATCH", "/queries/"+id, json)
@@ -155,7 +155,7 @@ func TestQueryUpdate(t *testing.T) {
 	query.Lifetime = querycache.Duration(time.Hour + time.Minute)
 	query.Query = "SELECT 2;"
 	query.LastRefresh = oneHourAgo
-	query.AdapterId = "adapter-id"
+	query.DatasourceId = "datasource-id"
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
@@ -226,15 +226,15 @@ func TestQueryResult(t *testing.T) {
 	clock := &utils.RealClock{}
 	generator := &utils.UUIDGenerator{}
 	config := &querycache.Config{
-		QueryStore:   querycache.NewInMemoryQueryStore(clock, generator),
-		AdapterStore: querycache.NewInMemoryAdapterStore(clock, generator),
+		QueryStore:      querycache.NewInMemoryQueryStore(clock, generator),
+		DatasourceStore: querycache.NewInMemoryDatasourceStore(clock, generator),
 	}
 
-	adapter, err := config.AdapterStore.Create(&querycache.CreateAdapter{Type: "test", Name: "Test"})
+	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
-		Query: "SELECT * FROM users", AdapterId: adapter.Id})
+		Query: "SELECT * FROM users", DatasourceId: datasource.Id})
 	expect.Ok(t, err)
 
 	request, err := http.NewRequest("GET", "/queries/"+query.Id+"/result", nil)
@@ -253,7 +253,7 @@ func TestQueryResult(t *testing.T) {
 		t.Fatal("DATABASE_URL is not set")
 	}
 
-	adapter, err = config.AdapterStore.Update(adapter.Id, &querycache.UpdateAdapter{
+	datasource, err = config.DatasourceStore.Update(datasource.Id, &querycache.UpdateDatasource{
 		Type: &newType, Name: &newName, Options: &newOptions})
 
 	expect.Ok(t, err)

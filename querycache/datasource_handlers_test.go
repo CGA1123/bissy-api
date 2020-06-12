@@ -12,23 +12,23 @@ import (
 	"github.com/cga1123/bissy-api/utils"
 )
 
-func TestAdapterCreate(t *testing.T) {
+func TestDatasourceCreate(t *testing.T) {
 	t.Parallel()
 
 	now, id, config := testConfig()
 	json, err := jsonBody(map[string]string{
-		"name":    "test adapter",
+		"name":    "test datasource",
 		"type":    "postgres",
 		"options": "",
 	})
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("POST", "/adapters", json)
+	request, err := http.NewRequest("POST", "/datasources", json)
 	expect.Ok(t, err)
 
-	expected := &querycache.Adapter{
+	expected := &querycache.Datasource{
 		Id:        id,
-		Name:      "test adapter",
+		Name:      "test datasource",
 		Type:      "postgres",
 		Options:   "",
 		CreatedAt: now,
@@ -39,62 +39,62 @@ func TestAdapterCreate(t *testing.T) {
 	expecthttp.Ok(t, response)
 	expecthttp.JSONBody(t, expected, response.Body)
 
-	actual, err := config.AdapterStore.Get(id)
+	actual, err := config.DatasourceStore.Get(id)
 
 	expect.Ok(t, err)
 	expect.Equal(t, expected, actual)
 }
 
-func TestAdapterGet(t *testing.T) {
+func TestDatasourceGet(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
-	adapter, err := config.AdapterStore.Create(&querycache.CreateAdapter{
-		Name:    "test adapter",
+	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
+		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable",
 	})
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("GET", "/adapters/"+id, nil)
+	request, err := http.NewRequest("GET", "/datasources/"+id, nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapter, response.Body)
+	expecthttp.JSONBody(t, datasource, response.Body)
 }
 
-func TestAdapterDelete(t *testing.T) {
+func TestDatasourceDelete(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
-	adapter, err := config.AdapterStore.Create(&querycache.CreateAdapter{
-		Name:    "test adapter",
+	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
+		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable",
 	})
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("DELETE", "/adapters/"+id, nil)
+	request, err := http.NewRequest("DELETE", "/datasources/"+id, nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapter, response.Body)
+	expecthttp.JSONBody(t, datasource, response.Body)
 
-	adapters, err := config.AdapterStore.List(1, 1)
+	datasources, err := config.DatasourceStore.List(1, 1)
 	expect.Ok(t, err)
-	expect.Equal(t, []*querycache.Adapter{}, adapters)
+	expect.Equal(t, []*querycache.Datasource{}, datasources)
 }
 
-func TestAdapterUpdate(t *testing.T) {
+func TestDatasourceUpdate(t *testing.T) {
 	t.Parallel()
 
 	_, id, config := testConfig()
-	adapter, err := config.AdapterStore.Create(&querycache.CreateAdapter{
-		Name:    "test adapter",
+	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
+		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable"})
 	expect.Ok(t, err)
@@ -105,56 +105,56 @@ func TestAdapterUpdate(t *testing.T) {
 		"options": ""})
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("PATCH", "/adapters/"+id, json)
+	request, err := http.NewRequest("PATCH", "/datasources/"+id, json)
 	expect.Ok(t, err)
 
-	adapter.Name = "test"
-	adapter.Type = "snowflake"
-	adapter.Options = ""
+	datasource.Name = "test"
+	datasource.Type = "snowflake"
+	datasource.Options = ""
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapter, response.Body)
+	expecthttp.JSONBody(t, datasource, response.Body)
 
-	adapter, err = config.AdapterStore.Get(id)
+	datasource, err = config.DatasourceStore.Get(id)
 	expect.Ok(t, err)
 
-	expect.Equal(t, "test", adapter.Name)
-	expect.Equal(t, "snowflake", adapter.Type)
-	expect.Equal(t, "", adapter.Options)
+	expect.Equal(t, "test", datasource.Name)
+	expect.Equal(t, "snowflake", datasource.Type)
+	expect.Equal(t, "", datasource.Options)
 }
 
-func TestAdapterList(t *testing.T) {
+func TestDatasourceList(t *testing.T) {
 	t.Parallel()
 
-	adapters := []*querycache.Adapter{}
+	datasources := []*querycache.Datasource{}
 	config := &querycache.Config{
-		AdapterStore: querycache.NewInMemoryAdapterStore(&utils.RealClock{},
+		DatasourceStore: querycache.NewInMemoryDatasourceStore(&utils.RealClock{},
 			&utils.UUIDGenerator{})}
 
 	for i := 0; i < 30; i++ {
-		adapter, err := config.AdapterStore.Create(&querycache.CreateAdapter{
+		datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
 			Name: fmt.Sprintf("Name %v", i)})
 
 		expect.Ok(t, err)
-		adapters = append(adapters, adapter)
+		datasources = append(datasources, datasource)
 	}
 
-	request, err := http.NewRequest("GET", "/adapters", nil)
+	request, err := http.NewRequest("GET", "/datasources", nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapters[:25], response.Body)
+	expecthttp.JSONBody(t, datasources[:25], response.Body)
 
 	// pagination
-	request, err = http.NewRequest("GET", "/adapters?page=2&per=5", nil)
+	request, err = http.NewRequest("GET", "/datasources?page=2&per=5", nil)
 	expect.Ok(t, err)
 
 	response = testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
-	expecthttp.JSONBody(t, adapters[5:10], response.Body)
+	expecthttp.JSONBody(t, datasources[5:10], response.Body)
 }

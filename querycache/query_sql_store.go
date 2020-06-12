@@ -35,12 +35,12 @@ func (s *SQLQueryStore) Create(ca *CreateQuery) (*Query, error) {
 	id := s.idGenerator.Generate()
 
 	queryStr := `
-		INSERT INTO querycache_queries (id, query, lifetime, adapter_id, created_at, updated_at, last_refresh)
+		INSERT INTO querycache_queries (id, query, lifetime, datasource_id, created_at, updated_at, last_refresh)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING *`
 
 	var query Query
-	if err := s.db.Get(&query, queryStr, id, ca.Query, ca.Lifetime, ca.AdapterId, now, now, now); err != nil {
+	if err := s.db.Get(&query, queryStr, id, ca.Query, ca.Lifetime, ca.DatasourceId, now, now, now); err != nil {
 		return nil, err
 	}
 
@@ -65,7 +65,7 @@ func (s *SQLQueryStore) Update(id string, uq *UpdateQuery) (*Query, error) {
 	queryStr := `
 		UPDATE querycache_queries
 		SET query = COALESCE($2, query),
-				adapter_id = COALESCE($3, adapter_id),
+				datasource_id = COALESCE($3, datasource_id),
 				lifetime = COALESCE($4, lifetime),
 				last_refresh = COALESCE($5, last_refresh),
 				updated_at = $6
@@ -79,7 +79,7 @@ func (s *SQLQueryStore) Update(id string, uq *UpdateQuery) (*Query, error) {
 		lastRefresh = sql.NullTime{Time: uq.LastRefresh, Valid: true}
 	}
 
-	if err := s.db.Get(&query, queryStr, id, uq.Query, uq.AdapterId, uq.Lifetime, lastRefresh, s.clock.Now()); err != nil {
+	if err := s.db.Get(&query, queryStr, id, uq.Query, uq.DatasourceId, uq.Lifetime, lastRefresh, s.clock.Now()); err != nil {
 		return nil, err
 	}
 

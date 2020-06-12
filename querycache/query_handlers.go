@@ -124,12 +124,12 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	adapter, err := c.AdapterStore.Get(query.AdapterId)
+	datasource, err := c.DatasourceStore.Get(query.DatasourceId)
 	if err != nil {
 		return err
 	}
 
-	executor, err := adapter.NewExecutor()
+	executor, err := datasource.NewExecutor()
 	if err != nil {
 		return err
 	}

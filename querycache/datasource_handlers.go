@@ -9,38 +9,38 @@ import (
 	"github.com/cga1123/bissy-api/utils"
 )
 
-func (c *Config) adaptersList(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourcesList(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
 	page := params.MaybeInt("page", 1)
 	per := params.MaybeInt("per", 25)
 
-	adapters, err := c.AdapterStore.List(page, per)
+	datasources, err := c.DatasourceStore.List(page, per)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusInternalServerError}
 	}
 
-	return json.NewEncoder(w).Encode(adapters)
+	return json.NewEncoder(w).Encode(datasources)
 }
 
-func (c *Config) adaptersCreate(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourcesCreate(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
-	var createAdapter CreateAdapter
-	if err := utils.ParseJSONBody(r.Body, &createAdapter); err != nil {
+	var createDatasource CreateDatasource
+	if err := utils.ParseJSONBody(r.Body, &createDatasource); err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	adapter, err := c.AdapterStore.Create(&createAdapter)
+	datasource, err := c.DatasourceStore.Create(&createDatasource)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	err = json.NewEncoder(w).Encode(adapter)
+	err = json.NewEncoder(w).Encode(datasource)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusInternalServerError}
@@ -49,7 +49,7 @@ func (c *Config) adaptersCreate(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (c *Config) adapterGet(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourceGet(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
@@ -59,15 +59,15 @@ func (c *Config) adapterGet(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
 
-	adapter, err := c.AdapterStore.Get(id)
+	datasource, err := c.DatasourceStore.Get(id)
 	if err != nil {
 		return err
 	}
 
-	return json.NewEncoder(w).Encode(adapter)
+	return json.NewEncoder(w).Encode(datasource)
 }
 
-func (c *Config) adapterDelete(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourceDelete(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
@@ -77,15 +77,15 @@ func (c *Config) adapterDelete(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
 
-	adapter, err := c.AdapterStore.Delete(id)
+	datasource, err := c.DatasourceStore.Delete(id)
 	if err != nil {
 		return err
 	}
 
-	return json.NewEncoder(w).Encode(adapter)
+	return json.NewEncoder(w).Encode(datasource)
 }
 
-func (c *Config) adapterUpdate(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourceUpdate(w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
 
 	params := handlerutils.Params(r)
@@ -95,16 +95,16 @@ func (c *Config) adapterUpdate(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
 	}
 
-	var updateAdapter UpdateAdapter
-	if err := utils.ParseJSONBody(r.Body, &updateAdapter); err != nil {
+	var updateDatasource UpdateDatasource
+	if err := utils.ParseJSONBody(r.Body, &updateDatasource); err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	adapter, err := c.AdapterStore.Update(id, &updateAdapter)
+	datasource, err := c.DatasourceStore.Update(id, &updateDatasource)
 	if err != nil {
 		return err
 	}
 
-	return json.NewEncoder(w).Encode(adapter)
+	return json.NewEncoder(w).Encode(datasource)
 }
