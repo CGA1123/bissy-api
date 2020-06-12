@@ -12,6 +12,10 @@ import (
 	"github.com/honeycombio/beeline-go"
 )
 
+const (
+	contextKey = "auth_user_claim"
+)
+
 type Claims struct {
 	UserId string `json:"user_id"`
 	Name   string
@@ -43,7 +47,32 @@ func (c *Config) SignedToken(u *User) (string, error) {
 	return token.SignedString(c.signingKey)
 }
 
-func authenticate(c *Config, r *http.Request) (*User, error) {
+func UserFromContext(ctx context.Context) (*Claims, bool) {
+	claim, ok := ctx.Value(contextKey).(*Claims)
+
+	return claim, ok
+}
+
+func (c *Config) WithAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		claim, err := authenticate(c, r)
+		if err != nil {
+			code := http.StatusUnauthorized
+
+			w.Header().Set("WWW-Authenticate", `Bearer realm="bissy-api" charset="UTF-8"`)
+			http.Error(w, http.StatusText(code), code)
+
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), contextKey, claim)
+		beeline.AddField(ctx, "user_id", claim.UserId)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func authenticate(c *Config, r *http.Request) (*Claims, error) {
 	header := strings.Split(r.Header.Get("Authorization"), "Bearer ")
 	if len(header) != 2 {
 		return nil, fmt.Errorf("bad Authorization header (%v)", r.Header.Get("Authorization"))
@@ -65,34 +94,5 @@ func authenticate(c *Config, r *http.Request) (*User, error) {
 		return nil, fmt.Errorf("could not verify token")
 	}
 
-	// TODO: do we need to get the user?
-	user, err := c.userStore.Get(claims.UserId)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching user (%v) %v", claims.UserId, err)
-	}
-
-	return user, nil
-}
-
-func (c *Config) WithAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := authenticate(c, r)
-		if err != nil {
-			code := http.StatusUnauthorized
-
-			w.Header().Set("WWW-Authenticate", `Bearer realm="bissy-api" charset="UTF-8"`)
-			http.Error(w, http.StatusText(code), code)
-
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), "user", user)
-		beeline.AddField(ctx, "user_id", user.Id)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-
-		if token, err := c.SignedToken(user); err == nil {
-			w.Header().Set("Bissy-Token", token)
-		}
-	})
+	return claims, nil
 }
