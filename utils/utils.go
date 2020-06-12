@@ -64,11 +64,7 @@ func TestDB(t *testing.T) (*sqlx.DB, func() error) {
 }
 
 func TestRedis(t *testing.T) (*redis.Client, func() error) {
-	url, ok := os.LookupEnv("REDISCLOUD_URL")
-	if !ok {
-		t.Fatal("REDISCLOUD_URL not set")
-	}
-
+	url := os.Getenv("REDISCLOUD_URL")
 	options, err := redis.ParseURL(url)
 	expect.Ok(t, err)
 
@@ -108,9 +104,10 @@ func NewTestHTTPClient(t *testing.T) *TestHTTPClient {
 }
 
 func (c *TestHTTPClient) Do(r *http.Request) (*http.Response, error) {
-	responseFunc, ok := c.Mocks[r.Method+"|"+r.URL.String()]
+	requestKey := r.Method + "|" + r.URL.String()
+	responseFunc, ok := c.Mocks[requestKey]
 	if !ok {
-		c.T.Fatalf("no mock for: %v", r)
+		return nil, fmt.Errorf("no mock set for %v", requestKey)
 	}
 
 	return responseFunc(r)

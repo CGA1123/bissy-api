@@ -27,6 +27,15 @@ func Equal(t *testing.T, expected, actual interface{}) {
 	}
 }
 
+func NotEqual(t *testing.T, expected, actual interface{}) {
+	t.Helper()
+
+	diff := cmp.Diff(expected, actual)
+	if diff == "" {
+		t.Errorf("Expected %v not to equal %v", expected, actual)
+	}
+}
+
 func Ok(t *testing.T, err error) {
 	t.Helper()
 
