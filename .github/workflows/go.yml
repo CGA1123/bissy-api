@@ -74,3 +74,6 @@ jobs:
         prefix: github.com/cga1123/bissy-api
         coverageLocations: |
           ${{github.workspace}}/cover.out:gocov
+
+    - name: Lint
+      run: golint ./... -set_exit_status

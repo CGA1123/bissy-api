@@ -24,12 +24,12 @@ import (
 )
 
 const (
-	REDIS_URL            = "REDISCLOUD_URL"
-	JWT_SIGNING_KEY      = "JWT_SIGNING_KEY"
-	GITHUB_CLIENT_ID     = "GITHUB_CLIENT_ID"
-	GITHUB_CLIENT_SECRET = "GITHUB_CLIENT_SECRET"
-	DATABASE_URL         = "DATABASE_URL"
-	PORT                 = "PORT"
+	redisURLVar           = "REDISCLOUD_URL"
+	jwtSigningKeyVar      = "JWT_SIGNING_KEY"
+	githubClientIDVar     = "GITHUB_CLIENT_ID"
+	githubClientSecretVar = "GITHUB_CLIENT_SECRET"
+	databaseURLVar        = "DATABASE_URL"
+	portVar               = "PORT"
 )
 
 func initAuth(env map[string]string, db *hnysqlx.DB, redis *redis.Client) *auth.Config {
@@ -39,16 +39,16 @@ func initAuth(env map[string]string, db *hnysqlx.DB, redis *redis.Client) *auth.
 	store := auth.NewSQLUserStore(db, clock, idGen)
 
 	return auth.NewConfig(
-		[]byte(env[JWT_SIGNING_KEY]),
+		[]byte(env[jwtSigningKeyVar]),
 		store,
 		clock,
 		&auth.RedisStore{Client: redis, IdGenerator: idGen},
-		auth.NewGithubApp(env[GITHUB_CLIENT_ID], env[GITHUB_CLIENT_SECRET], &http.Client{}),
+		auth.NewGithubApp(env[githubClientIDVar], env[githubClientSecretVar], &http.Client{}),
 	)
 }
 
 func initRedis(vars map[string]string) *redis.Client {
-	options, err := redis.ParseURL(vars[REDIS_URL])
+	options, err := redis.ParseURL(vars[redisURLVar])
 	if err != nil {
 		log.Fatalf("failed to parse redis url %v", err)
 	}
@@ -74,7 +74,7 @@ func initHoneycomb() {
 }
 
 func initDb(env map[string]string) *hnysqlx.DB {
-	db, err := sqlx.Open("postgres", env[DATABASE_URL])
+	db, err := sqlx.Open("postgres", env[databaseURLVar])
 	if err != nil {
 		log.Fatalf("failed to open db %v", err)
 	}
@@ -92,12 +92,12 @@ func homeHandler(w http.ResponseWriter, h *http.Request) {
 
 func main() {
 	env, err := utils.RequireEnv(
-		PORT,
-		DATABASE_URL,
-		JWT_SIGNING_KEY,
-		GITHUB_CLIENT_ID,
-		GITHUB_CLIENT_SECRET,
-		REDIS_URL,
+		redisURLVar,
+		jwtSigningKeyVar,
+		githubClientIDVar,
+		githubClientSecretVar,
+		databaseURLVar,
+		portVar,
 	)
 	if err != nil {
 		log.Fatal(err)
