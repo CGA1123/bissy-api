@@ -3,7 +3,12 @@ triggers:
 - name: ""
   pattens:
   - '**/*.go'
-  cmd: clear; go test -timeout=10s -parallel=4 ./...; golint -set_exit_status ./...; echo " * DONE"
+  cmd: |
+    clear
+    go test -timeout=10s -coverprofile=cover.out -parallel=4 ./...
+    go tool cover -html=cover.out -o coverage.html
+    golint ./...
+    echo " * DONE"
   shell: true
   delay: 100ms
   stop_timeout: 500ms
