@@ -14,6 +14,7 @@ import (
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -65,14 +66,14 @@ func (generator *TestIDGenerator) Generate() string {
 }
 
 // TestDB returns a test db connection
-func TestDB(t *testing.T) (*sqlx.DB, func() error) {
+func TestDB(t *testing.T) (*hnysqlx.DB, func() error) {
 	db, err := sqlx.Open("pgx", uuid.New().String())
 	expect.Ok(t, err)
 
 	err = db.Ping()
 	expect.Ok(t, err)
 
-	return db, db.Close
+	return hnysqlx.WrapDB(db), db.Close
 }
 
 // TestRedis returns a test redis connection

@@ -15,7 +15,10 @@ import (
 func TestDatasourceCreate(t *testing.T) {
 	t.Parallel()
 
-	now, id, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	now, id, config := testConfig(db)
 	json, err := jsonBody(map[string]string{
 		"name":    "test datasource",
 		"type":    "postgres",
@@ -48,7 +51,10 @@ func TestDatasourceCreate(t *testing.T) {
 func TestDatasourceGet(t *testing.T) {
 	t.Parallel()
 
-	_, id, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	_, id, config := testConfig(db)
 	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
@@ -68,7 +74,10 @@ func TestDatasourceGet(t *testing.T) {
 func TestDatasourceDelete(t *testing.T) {
 	t.Parallel()
 
-	_, id, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	_, id, config := testConfig(db)
 	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
@@ -92,7 +101,10 @@ func TestDatasourceDelete(t *testing.T) {
 func TestDatasourceUpdate(t *testing.T) {
 	t.Parallel()
 
-	_, id, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	_, id, config := testConfig(db)
 	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
@@ -129,9 +141,12 @@ func TestDatasourceList(t *testing.T) {
 	t.Parallel()
 
 	datasources := []*querycache.Datasource{}
+
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
 	config := &querycache.Config{
-		DatasourceStore: querycache.NewInMemoryDatasourceStore(&utils.RealClock{},
-			&utils.UUIDGenerator{})}
+		DatasourceStore: querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})}
 
 	for i := 0; i < 30; i++ {
 		datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{

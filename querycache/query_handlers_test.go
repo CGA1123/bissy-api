@@ -13,17 +13,24 @@ import (
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/cga1123/bissy-api/utils"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
 
 func TestQueryCreate(t *testing.T) {
 	t.Parallel()
 
-	now, id, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	now, id, config := testConfig(db)
+	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{Type: "test", Name: "Test"})
+	expect.Ok(t, err)
+
 	json, err := jsonBody(map[string]string{
 		"lifetime":     "1h01m",
 		"query":        "SELECT 1;",
-		"datasourceID": "datasource-id",
+		"datasourceID": datasource.ID,
 	})
 	expect.Ok(t, err)
 
@@ -38,7 +45,7 @@ func TestQueryCreate(t *testing.T) {
 		ID:           id,
 		Lifetime:     querycache.Duration(time.Hour + time.Minute),
 		Query:        "SELECT 1;",
-		DatasourceID: "datasource-id",
+		DatasourceID: datasource.ID,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 		LastRefresh:  now,
@@ -51,11 +58,14 @@ func TestQueryCreate(t *testing.T) {
 func TestQueryCreateBadRequest(t *testing.T) {
 	t.Parallel()
 
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
 	body := strings.NewReader("not json")
 	request, err := http.NewRequest("POST", "/queries", body)
 	expect.Ok(t, err)
 
-	_, _, config := testConfig()
+	_, _, config := testConfig(db)
 	response := testHandler(config, request)
 
 	expecthttp.Status(t, http.StatusUnprocessableEntity, response)
@@ -64,10 +74,19 @@ func TestQueryCreateBadRequest(t *testing.T) {
 func TestQueryGet(t *testing.T) {
 	t.Parallel()
 
-	_, id, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	_, id, config := testConfig(db)
+
+	datasource, err := config.DatasourceStore.Create(
+		&querycache.CreateDatasource{Type: "test", Name: "Test"})
+
+	expect.Ok(t, err)
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
-		Query:    "SELECT 1;",
-		Lifetime: querycache.Duration(time.Hour),
+		Query:        "SELECT 1;",
+		Lifetime:     querycache.Duration(time.Hour),
+		DatasourceID: datasource.ID,
 	})
 	expect.Ok(t, err)
 
@@ -85,9 +104,12 @@ func TestQueryGet(t *testing.T) {
 func TestQueryGetNotFound(t *testing.T) {
 	t.Parallel()
 
-	_, _, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
 
-	request, err := http.NewRequest("GET", "/queries/does-not-exist", nil)
+	_, _, config := testConfig(db)
+
+	request, err := http.NewRequest("GET", "/queries/"+uuid.New().String(), nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
@@ -97,10 +119,17 @@ func TestQueryGetNotFound(t *testing.T) {
 func TestQueryDelete(t *testing.T) {
 	t.Parallel()
 
-	_, id, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	_, id, config := testConfig(db)
+	datasource, err := config.DatasourceStore.Create(
+		&querycache.CreateDatasource{Type: "test", Name: "Test"})
+
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
-		Query:    "SELECT 1;",
-		Lifetime: querycache.Duration(time.Hour),
+		Query:        "SELECT 1;",
+		Lifetime:     querycache.Duration(time.Hour),
+		DatasourceID: datasource.ID,
 	})
 	expect.Ok(t, err)
 
@@ -122,9 +151,12 @@ func TestQueryDelete(t *testing.T) {
 func TestQueryDeleteNotFound(t *testing.T) {
 	t.Parallel()
 
-	_, _, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
 
-	request, err := http.NewRequest("DELETE", "/queries/does-not-exist", nil)
+	_, _, config := testConfig(db)
+
+	request, err := http.NewRequest("DELETE", "/queries/"+uuid.New().String(), nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
@@ -134,10 +166,28 @@ func TestQueryDeleteNotFound(t *testing.T) {
 func TestQueryUpdate(t *testing.T) {
 	t.Parallel()
 
-	now, id, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	now := time.Now().Truncate(time.Millisecond)
+	id := uuid.New().String()
+	config := &querycache.Config{
+		QueryStore:      newTestQueryStore(db, now, id),
+		DatasourceStore: querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{}),
+		Executor:        &querycache.TestExecutor{}}
+
+	datasource, err := config.DatasourceStore.Create(
+		&querycache.CreateDatasource{Type: "test", Name: "Test"})
+	expect.Ok(t, err)
+
+	otherDatasource, err := config.DatasourceStore.Create(
+		&querycache.CreateDatasource{Type: "test", Name: "Test"})
+	expect.Ok(t, err)
+
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
-		Query:    "SELECT 1;",
-		Lifetime: querycache.Duration(time.Hour),
+		Query:        "SELECT 1;",
+		Lifetime:     querycache.Duration(time.Hour),
+		DatasourceID: datasource.ID,
 	})
 	expect.Ok(t, err)
 
@@ -145,8 +195,8 @@ func TestQueryUpdate(t *testing.T) {
 	json, err := jsonBody(map[string]string{
 		"lifetime":     "1h01m",
 		"query":        "SELECT 2;",
-		"datasourceID": "datasource-id",
-		"lastRefresh":  oneHourAgo.Format(time.RFC3339Nano)})
+		"lastRefresh":  oneHourAgo.Format(time.RFC3339Nano),
+		"datasourceId": otherDatasource.ID})
 	expect.Ok(t, err)
 
 	request, err := http.NewRequest("PATCH", "/queries/"+id, json)
@@ -155,7 +205,7 @@ func TestQueryUpdate(t *testing.T) {
 	query.Lifetime = querycache.Duration(time.Hour + time.Minute)
 	query.Query = "SELECT 2;"
 	query.LastRefresh = oneHourAgo
-	query.DatasourceID = "datasource-id"
+	query.DatasourceID = otherDatasource.ID
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
@@ -172,7 +222,10 @@ func TestQueryUpdate(t *testing.T) {
 func TestQueryUpdateNotFound(t *testing.T) {
 	t.Parallel()
 
-	_, id, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	_, id, config := testConfig(db)
 	json, err := jsonBody(map[string]string{
 		"lifetime": "1h01m",
 		"query":    "SELECT 2;",
@@ -189,14 +242,23 @@ func TestQueryUpdateNotFound(t *testing.T) {
 func TestQueryList(t *testing.T) {
 	t.Parallel()
 
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
 	queries := []querycache.Query{}
 	config := &querycache.Config{
-		QueryStore: querycache.NewInMemoryQueryStore(&utils.RealClock{},
-			&utils.UUIDGenerator{})}
+		QueryStore:      querycache.NewSQLQueryStore(db, &utils.RealClock{}, &utils.UUIDGenerator{}),
+		DatasourceStore: querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{}),
+	}
+
+	datasource, err := config.DatasourceStore.Create(
+		&querycache.CreateDatasource{Type: "test", Name: "Test"})
+	expect.Ok(t, err)
 
 	for i := 0; i < 30; i++ {
 		query, err := config.QueryStore.Create(&querycache.CreateQuery{
-			Query: fmt.Sprintf("SELECT %v", i)})
+			DatasourceID: datasource.ID,
+			Query:        fmt.Sprintf("SELECT %v", i)})
 
 		expect.Ok(t, err)
 		queries = append(queries, *query)
@@ -223,11 +285,14 @@ func TestQueryList(t *testing.T) {
 func TestQueryResult(t *testing.T) {
 	t.Parallel()
 
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
 	clock := &utils.RealClock{}
 	generator := &utils.UUIDGenerator{}
 	config := &querycache.Config{
-		QueryStore:      querycache.NewInMemoryQueryStore(clock, generator),
-		DatasourceStore: querycache.NewInMemoryDatasourceStore(clock, generator),
+		QueryStore:      querycache.NewSQLQueryStore(db, clock, generator),
+		DatasourceStore: querycache.NewSQLDatasourceStore(db, clock, generator),
 	}
 
 	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{Type: "test", Name: "Test"})

@@ -7,6 +7,8 @@ import (
 
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/querycache"
+	"github.com/cga1123/bissy-api/utils"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
 
@@ -31,8 +33,18 @@ func TestCachedExecutorExecute(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
+	id := uuid.New().String()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
 
-	executor := testCachedExecutor()
+	store := newTestQueryStore(db, now, id)
+	executor := &querycache.CachedExecutor{
+		Cache:    querycache.NewInMemoryCache(),
+		Store:    store,
+		Executor: &querycache.TestExecutor{},
+		Clock:    &utils.TestClock{Time: now},
+	}
+
 	query := &querycache.Query{
 		ID:          "1",
 		LastRefresh: now,

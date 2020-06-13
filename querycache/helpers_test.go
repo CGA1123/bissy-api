@@ -11,39 +11,30 @@ import (
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
-func newTestQueryStore(now time.Time, id string) *querycache.InMemoryQueryStore {
-	return querycache.NewInMemoryQueryStore(
+func newTestQueryStore(db *hnysqlx.DB, now time.Time, id string) *querycache.SQLQueryStore {
+	return querycache.NewSQLQueryStore(
+		db,
 		&utils.TestClock{Time: now},
 		&utils.TestIDGenerator{ID: id})
 }
 
-func newTestDatasourceStore(now time.Time, id string) *querycache.InMemoryDatasourceStore {
-	return querycache.NewInMemoryDatasourceStore(
+func newTestDatasourceStore(db *hnysqlx.DB, now time.Time, id string) *querycache.SQLDatasourceStore {
+	return querycache.NewSQLDatasourceStore(
+		db,
 		&utils.TestClock{Time: now},
 		&utils.TestIDGenerator{ID: id})
 }
 
-func testCachedExecutor() *querycache.CachedExecutor {
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestQueryStore(now, id)
-	return &querycache.CachedExecutor{
-		Cache:    querycache.NewInMemoryCache(),
-		Store:    store,
-		Executor: &querycache.TestExecutor{},
-		Clock:    &utils.TestClock{Time: now},
-	}
-}
-
-func testConfig() (time.Time, string, *querycache.Config) {
-	now := time.Now()
+func testConfig(db *hnysqlx.DB) (time.Time, string, *querycache.Config) {
+	now := time.Now().Truncate(time.Millisecond)
 	id := uuid.New().String()
 
 	return now, id, &querycache.Config{
-		QueryStore:      newTestQueryStore(now, id),
-		DatasourceStore: newTestDatasourceStore(now, id),
+		QueryStore:      newTestQueryStore(db, now, id),
+		DatasourceStore: newTestDatasourceStore(db, now, id),
 		Executor:        &querycache.TestExecutor{}}
 }
 

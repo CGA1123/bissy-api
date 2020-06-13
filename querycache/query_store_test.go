@@ -263,59 +263,6 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 	expect.Error(t, err)
 }
 
-func TestInMemoryQueryCreate(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestQueryStore(now, id)
-	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
-
-	testQueryCreate(t, datasourceStore, store, id, now)
-}
-
-func TestInMemoryQueryGet(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestQueryStore(now, id)
-	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
-
-	testQueryGet(t, datasourceStore, store, id, now)
-}
-
-func TestInMemoryQueryDelete(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestQueryStore(now, id)
-	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
-
-	testQueryDelete(t, datasourceStore, store, id, now)
-}
-
-func TestInMemoryQueryUpdate(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestQueryStore(now, id)
-	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
-
-	testQueryUpdate(t, datasourceStore, store, id, now)
-}
-
-func TestInMemoryQueryList(t *testing.T) {
-	t.Parallel()
-
-	store := querycache.NewInMemoryQueryStore(&utils.RealClock{}, &utils.UUIDGenerator{})
-	datasourceStore := querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{})
-
-	testQueryList(t, datasourceStore, store)
-}
-
 func testSQLQueryStore(now time.Time, id string, db *hnysqlx.DB) *querycache.SQLQueryStore {
 	return querycache.NewSQLQueryStore(
 		db,
@@ -325,12 +272,8 @@ func testSQLQueryStore(now time.Time, id string, db *hnysqlx.DB) *querycache.SQL
 }
 
 func withTestSQLQueryStore(t *testing.T, f func(*testing.T, querycache.DatasourceStore, querycache.QueryStore, string, time.Time)) {
-	db, err := testDb(uuid.New().String())
-	expect.Ok(t, err)
-	defer db.Close()
-
-	err = db.Ping()
-	expect.Ok(t, err)
+	db, teardown := utils.TestDB(t)
+	defer teardown()
 
 	now := time.Now().Truncate(time.Millisecond)
 	id := uuid.New().String()
@@ -367,12 +310,9 @@ func TestSQLQueryUpdate(t *testing.T) {
 func TestSQLQueryList(t *testing.T) {
 	t.Parallel()
 
-	db, err := testDb(uuid.New().String())
-	expect.Ok(t, err)
-	defer db.Close()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
 
-	err = db.Ping()
-	expect.Ok(t, err)
 	store := querycache.NewSQLQueryStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
 	datasourceStore := querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})
 

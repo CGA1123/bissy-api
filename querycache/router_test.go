@@ -7,12 +7,16 @@ import (
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
+	"github.com/cga1123/bissy-api/utils"
 )
 
 func TestHome(t *testing.T) {
 	t.Parallel()
 
-	_, _, config := testConfig()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	_, _, config := testConfig(db)
 	request, err := http.NewRequest("GET", "/", nil)
 	expect.Ok(t, err)
 
