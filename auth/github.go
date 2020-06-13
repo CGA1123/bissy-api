@@ -16,7 +16,6 @@ import (
 // ClientState represents the state passed in by a client auth request,
 // including a random State string, and the Redirect URI callback
 type ClientState struct {
-	State    string
 	Redirect string
 }
 
@@ -129,13 +128,7 @@ func (c *Config) githubSignin(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("redirect_uri not set"), Status: http.StatusBadRequest}
 	}
 
-	clientState, ok := handlerutils.Params(r).Get("state")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("state not set"), Status: http.StatusBadRequest}
-	}
-
-	reader, err := json.Marshal(&ClientState{State: clientState, Redirect: redirectURL})
+	reader, err := json.Marshal(&ClientState{Redirect: redirectURL})
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("error marshalling state"), Status: http.StatusInternalServerError}
@@ -232,7 +225,7 @@ func (c *Config) githubCallback(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("error setting code: %v", err)
 	}
 
-	redirectURL := fmt.Sprintf("%v?code=%v&state=%v", clientState.Redirect, code, clientState.State)
+	redirectURL := fmt.Sprintf("%v?code=%v", clientState.Redirect, code)
 
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 

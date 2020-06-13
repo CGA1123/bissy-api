@@ -136,7 +136,7 @@ func TestGithubSignIn(t *testing.T) {
 	defer teardown()
 
 	request, err := http.NewRequest("GET",
-		"/github/signin?redirect_uri=https://app.bissy.io&state=client-state", nil)
+		"/github/signin?redirect_uri=https://app.bissy.io", nil)
 	expect.Ok(t, err)
 
 	response := testRouter(config, request)
@@ -153,7 +153,10 @@ func TestGithubSignIn(t *testing.T) {
 
 	clientState, err := redis.Get(redisID)
 	expect.Ok(t, err)
-	expecthttp.JSONBody(t, &auth.ClientState{Redirect: "https://app.bissy.io", State: "client-state"}, bytes.NewBuffer([]byte(clientState)))
+	expecthttp.JSONBody(
+		t,
+		&auth.ClientState{Redirect: "https://app.bissy.io"},
+		bytes.NewBuffer([]byte(clientState)))
 }
 
 func TestGithubCallback(t *testing.T) {
@@ -164,7 +167,7 @@ func TestGithubCallback(t *testing.T) {
 	config, store, redis, teardown := testConfig(t, now, userID, redisID, httpClient)
 	defer teardown()
 
-	clientState := `{"redirect": "https://app.bissy.io", "state": "client-state"}`
+	clientState := `{"redirect": "https://app.bissy.io"}`
 	_, err := redis.Set(clientState, time.Hour)
 	expect.Ok(t, err)
 
@@ -186,7 +189,7 @@ func TestGithubCallback(t *testing.T) {
 	expect.Ok(t, err)
 
 	// response
-	expectedRedirect := fmt.Sprintf("https://app.bissy.io?code=%v&state=%v", redisID, "client-state")
+	expectedRedirect := fmt.Sprintf("https://app.bissy.io?code=%v", redisID)
 	expecthttp.Status(t, http.StatusFound, response)
 	expect.Equal(t, expectedUser, user)
 	expecthttp.Header(t, "Location", expectedRedirect, response.Header())
