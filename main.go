@@ -21,6 +21,7 @@ import (
 	"github.com/honeycombio/beeline-go/wrappers/hnynethttp"
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/cors"
 )
 
 const (
@@ -30,7 +31,23 @@ const (
 	githubClientSecretVar = "GITHUB_CLIENT_SECRET"
 	databaseURLVar        = "DATABASE_URL"
 	portVar               = "PORT"
+	frontendOrigin        = "FRONTEND_ORIGIN"
 )
+
+func initCors(frontend string) *cors.Cors {
+	methods := []string{
+		http.MethodGet,
+		http.MethodPost,
+		http.MethodOptions,
+		http.MethodPatch,
+		http.MethodHead,
+	}
+
+	return cors.New(cors.Options{
+		AllowCredentials: true,
+		AllowedMethods:   methods,
+		AllowedOrigins:   []string{frontend}})
+}
 
 func initAuth(env map[string]string, db *hnysqlx.DB, redis *redis.Client) *auth.Config {
 	clock := &utils.RealClock{}
@@ -103,6 +120,7 @@ func requireEnv() map[string]string {
 		githubClientSecretVar,
 		databaseURLVar,
 		portVar,
+		frontendOrigin,
 	)
 
 	if err != nil {
@@ -155,9 +173,10 @@ func main() {
 	redisClient := initRedis(env)
 	db := initDb(env)
 	authConfig := initAuth(env, db, redisClient)
+	corsConfig := initCors(env[frontendOrigin])
 
 	router := mux.NewRouter()
-	router.Use(hnygorilla.Middleware)
+	router.Use(hnygorilla.Middleware, corsConfig.Handler)
 	router.HandleFunc("/", homeHandler)
 	router.HandleFunc("/ping", ping.Handler)
 	router.Handle("/authping", authConfig.Middleware(http.HandlerFunc(ping.Handler)))

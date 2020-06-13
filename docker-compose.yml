@@ -26,6 +26,7 @@ services:
       - DATABASE_URL=postgres://bissy:bissy@postgres:5432/bissy_development?sslmode=disable
       - JWT_SIGNING_KEY=8bb1f10acd560f472b9eaaeb3ffd092d
       - PORT=1123
+      - FRONTEND_ORIGIN=http://localhost:8000
       - GITHUB_CLIENT_ID
       - GITHUB_CLIENT_SECRET
     ports:
