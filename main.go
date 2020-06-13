@@ -86,11 +86,16 @@ func initDb(env map[string]string) *hnysqlx.DB {
 	return hnysqlx.WrapDB(db)
 }
 
-func homeHandler(w http.ResponseWriter, h *http.Request) {
-	fmt.Fprintf(w, "bissy-api")
+func initQueryCache(db *hnysqlx.DB, clock utils.Clock, gen utils.IDGenerator, redisClient *redis.Client) *querycache.Config {
+	return &querycache.Config{
+		QueryStore:      querycache.NewSQLQueryStore(db, clock, gen),
+		DatasourceStore: querycache.NewSQLDatasourceStore(db, clock, gen),
+		Cache:           &querycache.RedisCache{Client: redisClient},
+		Clock:           clock,
+	}
 }
 
-func main() {
+func requireEnv() map[string]string {
 	env, err := utils.RequireEnv(
 		redisURLVar,
 		jwtSigningKeyVar,
@@ -99,10 +104,51 @@ func main() {
 		databaseURLVar,
 		portVar,
 	)
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	return env
+}
+
+func homeHandler(w http.ResponseWriter, h *http.Request) {
+	fmt.Fprintf(w, "bissy-api")
+}
+
+func runServer(handler http.Handler, port string) *http.Server {
+	server := &http.Server{
+		Addr:         "0.0.0.0:" + port,
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      handler,
+	}
+
+	// Run our server in a goroutine so that it doesn't block.
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	return server
+}
+
+func shutdown(server *http.Server) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	server.Shutdown(ctx)
+
+	log.Println("shutting down")
+}
+
+func main() {
+	env := requireEnv()
 	clock := &utils.RealClock{}
 	generator := &utils.UUIDGenerator{}
 	initHoneycomb()
@@ -119,41 +165,14 @@ func main() {
 	authMux := router.PathPrefix("/auth").Subrouter()
 	authConfig.SetupHandlers(authMux)
 
+	queryCacheConfig := initQueryCache(db, clock, generator, redisClient)
 	querycacheMux := router.PathPrefix("/querycache").Subrouter()
-	queryCacheConfig := querycache.Config{
-		QueryStore:      querycache.NewSQLQueryStore(db, clock, generator),
-		DatasourceStore: querycache.NewSQLDatasourceStore(db, clock, generator),
-		Cache:           &querycache.RedisCache{Client: redisClient},
-		Clock:           clock,
-	}
-
 	querycacheMux.Use(authConfig.Middleware)
 	queryCacheConfig.SetupHandlers(querycacheMux)
 
 	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
 
-	server := &http.Server{
-		Addr:         "0.0.0.0:" + env[portVar],
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
-		Handler:      handler,
-	}
+	shutdown(runServer(handler, env[portVar]))
 
-	// Run our server in a goroutine so that it doesn't block.
-	go func() {
-		if err := server.ListenAndServe(); err != nil {
-			log.Println(err)
-		}
-	}()
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	<-c
-
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	server.Shutdown(ctx)
-	log.Println("shutting down")
 	os.Exit(0)
 }

@@ -7,7 +7,7 @@ triggers:
   shell: true
   delay: 100ms
   stop_timeout: 500ms
-  signal: KILL
+  signal: INT
   kill_signal: ""
 watch_paths:
 - /go/src/app
