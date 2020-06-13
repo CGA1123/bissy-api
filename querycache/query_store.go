@@ -11,16 +11,20 @@ import (
 	"github.com/cga1123/bissy-api/utils"
 )
 
+// Query describes an SQL query on a given datasource that should be cached for
+// a given Lifetime value
 type Query struct {
-	Id           string    `json:"id"`
+	ID           string    `json:"id"`
 	Query        string    `json:"query"`
-	DatasourceId string    `json:"datasourceId" db:"datasource_id"`
+	DatasourceID string    `json:"datasourceId" db:"datasource_id"`
 	Lifetime     Duration  `json:"lifetime"`
 	CreatedAt    time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt    time.Time `json:"updatedAt" db:"updated_at"`
 	LastRefresh  time.Time `json:"lastRefresh" db:"last_refresh"`
 }
 
+// Fresh determines whether a query was last refreshed within Lifetime of the
+// given time parameter
 func (query *Query) Fresh(now time.Time) bool {
 	timeSinceLastRefresh := now.Sub(query.LastRefresh)
 	refreshedRecently := Duration(timeSinceLastRefresh) < query.Lifetime
@@ -29,25 +33,31 @@ func (query *Query) Fresh(now time.Time) bool {
 	return refreshedRecently && !updatedRecently
 }
 
+// CreateQuery describes the required parameter to create a new Query
 type CreateQuery struct {
 	Query        string   `json:"query"`
 	Lifetime     Duration `json:"lifetime"`
-	DatasourceId string   `json:"datasourceId"`
+	DatasourceID string   `json:"datasourceId"`
 }
 
+// UpdateQuery describes the paramater which may be updated on a Query
 type UpdateQuery struct {
 	Query        *string   `json:"query"`
-	DatasourceId *string   `json:"datasourceId"`
+	DatasourceID *string   `json:"datasourceId"`
 	Lifetime     *Duration `json:"lifetime"`
 	LastRefresh  time.Time `json:"lastRefresh"`
 }
 
+// Duration is an alias to time.Duration to allow for defining JSON marshalling
+// and unmarshalling
 type Duration time.Duration
 
+// MarshalJSON marshals a Duration into JSON
 func (d Duration) MarshalJSON() ([]byte, error) {
 	return json.Marshal(time.Duration(d).String())
 }
 
+// UnmarshalJSON unmarshals JSON into a Duration
 func (d *Duration) UnmarshalJSON(b []byte) error {
 	var v interface{}
 	if err := json.Unmarshal(b, &v); err != nil {
@@ -69,6 +79,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 	}
 }
 
+// QueryStore describes a generic Store for Queries
 type QueryStore interface {
 	Get(string) (*Query, error)
 	Create(*CreateQuery) (*Query, error)
@@ -77,14 +88,16 @@ type QueryStore interface {
 	Update(string, *UpdateQuery) (*Query, error)
 }
 
+// InMemoryQueryStore defines an in-memory implementation of a QueryStore
 type InMemoryQueryStore struct {
 	Queries     map[string]*Query
 	clock       utils.Clock
-	idGenerator utils.IdGenerator
+	idGenerator utils.IDGenerator
 	lock        sync.RWMutex
 }
 
-func NewInMemoryQueryStore(clock utils.Clock, idGenerator utils.IdGenerator) *InMemoryQueryStore {
+// NewInMemoryQueryStore builds a new InMemoryQueryStore
+func NewInMemoryQueryStore(clock utils.Clock, idGenerator utils.IDGenerator) *InMemoryQueryStore {
 	return &InMemoryQueryStore{
 		clock:       clock,
 		idGenerator: idGenerator,
@@ -92,16 +105,16 @@ func NewInMemoryQueryStore(clock utils.Clock, idGenerator utils.IdGenerator) *In
 	}
 }
 
-// Create and persist to memory a Query from a CreateQuery struct
+// Create creates and persist to memory a Query from a CreateQuery struct
 func (store *InMemoryQueryStore) Create(createQuery *CreateQuery) (*Query, error) {
 	id := store.idGenerator.Generate()
 	now := store.clock.Now()
 
 	query := Query{
-		Id:           id,
+		ID:           id,
 		Query:        createQuery.Query,
 		Lifetime:     createQuery.Lifetime,
-		DatasourceId: createQuery.DatasourceId,
+		DatasourceID: createQuery.DatasourceID,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 		LastRefresh:  now,
@@ -115,6 +128,7 @@ func (store *InMemoryQueryStore) Create(createQuery *CreateQuery) (*Query, error
 	return &query, nil
 }
 
+// Get returns the Query with associated id from the store
 func (store *InMemoryQueryStore) Get(id string) (*Query, error) {
 	store.lock.RLock()
 	defer store.lock.RUnlock()
@@ -127,6 +141,7 @@ func (store *InMemoryQueryStore) Get(id string) (*Query, error) {
 	return query, nil
 }
 
+// Delete removes the Query with associated id from the store
 func (store *InMemoryQueryStore) Delete(id string) (*Query, error) {
 	store.lock.Lock()
 	defer store.lock.Unlock()
@@ -141,6 +156,7 @@ func (store *InMemoryQueryStore) Delete(id string) (*Query, error) {
 	return query, nil
 }
 
+// Update updates the Query with associated id from the store
 func (store *InMemoryQueryStore) Update(id string, update *UpdateQuery) (*Query, error) {
 	store.lock.Lock()
 	defer store.lock.Unlock()
@@ -158,8 +174,8 @@ func (store *InMemoryQueryStore) Update(id string, update *UpdateQuery) (*Query,
 		query.Lifetime = *update.Lifetime
 	}
 
-	if update.DatasourceId != nil {
-		query.DatasourceId = *update.DatasourceId
+	if update.DatasourceID != nil {
+		query.DatasourceID = *update.DatasourceID
 	}
 
 	if !update.LastRefresh.IsZero() {
@@ -169,6 +185,7 @@ func (store *InMemoryQueryStore) Update(id string, update *UpdateQuery) (*Query,
 	return query, nil
 }
 
+// List returns the requests Queries from the Store, ordered by createdAt
 func (store *InMemoryQueryStore) List(page, per int) ([]*Query, error) {
 	store.lock.RLock()
 	defer store.lock.RUnlock()

@@ -19,9 +19,9 @@ func TestHandler(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	expectedJson := map[string]interface{}{"message": "pong"}
+	expectedJSON := map[string]interface{}{"message": "pong"}
 
 	expecthttp.Ok(t, rr)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, rr)
-	expecthttp.JSONBody(t, expectedJson, rr.Body)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, rr)
+	expecthttp.JSONBody(t, expectedJSON, rr.Body)
 }

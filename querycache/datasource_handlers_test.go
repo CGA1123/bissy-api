@@ -27,7 +27,7 @@ func TestDatasourceCreate(t *testing.T) {
 	expect.Ok(t, err)
 
 	expected := &querycache.Datasource{
-		Id:        id,
+		ID:        id,
 		Name:      "test datasource",
 		Type:      "postgres",
 		Options:   "",
@@ -61,7 +61,7 @@ func TestDatasourceGet(t *testing.T) {
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasource, response.Body)
 }
 
@@ -81,7 +81,7 @@ func TestDatasourceDelete(t *testing.T) {
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasource, response.Body)
 
 	datasources, err := config.DatasourceStore.List(1, 1)
@@ -114,7 +114,7 @@ func TestDatasourceUpdate(t *testing.T) {
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasource, response.Body)
 
 	datasource, err = config.DatasourceStore.Get(id)
@@ -146,7 +146,7 @@ func TestDatasourceList(t *testing.T) {
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasources[:25], response.Body)
 
 	// pagination
@@ -155,6 +155,6 @@ func TestDatasourceList(t *testing.T) {
 
 	response = testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasources[5:10], response.Body)
 }

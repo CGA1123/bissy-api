@@ -16,13 +16,13 @@ import (
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
-func testConfig(t *testing.T, now time.Time, userId, redisId string, client utils.HTTPClient) (*auth.Config, *auth.SQLUserStore, *auth.RedisStore, func()) {
+func testConfig(t *testing.T, now time.Time, userID, redisID string, client utils.HTTPClient) (*auth.Config, *auth.SQLUserStore, *auth.RedisStateStore, func()) {
 	db, dbTeardown := utils.TestDB(t)
 	redisClient, redisTeardown := utils.TestRedis(t)
-	redis := &auth.RedisStore{Client: redisClient, IdGenerator: &utils.TestIdGenerator{Id: redisId}}
+	redis := &auth.RedisStateStore{Client: redisClient, IDGenerator: &utils.TestIDGenerator{ID: redisID}}
 	githubApp := auth.NewGithubApp("client-id", "client-secret", client)
 
-	store := testSQLUserStore(now.Truncate(time.Millisecond), userId, hnysqlx.WrapDB(db))
+	store := testSQLUserStore(now.Truncate(time.Millisecond), userID, hnysqlx.WrapDB(db))
 	signingKey := []byte("test-key")
 	clock := &utils.TestClock{Time: now}
 	config := auth.NewConfig(
@@ -44,7 +44,7 @@ func testingHandler(t *testing.T, expected *auth.User) http.Handler {
 		claim, ok := auth.UserFromContext(r.Context())
 
 		expect.True(t, ok)
-		expect.Equal(t, expected.Id, claim.UserId)
+		expect.Equal(t, expected.ID, claim.UserID)
 		expect.Equal(t, expected.Name, claim.Name)
 	})
 }
@@ -77,17 +77,17 @@ func TestAuthHandler(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now().Truncate(time.Millisecond)
-	userId := uuid.New().String()
+	userID := uuid.New().String()
 	config, store, _, teardown := testConfig(
 		t,
 		now,
-		userId,
+		userID,
 		uuid.New().String(),
-		utils.NewTestHTTPClient(t),
+		utils.NewTestHTTPClient(),
 	)
 	defer teardown()
 
-	user, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Chritian"})
+	user, err := store.Create(&auth.CreateUser{GithubID: "github-id", Name: "Chritian"})
 	expect.Ok(t, err)
 
 	request, err := http.NewRequest("GET", "/", nil)
@@ -119,26 +119,26 @@ func TestAuthHandler(t *testing.T) {
 
 func TestTokenHandler(t *testing.T) {
 	now := time.Now().Truncate(time.Millisecond)
-	userId := uuid.New().String()
-	redisId := uuid.New().String()
-	httpClient := utils.NewTestHTTPClient(t)
-	config, store, redis, teardown := testConfig(t, now, userId, redisId, httpClient)
+	userID := uuid.New().String()
+	redisID := uuid.New().String()
+	httpClient := utils.NewTestHTTPClient()
+	config, store, redis, teardown := testConfig(t, now, userID, redisID, httpClient)
 	defer teardown()
 
-	user, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Chritian"})
+	user, err := store.Create(&auth.CreateUser{GithubID: "github-id", Name: "Chritian"})
 	expect.Ok(t, err)
 
-	_, err = redis.Set(user.Id, time.Minute*5)
+	_, err = redis.Set(user.ID, time.Minute*5)
 	expect.Ok(t, err)
 
 	token, err := config.SignedToken(user)
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("GET", "/token?code="+redisId, nil)
+	request, err := http.NewRequest("GET", "/token?code="+redisID, nil)
 	expect.Ok(t, err)
 
 	response := testRouter(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.JSONBody(t, map[string]interface{}{"token": token}, response.Body)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 }

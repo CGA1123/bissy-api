@@ -7,16 +7,19 @@ import (
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
+// SQLDatasourceStore describes an SQL implementation of DatasourceStore
 type SQLDatasourceStore struct {
 	db          *hnysqlx.DB
 	clock       utils.Clock
-	idGenerator utils.IdGenerator
+	idGenerator utils.IDGenerator
 }
 
-func NewSQLDatasourceStore(db *hnysqlx.DB, clock utils.Clock, generator utils.IdGenerator) *SQLDatasourceStore {
+// NewSQLDatasourceStore retunes a new SQLDatasourceStore
+func NewSQLDatasourceStore(db *hnysqlx.DB, clock utils.Clock, generator utils.IDGenerator) *SQLDatasourceStore {
 	return &SQLDatasourceStore{db: db, clock: clock, idGenerator: generator}
 }
 
+// Create creates and persists a new Datasource to the Store
 func (s *SQLDatasourceStore) Create(ca *CreateDatasource) (*Datasource, error) {
 	now := s.clock.Now()
 	id := s.idGenerator.Generate()
@@ -34,6 +37,7 @@ func (s *SQLDatasourceStore) Create(ca *CreateDatasource) (*Datasource, error) {
 	return &datasource, nil
 }
 
+// Get returns the Datasource with associated id from the store
 func (s *SQLDatasourceStore) Get(id string) (*Datasource, error) {
 	var datasource Datasource
 
@@ -46,6 +50,7 @@ func (s *SQLDatasourceStore) Get(id string) (*Datasource, error) {
 	return &datasource, nil
 }
 
+// Delete removes the Datasource with given id from the Store
 func (s *SQLDatasourceStore) Delete(id string) (*Datasource, error) {
 	var datasource Datasource
 
@@ -58,6 +63,7 @@ func (s *SQLDatasourceStore) Delete(id string) (*Datasource, error) {
 	return &datasource, nil
 }
 
+// List returns the requests Datasources from the Store, ordered by createdAt
 func (s *SQLDatasourceStore) List(page, per int) ([]*Datasource, error) {
 	if page < 1 || per < 1 {
 		return nil,
@@ -75,6 +81,7 @@ func (s *SQLDatasourceStore) List(page, per int) ([]*Datasource, error) {
 	return datasources, nil
 }
 
+// Update updates the Datasource with associated id from the store
 func (s *SQLDatasourceStore) Update(id string, ua *UpdateDatasource) (*Datasource, error) {
 	var datasource Datasource
 

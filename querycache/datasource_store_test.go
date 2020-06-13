@@ -18,7 +18,7 @@ import (
 
 func testDatasourceCreate(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
 	expected := &querycache.Datasource{
-		Id:        id,
+		ID:        id,
 		Name:      "test datasource",
 		Type:      "postgres",
 		Options:   "sslmode=disable",
@@ -43,7 +43,7 @@ func testDatasourceCreate(t *testing.T, store querycache.DatasourceStore, id str
 
 func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
 	expected := &querycache.Datasource{
-		Id:        id,
+		ID:        id,
 		Name:      "test datasource",
 		Type:      "postgres",
 		Options:   "sslmode=disable",
@@ -70,7 +70,7 @@ func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id str
 
 func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
 	expected := &querycache.Datasource{
-		Id:        id,
+		ID:        id,
 		Name:      "test datasource",
 		Type:      "postgres",
 		Options:   "sslmode=disable",
@@ -92,7 +92,7 @@ func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string
 
 func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
 	expected := &querycache.Datasource{
-		Id:        id,
+		ID:        id,
 		Name:      "test snowdapter",
 		Type:      "snowflake",
 		Options:   "",
@@ -242,7 +242,7 @@ func testSQLDatasourceStore(now time.Time, id string, db *hnysqlx.DB) *querycach
 	return querycache.NewSQLDatasourceStore(
 		db,
 		&utils.TestClock{Time: now},
-		&utils.TestIdGenerator{Id: id},
+		&utils.TestIDGenerator{ID: id},
 	)
 }
 

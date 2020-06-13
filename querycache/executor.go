@@ -11,69 +11,93 @@ import (
 
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/go-redis/redis/v8"
+
+	// add support for mysql databases
 	_ "github.com/go-sql-driver/mysql"
+	// add support for postgres databases
 	_ "github.com/lib/pq"
+	// add support for snowflake databases
 	_ "github.com/snowflakedb/gosnowflake"
 )
 
+// QueryCache defines the interface for a cache of query results
 type QueryCache interface {
 	Get(*Query) (string, bool)
 	Set(*Query, string) error
 }
 
+// InMemoryCache is an in-memory implementation of QueryCache
 type InMemoryCache struct {
 	Cache map[string]string
 	lock  sync.RWMutex
 }
 
+// NewInMemoryCache sets up a new InMemoryCache
 func NewInMemoryCache() *InMemoryCache {
 	return &InMemoryCache{Cache: map[string]string{}}
 }
+
+// Get returns the cached results for a given query
 func (cache *InMemoryCache) Get(query *Query) (string, bool) {
 	cache.lock.RLock()
 	defer cache.lock.RUnlock()
 
-	value, ok := cache.Cache[query.Id]
+	value, ok := cache.Cache[query.ID]
 	return value, ok
 }
 
+// Set caches the results for a given query
 func (cache *InMemoryCache) Set(query *Query, result string) error {
 	cache.lock.Lock()
 	defer cache.lock.Unlock()
 
-	cache.Cache[query.Id] = result
+	cache.Cache[query.ID] = result
 
 	return nil
 }
 
+// RedisCache is a redis-backed implementation of QueryCache
 type RedisCache struct {
 	Client *redis.Client
 	Prefix string
 }
 
+// Get returns the cached results for a given query
 func (cache *RedisCache) Get(query *Query) (string, bool) {
 	value, err := cache.Client.Get(
 		context.TODO(),
-		cache.Prefix+":"+query.Id,
+		cache.Prefix+":"+query.ID,
 	).Result()
 
 	return value, err == nil
 }
 
+// Set caches the results for a given query
 func (cache *RedisCache) Set(query *Query, result string) error {
 	set := cache.Client.Set(
 		context.TODO(),
-		cache.Prefix+":"+query.Id,
+		cache.Prefix+":"+query.ID,
 		result,
 		time.Duration(query.Lifetime))
 
 	return set.Err()
 }
 
+// Executor defines the interface to execute a query
 type Executor interface {
 	Execute(*Query) (string, error)
 }
 
+// TestExecutor implements an Executor that echoes the passed query
+type TestExecutor struct{}
+
+// Execute echoes the given query
+func (t *TestExecutor) Execute(query *Query) (string, error) {
+	return fmt.Sprintf("Got: %v", query.Query), nil
+}
+
+// CachedExecutor implements Executor that caches query results for the given
+// Lifetime of a Query
 type CachedExecutor struct {
 	Cache    QueryCache
 	Executor Executor
@@ -81,24 +105,15 @@ type CachedExecutor struct {
 	Clock    utils.Clock
 }
 
-type TestExecutor struct{}
-
-func (t *TestExecutor) Execute(query *Query) (string, error) {
-	return fmt.Sprintf("Got: %v", query.Query), nil
-}
-
-type SQLExecutor struct {
-	db *sql.DB
-}
-
 func updateCache(cache *CachedExecutor, query *Query, result string) {
 	if err := cache.Cache.Set(query, result); err != nil {
 		return
 	}
 
-	cache.Store.Update(query.Id, &UpdateQuery{LastRefresh: time.Now()})
+	cache.Store.Update(query.ID, &UpdateQuery{LastRefresh: time.Now()})
 }
 
+// NewCachedExecutor sets up a new CachedExecutor
 func NewCachedExecutor(cache QueryCache, store QueryStore, clock utils.Clock, executor Executor) *CachedExecutor {
 	return &CachedExecutor{
 		Cache:    cache,
@@ -108,6 +123,8 @@ func NewCachedExecutor(cache QueryCache, store QueryStore, clock utils.Clock, ex
 	}
 }
 
+// Execute checks the cache for the given query cache, fallsback to the the
+// configured executor if no results are found and stores the new results.
 func (cache *CachedExecutor) Execute(query *Query) (string, error) {
 	if query.Fresh(cache.Clock.Now()) {
 		if result, ok := cache.Cache.Get(query); ok {
@@ -125,6 +142,12 @@ func (cache *CachedExecutor) Execute(query *Query) (string, error) {
 	return result, nil
 }
 
+// SQLExecutor implements Executor against an *sql.DB
+type SQLExecutor struct {
+	db *sql.DB
+}
+
+// NewSQLExecutor builds a new SQLExecutor, parameters are passed to sql.Open
 func NewSQLExecutor(driver, conn string) (*SQLExecutor, error) {
 	db, err := sql.Open(driver, conn)
 	if err != nil {
@@ -134,6 +157,8 @@ func NewSQLExecutor(driver, conn string) (*SQLExecutor, error) {
 	return &SQLExecutor{db: db}, nil
 }
 
+// Execute runs the query against the configured database
+// returns the results as a CSV string
 func (sql *SQLExecutor) Execute(query *Query) (string, error) {
 	rows, err := sql.db.Query(query.Query)
 	if err != nil {
@@ -153,7 +178,7 @@ func (sql *SQLExecutor) Execute(query *Query) (string, error) {
 	ptrs := make([]interface{}, count)
 	for rows.Next() {
 		row := make([]string, count)
-		for i, _ := range cols {
+		for i := range cols {
 			ptrs[i] = &vals[i]
 		}
 
@@ -161,7 +186,7 @@ func (sql *SQLExecutor) Execute(query *Query) (string, error) {
 			return "", err
 		}
 
-		for i, _ := range cols {
+		for i := range cols {
 			var value interface{}
 			rawValue := vals[i]
 

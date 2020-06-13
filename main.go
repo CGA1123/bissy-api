@@ -42,7 +42,7 @@ func initAuth(env map[string]string, db *hnysqlx.DB, redis *redis.Client) *auth.
 		[]byte(env[jwtSigningKeyVar]),
 		store,
 		clock,
-		&auth.RedisStore{Client: redis, IdGenerator: idGen},
+		&auth.RedisStateStore{Client: redis, IDGenerator: idGen},
 		auth.NewGithubApp(env[githubClientIDVar], env[githubClientSecretVar], &http.Client{}),
 	)
 }
@@ -133,7 +133,7 @@ func main() {
 	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
 
 	server := &http.Server{
-		Addr:         "0.0.0.0:" + env[PORT],
+		Addr:         "0.0.0.0:" + env[portVar],
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,

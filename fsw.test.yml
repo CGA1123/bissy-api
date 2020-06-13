@@ -3,7 +3,7 @@ triggers:
 - name: ""
   pattens:
   - '**/*.go'
-  cmd: clear; go test -timeout=10s -parallel=4 ./...; golint ./... -set_exit_status; echo " * DONE"
+  cmd: clear; go test -timeout=10s -parallel=4 ./...; golint -set_exit_status ./...; echo " * DONE"
   shell: true
   delay: 100ms
   stop_timeout: 500ms

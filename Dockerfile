@@ -20,4 +20,5 @@ RUN go get -u -d github.com/golang-migrate/migrate/cmd/migrate \
       && git checkout $MIGRATE_VERSION \
       && go build -tags 'postgres' -ldflags="-X main.Version=$(git describe --tags)" -o $GOPATH/bin/migrate $GOPATH/src/github.com/golang-migrate/migrate/cmd/migrate
 
+RUN go get -u golang.org/x/lint/golint
 RUN go get github.com/codeskyblue/fswatch

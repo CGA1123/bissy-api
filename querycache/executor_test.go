@@ -35,7 +35,7 @@ func TestCachedExecutorExecute(t *testing.T) {
 
 	executor := testCachedExecutor()
 	query := &querycache.Query{
-		Id:          "1",
+		ID:          "1",
 		LastRefresh: now,
 		UpdatedAt:   now.Add(-time.Second),
 		Lifetime:    querycache.Duration(time.Hour),

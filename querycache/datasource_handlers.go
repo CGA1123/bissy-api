@@ -10,7 +10,7 @@ import (
 )
 
 func (c *Config) datasourcesList(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
 	page := params.MaybeInt("page", 1)
@@ -26,7 +26,7 @@ func (c *Config) datasourcesList(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Config) datasourcesCreate(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	var createDatasource CreateDatasource
 	if err := utils.ParseJSONBody(r.Body, &createDatasource); err != nil {
@@ -50,7 +50,7 @@ func (c *Config) datasourcesCreate(w http.ResponseWriter, r *http.Request) error
 }
 
 func (c *Config) datasourceGet(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
 	id, ok := params.Get("id")
@@ -68,7 +68,7 @@ func (c *Config) datasourceGet(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Config) datasourceDelete(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
 	id, ok := params.Get("id")
@@ -86,7 +86,7 @@ func (c *Config) datasourceDelete(w http.ResponseWriter, r *http.Request) error 
 }
 
 func (c *Config) datasourceUpdate(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
 	id, ok := params.Get("id")

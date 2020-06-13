@@ -8,27 +8,31 @@ import (
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
+// User represents an auth user
 type User struct {
-	Id        string `json:"id"`
-	GithubId  string `json:"githubId" db:"github_id"`
+	ID        string `json:"id"`
+	GithubID  string `json:"githubId" db:"github_id"`
 	Name      string
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 }
 
+// CreateUser is the struct containing all parameters necessary to create a user
 type CreateUser struct {
-	GithubId string `json:"github_id"`
+	GithubID string `json:"github_id"`
 	Name     string
 }
 
+// UserStore defines the interface to manage users
 type UserStore interface {
 	Get(string) (*User, error)
-	GetByGithubId(string) (*User, error)
+	GetByGithubID(string) (*User, error)
 	Create(*CreateUser) (*User, error)
 }
 
+// NewToken generates a new jwt.Token expiring at exp for the given user
 func (u *User) NewToken(exp time.Time) *jwt.Token {
 	return jwt.NewWithClaims(jwt.SigningMethodHS512, Claims{
-		u.Id,
+		u.ID,
 		u.Name,
 		jwt.StandardClaims{
 			ExpiresAt: exp.Unix(),
@@ -37,17 +41,20 @@ func (u *User) NewToken(exp time.Time) *jwt.Token {
 	})
 }
 
+// SQLUserStore is an SQL implementation of UserStore
 type SQLUserStore struct {
 	db          *hnysqlx.DB
-	idGenerator utils.IdGenerator
+	idGenerator utils.IDGenerator
 	clock       utils.Clock
 }
 
-func NewSQLUserStore(db *hnysqlx.DB, clock utils.Clock, gen utils.IdGenerator) *SQLUserStore {
+// NewSQLUserStore configures a new SQLUserStore
+func NewSQLUserStore(db *hnysqlx.DB, clock utils.Clock, gen utils.IDGenerator) *SQLUserStore {
 	return &SQLUserStore{db: db, idGenerator: gen, clock: clock}
 }
 
-func (s *SQLUserStore) GetByGithubId(id string) (*User, error) {
+// GetByGithubID fetches a user from the store based on their GithubID
+func (s *SQLUserStore) GetByGithubID(id string) (*User, error) {
 	var user User
 
 	query := "SELECT * FROM auth_users WHERE github_id = $1"
@@ -59,6 +66,7 @@ func (s *SQLUserStore) GetByGithubId(id string) (*User, error) {
 	return &user, nil
 }
 
+// Get fetches a user from the store based on their ID
 func (s *SQLUserStore) Get(id string) (*User, error) {
 	var user User
 
@@ -71,6 +79,7 @@ func (s *SQLUserStore) Get(id string) (*User, error) {
 	return &user, nil
 }
 
+// Create persists a new user to the store
 func (s *SQLUserStore) Create(cu *CreateUser) (*User, error) {
 	now := s.clock.Now()
 	id := s.idGenerator.Generate()
@@ -81,7 +90,7 @@ func (s *SQLUserStore) Create(cu *CreateUser) (*User, error) {
 		RETURNING *`
 
 	var user User
-	if err := s.db.Get(&user, query, id, cu.GithubId, cu.Name, now); err != nil {
+	if err := s.db.Get(&user, query, id, cu.GithubID, cu.Name, now); err != nil {
 		return nil, err
 	}
 
