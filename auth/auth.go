@@ -12,26 +12,31 @@ import (
 	"github.com/honeycombio/beeline-go"
 )
 
+type contextKey int
+
 const (
-	contextKey = "auth_user_claim"
+	userContextKey contextKey = iota
 )
 
+// Claims represents the custom JWT Claims struct
 type Claims struct {
-	UserId string `json:"user_id"`
+	UserID string `json:"user_id"`
 	Name   string
 	jwt.StandardClaims
 }
 
+// Config contains all the values required to support the auth package
 type Config struct {
 	signingKey []byte
 	expiryTime time.Duration
 	userStore  UserStore
 	clock      utils.Clock
-	redis      CacheStore
+	redis      StateStore
 	githubApp  *GithubApp
 }
 
-func NewConfig(key []byte, store UserStore, clock utils.Clock, redis CacheStore, githubApp *GithubApp) *Config {
+// NewConfig build a new Config struct
+func NewConfig(key []byte, store UserStore, clock utils.Clock, redis StateStore, githubApp *GithubApp) *Config {
 	return &Config{
 		signingKey: key,
 		userStore:  store,
@@ -41,18 +46,24 @@ func NewConfig(key []byte, store UserStore, clock utils.Clock, redis CacheStore,
 	}
 }
 
+// SignedToken returns a new signed JWT token string for the given User
 func (c *Config) SignedToken(u *User) (string, error) {
 	token := u.NewToken(c.clock.Now().Add(12 * time.Hour))
 
 	return token.SignedString(c.signingKey)
 }
 
+// UserFromContext fetches the Claim from the current context
 func UserFromContext(ctx context.Context) (*Claims, bool) {
-	claim, ok := ctx.Value(contextKey).(*Claims)
+	claim, ok := ctx.Value(userContextKey).(*Claims)
 
 	return claim, ok
 }
 
+// Middleware ensures that a request is authentic before passing the request on
+// to the next middleware in the stack.
+// It will inject a Claim struct into the request context on successful authentication
+// This Claim can be retrieved in downsteam handlers via UserFromContext.
 func (c *Config) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claim, err := authenticate(c, r)
@@ -65,8 +76,8 @@ func (c *Config) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), contextKey, claim)
-		beeline.AddField(ctx, "user_id", claim.UserId)
+		ctx := context.WithValue(r.Context(), userContextKey, claim)
+		beeline.AddField(ctx, "user_id", claim.UserID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

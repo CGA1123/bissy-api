@@ -23,7 +23,7 @@ func TestQueryCreate(t *testing.T) {
 	json, err := jsonBody(map[string]string{
 		"lifetime":     "1h01m",
 		"query":        "SELECT 1;",
-		"datasourceId": "datasource-id",
+		"datasourceID": "datasource-id",
 	})
 	expect.Ok(t, err)
 
@@ -35,10 +35,10 @@ func TestQueryCreate(t *testing.T) {
 
 	actual, err := config.QueryStore.Get(id)
 	expected := &querycache.Query{
-		Id:           id,
+		ID:           id,
 		Lifetime:     querycache.Duration(time.Hour + time.Minute),
 		Query:        "SELECT 1;",
-		DatasourceId: "datasource-id",
+		DatasourceID: "datasource-id",
 		CreatedAt:    now,
 		UpdatedAt:    now,
 		LastRefresh:  now,
@@ -76,7 +76,7 @@ func TestQueryGet(t *testing.T) {
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, query, response.Body)
 }
 
@@ -109,7 +109,7 @@ func TestQueryDelete(t *testing.T) {
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, query, response.Body)
 
 	queries, err := config.QueryStore.List(1, 1)
@@ -145,7 +145,7 @@ func TestQueryUpdate(t *testing.T) {
 	json, err := jsonBody(map[string]string{
 		"lifetime":     "1h01m",
 		"query":        "SELECT 2;",
-		"datasourceId": "datasource-id",
+		"datasourceID": "datasource-id",
 		"lastRefresh":  oneHourAgo.Format(time.RFC3339Nano)})
 	expect.Ok(t, err)
 
@@ -155,11 +155,11 @@ func TestQueryUpdate(t *testing.T) {
 	query.Lifetime = querycache.Duration(time.Hour + time.Minute)
 	query.Query = "SELECT 2;"
 	query.LastRefresh = oneHourAgo
-	query.DatasourceId = "datasource-id"
+	query.DatasourceID = "datasource-id"
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, query, response.Body)
 
 	query, err = config.QueryStore.Get(id)
@@ -207,7 +207,7 @@ func TestQueryList(t *testing.T) {
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, queries[:25], response.Body)
 
 	// pagination
@@ -216,7 +216,7 @@ func TestQueryList(t *testing.T) {
 
 	response = testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeJson, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, queries[5:10], response.Body)
 }
 
@@ -234,15 +234,15 @@ func TestQueryResult(t *testing.T) {
 	expect.Ok(t, err)
 
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
-		Query: "SELECT * FROM users", DatasourceId: datasource.Id})
+		Query: "SELECT * FROM users", DatasourceID: datasource.ID})
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("GET", "/queries/"+query.Id+"/result", nil)
+	request, err := http.NewRequest("GET", "/queries/"+query.ID+"/result", nil)
 	expect.Ok(t, err)
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeCsv, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeCSV, response)
 	expecthttp.StringBody(t, "Got: SELECT * FROM users", response)
 
 	// PG Test
@@ -253,21 +253,21 @@ func TestQueryResult(t *testing.T) {
 		t.Fatal("DATABASE_URL is not set")
 	}
 
-	datasource, err = config.DatasourceStore.Update(datasource.Id, &querycache.UpdateDatasource{
+	datasource, err = config.DatasourceStore.Update(datasource.ID, &querycache.UpdateDatasource{
 		Type: &newType, Name: &newName, Options: &newOptions})
 
 	expect.Ok(t, err)
 
 	newQuery := "SELECT 1"
-	query, err = config.QueryStore.Update(query.Id, &querycache.UpdateQuery{
+	query, err = config.QueryStore.Update(query.ID, &querycache.UpdateQuery{
 		Query: &newQuery})
 	expect.Ok(t, err)
 
-	request, err = http.NewRequest("GET", "/queries/"+query.Id+"/result", nil)
+	request, err = http.NewRequest("GET", "/queries/"+query.ID+"/result", nil)
 	expect.Ok(t, err)
 
 	response = testHandler(config, request)
 	expecthttp.Ok(t, response)
-	expecthttp.ContentType(t, handlerutils.ContentTypeCsv, response)
+	expecthttp.ContentType(t, handlerutils.ContentTypeCSV, response)
 	expecthttp.StringBody(t, "?column?\n1\n", response)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Config contains everything external required to setup querycache
 type Config struct {
 	QueryStore      QueryStore
 	DatasourceStore DatasourceStore
@@ -17,8 +18,9 @@ type Config struct {
 	Clock           utils.Clock
 }
 
+// SetupHandlers mounts the querycache handlers onto the given mux
 func (c *Config) SetupHandlers(router *mux.Router) {
-	router.HandleFunc("/", c.Home).Methods("GET")
+	router.HandleFunc("/", c.home).Methods("GET")
 
 	router.
 		Handle("/queries", &handlerutils.Handler{H: c.queriesList}).
@@ -65,7 +67,7 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 		Methods("PATCH")
 }
 
-func (c *Config) Home(w http.ResponseWriter, r *http.Request) {
+func (c *Config) home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 
 	fmt.Fprintf(w, "querycache: using cache, saving cash\n")

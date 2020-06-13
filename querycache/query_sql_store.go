@@ -8,16 +8,19 @@ import (
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
+// SQLQueryStore defines an SQL implementation of a QueryStore
 type SQLQueryStore struct {
 	db          *hnysqlx.DB
 	clock       utils.Clock
-	idGenerator utils.IdGenerator
+	idGenerator utils.IDGenerator
 }
 
-func NewSQLQueryStore(db *hnysqlx.DB, clock utils.Clock, generator utils.IdGenerator) *SQLQueryStore {
+// NewSQLQueryStore builds a new SQLQueryStore
+func NewSQLQueryStore(db *hnysqlx.DB, clock utils.Clock, generator utils.IDGenerator) *SQLQueryStore {
 	return &SQLQueryStore{db: db, clock: clock, idGenerator: generator}
 }
 
+// Get returns the Query with associated id from the store
 func (s *SQLQueryStore) Get(id string) (*Query, error) {
 	var query Query
 
@@ -30,6 +33,7 @@ func (s *SQLQueryStore) Get(id string) (*Query, error) {
 	return &query, nil
 }
 
+// Create creates and persist to memory a Query from a CreateQuery struct
 func (s *SQLQueryStore) Create(ca *CreateQuery) (*Query, error) {
 	now := s.clock.Now()
 	id := s.idGenerator.Generate()
@@ -40,13 +44,14 @@ func (s *SQLQueryStore) Create(ca *CreateQuery) (*Query, error) {
 		RETURNING *`
 
 	var query Query
-	if err := s.db.Get(&query, queryStr, id, ca.Query, ca.Lifetime, ca.DatasourceId, now, now, now); err != nil {
+	if err := s.db.Get(&query, queryStr, id, ca.Query, ca.Lifetime, ca.DatasourceID, now, now, now); err != nil {
 		return nil, err
 	}
 
 	return &query, nil
 }
 
+// Delete removes the Query with associated id from the store
 func (s *SQLQueryStore) Delete(id string) (*Query, error) {
 	var query Query
 
@@ -59,6 +64,7 @@ func (s *SQLQueryStore) Delete(id string) (*Query, error) {
 	return &query, nil
 }
 
+// Update updates the Query with associated id from the store
 func (s *SQLQueryStore) Update(id string, uq *UpdateQuery) (*Query, error) {
 	var query Query
 
@@ -79,13 +85,14 @@ func (s *SQLQueryStore) Update(id string, uq *UpdateQuery) (*Query, error) {
 		lastRefresh = sql.NullTime{Time: uq.LastRefresh, Valid: true}
 	}
 
-	if err := s.db.Get(&query, queryStr, id, uq.Query, uq.DatasourceId, uq.Lifetime, lastRefresh, s.clock.Now()); err != nil {
+	if err := s.db.Get(&query, queryStr, id, uq.Query, uq.DatasourceID, uq.Lifetime, lastRefresh, s.clock.Now()); err != nil {
 		return nil, err
 	}
 
 	return &query, nil
 }
 
+// List returns the requests Queries from the Store, ordered by createdAt
 func (s *SQLQueryStore) List(page, per int) ([]*Query, error) {
 	if page < 1 || per < 1 {
 		return nil,

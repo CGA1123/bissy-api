@@ -56,13 +56,13 @@ func testQueryCreate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 	createQuery := querycache.CreateQuery{
 		Query:        "SELECT 1;",
 		Lifetime:     3 * querycache.Duration(time.Hour),
-		DatasourceId: datasource.Id,
+		DatasourceID: datasource.ID,
 	}
 
 	expected := &querycache.Query{
-		Id:           id,
+		ID:           id,
 		Query:        "SELECT 1;",
-		DatasourceId: datasource.Id,
+		DatasourceID: datasource.ID,
 		Lifetime:     3 * querycache.Duration(time.Hour),
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -86,13 +86,13 @@ func testQueryGet(t *testing.T, datasourceStore querycache.DatasourceStore, stor
 	createQuery := querycache.CreateQuery{
 		Query:        "SELECT 1;",
 		Lifetime:     3 * querycache.Duration(time.Hour),
-		DatasourceId: datasource.Id,
+		DatasourceID: datasource.ID,
 	}
 
 	expected := querycache.Query{
-		Id:           id,
+		ID:           id,
 		Query:        "SELECT 1;",
-		DatasourceId: datasource.Id,
+		DatasourceID: datasource.ID,
 		Lifetime:     3 * querycache.Duration(time.Hour),
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -122,7 +122,7 @@ func testQueryList(t *testing.T, datasourceStore querycache.DatasourceStore, sto
 		q := &querycache.CreateQuery{
 			Query:        fmt.Sprintf("SELECT %v;", i),
 			Lifetime:     querycache.Duration(time.Duration(i) * time.Hour),
-			DatasourceId: datasource.Id,
+			DatasourceID: datasource.ID,
 		}
 		query, err := store.Create(q)
 		expect.Ok(t, err)
@@ -164,13 +164,13 @@ func testQueryDelete(t *testing.T, datasourceStore querycache.DatasourceStore, s
 	createQuery := querycache.CreateQuery{
 		Query:        "SELECT 1;",
 		Lifetime:     3 * querycache.Duration(time.Hour),
-		DatasourceId: datasource.Id,
+		DatasourceID: datasource.ID,
 	}
 
 	expected := querycache.Query{
-		Id:           id,
+		ID:           id,
 		Query:        "SELECT 1;",
-		DatasourceId: datasource.Id,
+		DatasourceID: datasource.ID,
 		Lifetime:     3 * querycache.Duration(time.Hour),
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -199,7 +199,7 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 
 	createQuery := querycache.CreateQuery{
 		Query:        "SELECT 1;",
-		DatasourceId: datasource.Id,
+		DatasourceID: datasource.ID,
 		Lifetime:     3 * querycache.Duration(time.Hour),
 	}
 
@@ -208,17 +208,17 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 
 	newQuery := "SELECT 2;"
 	newLifetime := querycache.Duration(time.Hour)
-	newDatasourceId := datasourceTwo.Id
+	newDatasourceID := datasourceTwo.ID
 	updateQuery := querycache.UpdateQuery{
 		Query:        &newQuery,
 		Lifetime:     &newLifetime,
-		DatasourceId: &newDatasourceId,
+		DatasourceID: &newDatasourceID,
 	}
 
 	expected := querycache.Query{
-		Id:           id,
+		ID:           id,
 		Query:        "SELECT 2;",
-		DatasourceId: datasourceTwo.Id,
+		DatasourceID: datasourceTwo.ID,
 		Lifetime:     querycache.Duration(time.Hour),
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -320,7 +320,7 @@ func testSQLQueryStore(now time.Time, id string, db *hnysqlx.DB) *querycache.SQL
 	return querycache.NewSQLQueryStore(
 		db,
 		&utils.TestClock{Time: now},
-		&utils.TestIdGenerator{Id: id},
+		&utils.TestIDGenerator{ID: id},
 	)
 }
 

@@ -8,42 +8,48 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Defines some common ContentType strings
 const (
-	ContentTypeJson      = "application/json; charset=UTF-8"
+	ContentTypeJSON      = "application/json; charset=UTF-8"
 	ContentTypePlaintext = "text/plain"
-	ContentTypeCsv       = "text/csv"
+	ContentTypeCSV       = "text/csv"
 )
-
-type requestParams struct {
-	Values map[string][]string
-}
 
 type handlerError interface {
 	error
 	StatusCode() int
 }
 
+// Handler extends the http.Handler interface and allows handlers to return and
+// error
 type Handler struct {
 	H func(w http.ResponseWriter, r *http.Request) error
 }
 
+// HandlerError satisfies the error interface and allows for http handlers to
+// set a specific HTTP Status Code
 type HandlerError struct {
 	Err    error
 	Status int
 }
 
+// Error satisfies the error interface, returning the wrapped error
 func (h *HandlerError) Error() string {
 	return h.Err.Error()
 }
 
+// StatusCode returns the configured status code
 func (h *HandlerError) StatusCode() int {
 	return h.Status
 }
 
+// ContentType is a convience function to set the Content-Type header
 func ContentType(w http.ResponseWriter, contentType string) {
 	w.Header().Set("Content-Type", contentType)
 }
 
+// ServeHTTP satifies the http.Handler interface and wraps handlers to deal with
+// a returned error.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := h.H(w, r)
 	if err != nil {
@@ -62,7 +68,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Params(r *http.Request) *requestParams {
+// RequestParams represents the query and path parameters of a request
+type RequestParams struct {
+	values map[string][]string
+}
+
+// Params is a helper function that combines URL and query parameters into a
+// single map
+func Params(r *http.Request) *RequestParams {
 	pathVars := mux.Vars(r)
 	queryVars := r.URL.Query()
 	params := map[string][]string{}
@@ -75,11 +88,12 @@ func Params(r *http.Request) *requestParams {
 		params[k] = []string{v}
 	}
 
-	return &requestParams{Values: params}
+	return &RequestParams{values: params}
 }
 
-func (p *requestParams) Get(k string) (string, bool) {
-	values, ok := p.Values[k]
+// Get returns the requested param, if available
+func (p *RequestParams) Get(k string) (string, bool) {
+	values, ok := p.values[k]
 	if !ok || len(values) == 0 {
 		return "", false
 	}
@@ -87,7 +101,8 @@ func (p *requestParams) Get(k string) (string, bool) {
 	return values[0], true
 }
 
-func (p *requestParams) Int(k string) (int, bool) {
+// Int returns the given parameter casted to int if possible
+func (p *RequestParams) Int(k string) (int, bool) {
 	value, ok := p.Get(k)
 	if !ok {
 		return -1, false
@@ -101,7 +116,9 @@ func (p *requestParams) Int(k string) (int, bool) {
 	return i, true
 }
 
-func (p *requestParams) MaybeInt(k string, fallback int) int {
+// MaybeInt returns the given parameter casted to int, or the given fallback if
+// not set or not castable
+func (p *RequestParams) MaybeInt(k string, fallback int) int {
 	value, ok := p.Int(k)
 	if !ok {
 		return fallback

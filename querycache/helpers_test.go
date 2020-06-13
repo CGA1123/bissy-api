@@ -16,13 +16,13 @@ import (
 func newTestQueryStore(now time.Time, id string) *querycache.InMemoryQueryStore {
 	return querycache.NewInMemoryQueryStore(
 		&utils.TestClock{Time: now},
-		&utils.TestIdGenerator{Id: id})
+		&utils.TestIDGenerator{ID: id})
 }
 
 func newTestDatasourceStore(now time.Time, id string) *querycache.InMemoryDatasourceStore {
 	return querycache.NewInMemoryDatasourceStore(
 		&utils.TestClock{Time: now},
-		&utils.TestIdGenerator{Id: id})
+		&utils.TestIDGenerator{ID: id})
 }
 
 func testCachedExecutor() *querycache.CachedExecutor {

@@ -8,19 +8,23 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-type CacheStore interface {
+// StateStore defines an interface for caching state parameters during the
+// O authentication processes
+type StateStore interface {
 	Exists(string) (bool, error)
 	Set(string, time.Duration) (string, error)
 	Del(string) (bool, error)
 	Get(string) (string, error)
 }
 
-type RedisStore struct {
+// RedisStateStore is a redis backed implementation of StateStore
+type RedisStateStore struct {
 	Client      *redis.Client
-	IdGenerator utils.IdGenerator
+	IDGenerator utils.IDGenerator
 }
 
-func (r *RedisStore) Get(key string) (string, error) {
+// Get returns the payload stored at a key
+func (r *RedisStateStore) Get(key string) (string, error) {
 	value, err := r.Client.Get(context.TODO(), "auth:"+key).Result()
 	if err != nil {
 		return "", err
@@ -29,7 +33,8 @@ func (r *RedisStore) Get(key string) (string, error) {
 	return value, nil
 }
 
-func (r *RedisStore) Exists(key string) (bool, error) {
+// Exists checks whether the given key exists in cache
+func (r *RedisStateStore) Exists(key string) (bool, error) {
 	value, err := r.Client.Exists(context.TODO(), "auth:"+key).Result()
 	if err != nil {
 		return false, err
@@ -38,20 +43,24 @@ func (r *RedisStore) Exists(key string) (bool, error) {
 	return value == 1, nil
 }
 
-func (r *RedisStore) Set(url string, exp time.Duration) (string, error) {
-	key := r.IdGenerator.Generate()
+// Set stores the payload under a new random key, which is returned.
+// exp sets the lifetime for the key.
+func (r *RedisStateStore) Set(payload string, exp time.Duration) (string, error) {
+	key := r.IDGenerator.Generate()
 	_, err := r.Client.Set(
 		context.TODO(),
 		"auth:"+key,
-		url,
+		payload,
 		exp,
 	).Result()
 
 	return key, err
 }
 
-func (r *RedisStore) Del(key string) (bool, error) {
-	count, err := r.Client.Del(context.TODO(), key).Result()
+// Del removes the given key
+// returns true if a key was removed.
+func (r *RedisStateStore) Del(key string) (bool, error) {
+	count, err := r.Client.Del(context.TODO(), "auth:"+key).Result()
 	if err != nil {
 		return false, err
 	}

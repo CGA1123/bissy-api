@@ -14,7 +14,9 @@ import (
 )
 
 func TestHTTPClient(t *testing.T) {
-	client := utils.NewTestHTTPClient(t)
+	t.Parallel()
+
+	client := utils.NewTestHTTPClient()
 
 	request, err := http.NewRequest("GET", "https://example.com/hello", nil)
 	expect.Ok(t, err)
@@ -94,7 +96,7 @@ func TestParseJSONBody(t *testing.T) {
 func TestGenerators(t *testing.T) {
 	t.Parallel()
 
-	testGenerator := &utils.TestIdGenerator{Id: "my-id"}
+	testGenerator := &utils.TestIDGenerator{ID: "my-id"}
 	expect.Equal(t, testGenerator.Generate(), testGenerator.Generate())
 	expect.Equal(t, testGenerator.Generate(), "my-id")
 

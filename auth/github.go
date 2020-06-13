@@ -13,30 +13,38 @@ import (
 	"github.com/cga1123/bissy-api/utils"
 )
 
+// ClientState represents the state passed in by a client auth request,
+// including a random State string, and the Redirect URI callback
 type ClientState struct {
 	State    string
 	Redirect string
 }
 
+// GithubApp represents the configuration of the Github OAuth application used
+// to authenticate users.
 type GithubApp struct {
-	clientId     string
+	clientID     string
 	clientSecret string
 	httpClient   utils.HTTPClient
 }
 
-// Adds authorization via OAuth token
+// GithubOAuthClient is a http client that automatically adds the required
+// Authorization headers when called
 type GithubOAuthClient struct {
 	Token      string
 	HTTPClient utils.HTTPClient
 	Base       string
 }
 
+// Do executes a request using GithubOAuthClient
 func (c *GithubOAuthClient) Do(r *http.Request) (*http.Response, error) {
 	r.Header.Add("Authorization", "token "+c.Token)
 
 	return c.HTTPClient.Do(r)
 }
 
+// User fetches the currently authenticated user from Github and returns the
+// struct to be passed to create the user.
 func (c *GithubOAuthClient) User() (*CreateUser, error) {
 	json := strings.NewReader(`{ "query": "query { viewer { id, name } }" }`)
 	request, err := http.NewRequest("POST", c.Base+"/graphql", json)
@@ -52,7 +60,7 @@ func (c *GithubOAuthClient) User() (*CreateUser, error) {
 	var body struct {
 		Data struct {
 			Viewer struct {
-				Id   string
+				ID   string
 				Name string
 			}
 		}
@@ -63,20 +71,22 @@ func (c *GithubOAuthClient) User() (*CreateUser, error) {
 	}
 
 	return &CreateUser{
-		GithubId: body.Data.Viewer.Id,
+		GithubID: body.Data.Viewer.ID,
 		Name:     body.Data.Viewer.Name,
 	}, nil
 }
 
+// NewGithubApp configures a new GithubApp struct
 func NewGithubApp(id, secret string, client utils.HTTPClient) *GithubApp {
-	return &GithubApp{clientId: id, clientSecret: secret, httpClient: client}
+	return &GithubApp{clientID: id, clientSecret: secret, httpClient: client}
 }
 
-// Swap code for OAuth token and return an OAuthClient
+// OAuthClient swaps a code token for a GithubOAuthClient to make subsequent
+// authenticated requests to the Github API
 func (ga *GithubApp) OAuthClient(code, state string) (*GithubOAuthClient, error) {
 	baseURL := "https://api.github.com"
 	body, err := utils.JSONBody(map[string]string{
-		"client_id":     ga.clientId,
+		"client_id":     ga.clientID,
 		"client_secret": ga.clientSecret,
 		"code":          code,
 		"state":         state,
@@ -90,7 +100,7 @@ func (ga *GithubApp) OAuthClient(code, state string) (*GithubOAuthClient, error)
 		return nil, err
 	}
 
-	request.Header.Add("Accept", handlerutils.ContentTypeJson)
+	request.Header.Add("Accept", handlerutils.ContentTypeJSON)
 
 	response, err := ga.httpClient.Do(request)
 	if err != nil {
@@ -113,7 +123,7 @@ func (ga *GithubApp) OAuthClient(code, state string) (*GithubOAuthClient, error)
 }
 
 func (c *Config) githubSignin(w http.ResponseWriter, r *http.Request) error {
-	redirectUrl, ok := handlerutils.Params(r).Get("redirect_uri")
+	redirectURL, ok := handlerutils.Params(r).Get("redirect_uri")
 	if !ok {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("redirect_uri not set"), Status: http.StatusBadRequest}
@@ -125,7 +135,7 @@ func (c *Config) githubSignin(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("state not set"), Status: http.StatusBadRequest}
 	}
 
-	reader, err := json.Marshal(&ClientState{State: clientState, Redirect: redirectUrl})
+	reader, err := json.Marshal(&ClientState{State: clientState, Redirect: redirectURL})
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("error marshalling state"), Status: http.StatusInternalServerError}
@@ -136,18 +146,18 @@ func (c *Config) githubSignin(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	githubUrl := fmt.Sprintf(
+	githubURL := fmt.Sprintf(
 		"https://github.com/login/oauth/authorize?client_id=%v&state=%v&scope=user",
-		c.githubApp.clientId,
+		c.githubApp.clientID,
 		state)
 
-	http.Redirect(w, r, githubUrl, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, githubURL, http.StatusTemporaryRedirect)
 
 	return nil
 }
 
 func getOrCreateUser(store UserStore, cu *CreateUser) (*User, error) {
-	user, err := store.GetByGithubId(cu.GithubId)
+	user, err := store.GetByGithubID(cu.GithubID)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -165,15 +175,17 @@ func (c *Config) fetchState(key string) (*ClientState, error) {
 		return nil, fmt.Errorf("failed to check key exists: %v", err)
 	}
 
-	clientStateJson, err := c.redis.Get(key)
+	clientStateJSON, err := c.redis.Get(key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get key %v", err)
 	}
 
 	var clientState ClientState
-	if err := utils.ParseJSONBody(ioutil.NopCloser(strings.NewReader(clientStateJson)), &clientState); err != nil {
+	if err := utils.ParseJSONBody(ioutil.NopCloser(strings.NewReader(clientStateJSON)), &clientState); err != nil {
 		return nil, fmt.Errorf("error parsing client state: %v", err)
 	}
+
+	// TODO: Delete state key...
 
 	return &clientState, nil
 }
@@ -215,14 +227,14 @@ func (c *Config) githubCallback(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	code, err = c.redis.Set(user.Id, time.Minute*5)
+	code, err = c.redis.Set(user.ID, time.Minute*5)
 	if err != nil {
 		return fmt.Errorf("error setting code: %v", err)
 	}
 
-	redirectUrl := fmt.Sprintf("%v?code=%v&state=%v", clientState.Redirect, code, clientState.State)
+	redirectURL := fmt.Sprintf("%v?code=%v&state=%v", clientState.Redirect, code, clientState.State)
 
-	http.Redirect(w, r, redirectUrl, http.StatusFound)
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 
 	return nil
 }

@@ -25,23 +25,23 @@ func init() {
 	txdb.Register("pgx", "postgres", url)
 }
 
-func testUserGetByGithubId(t *testing.T, store auth.UserStore, id string, now time.Time) {
-	expected, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
+func testUserGetByGithubID(t *testing.T, store auth.UserStore, id string, now time.Time) {
+	expected, err := store.Create(&auth.CreateUser{GithubID: "github-id", Name: "Test"})
 	expect.Ok(t, err)
 
-	user, err := store.GetByGithubId(expected.GithubId)
+	user, err := store.GetByGithubID(expected.GithubID)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, user)
 
-	_, err = store.GetByGithubId(uuid.New().String())
+	_, err = store.GetByGithubID(uuid.New().String())
 	expect.Error(t, err)
 }
 
 func testUserGet(t *testing.T, store auth.UserStore, id string, now time.Time) {
-	expected, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
+	expected, err := store.Create(&auth.CreateUser{GithubID: "github-id", Name: "Test"})
 	expect.Ok(t, err)
 
-	user, err := store.Get(expected.Id)
+	user, err := store.Get(expected.ID)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, user)
 
@@ -50,10 +50,10 @@ func testUserGet(t *testing.T, store auth.UserStore, id string, now time.Time) {
 }
 
 func testUserCreate(t *testing.T, store auth.UserStore, id string, now time.Time) {
-	user, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
+	user, err := store.Create(&auth.CreateUser{GithubID: "github-id", Name: "Test"})
 	expect.Ok(t, err)
 
-	expected := &auth.User{Id: id, GithubId: "github-id", Name: "Test", CreatedAt: now}
+	expected := &auth.User{ID: id, GithubID: "github-id", Name: "Test", CreatedAt: now}
 	expect.Equal(t, expected, user)
 
 	user, err = store.Get(id)
@@ -62,10 +62,10 @@ func testUserCreate(t *testing.T, store auth.UserStore, id string, now time.Time
 }
 
 func testUserEmailDuplicate(t *testing.T, store auth.UserStore) {
-	_, err := store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
+	_, err := store.Create(&auth.CreateUser{GithubID: "github-id", Name: "Test"})
 	expect.Ok(t, err)
 
-	_, err = store.Create(&auth.CreateUser{GithubId: "github-id", Name: "Test"})
+	_, err = store.Create(&auth.CreateUser{GithubID: "github-id", Name: "Test"})
 	expect.Error(t, err)
 }
 
@@ -73,7 +73,7 @@ func testSQLUserStore(now time.Time, id string, db *hnysqlx.DB) *auth.SQLUserSto
 	return auth.NewSQLUserStore(
 		db,
 		&utils.TestClock{Time: now},
-		&utils.TestIdGenerator{Id: id},
+		&utils.TestIDGenerator{ID: id},
 	)
 }
 
@@ -98,10 +98,10 @@ func TestSQLUserGet(t *testing.T) {
 	withTestSQLUserStore(t, testUserGet)
 }
 
-func TestSQLUserGetByGithubId(t *testing.T) {
+func TestSQLUserGetByGithubID(t *testing.T) {
 	t.Parallel()
 
-	withTestSQLUserStore(t, testUserGetByGithubId)
+	withTestSQLUserStore(t, testUserGetByGithubID)
 }
 
 func TestSQLUserCreate(t *testing.T) {

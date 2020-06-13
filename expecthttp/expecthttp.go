@@ -9,6 +9,7 @@ import (
 	"github.com/cga1123/bissy-api/expect"
 )
 
+// Status expects the given status codes to match
 func Status(t *testing.T, expected int, rr *httptest.ResponseRecorder) {
 	t.Helper()
 
@@ -19,24 +20,28 @@ type hasHeaders interface {
 	Get(string) string
 }
 
+// Header expects the given response to contain the given header
 func Header(t *testing.T, key string, val string, headers hasHeaders) {
 	t.Helper()
 
 	expect.Equal(t, val, headers.Get(key))
 }
 
+// Ok expects the given repsonse to have status code OK (200)
 func Ok(t *testing.T, rr *httptest.ResponseRecorder) {
 	t.Helper()
 
 	Status(t, http.StatusOK, rr)
 }
 
+// ContentType expects the given response to have the given Content-Type header
 func ContentType(t *testing.T, expected string, rr *httptest.ResponseRecorder) {
 	t.Helper()
 
 	expect.Equal(t, expected, rr.Header().Get("Content-Type"))
 }
 
+// StringBody expect the response body to match the given string
 func StringBody(t *testing.T, expected string, rr *httptest.ResponseRecorder) {
 	t.Helper()
 
@@ -47,6 +52,7 @@ type hasBytes interface {
 	Bytes() []byte
 }
 
+// JSONBody expectes the response body to match the marshaled struct given
 func JSONBody(t *testing.T, expected interface{}, body hasBytes) {
 	t.Helper()
 

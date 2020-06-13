@@ -10,7 +10,7 @@ import (
 )
 
 func (c *Config) queriesList(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
 	page := params.MaybeInt("page", 1)
@@ -26,7 +26,7 @@ func (c *Config) queriesList(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Config) queriesCreate(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	var createQuery CreateQuery
 	if err := utils.ParseJSONBody(r.Body, &createQuery); err != nil {
@@ -50,7 +50,7 @@ func (c *Config) queriesCreate(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Config) queryGet(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
 	id, ok := params.Get("id")
@@ -68,7 +68,7 @@ func (c *Config) queryGet(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Config) queryDelete(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
 	id, ok := params.Get("id")
@@ -86,7 +86,7 @@ func (c *Config) queryDelete(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Config) queryUpdate(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
 	id, ok := params.Get("id")
@@ -110,7 +110,7 @@ func (c *Config) queryUpdate(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeCsv)
+	handlerutils.ContentType(w, handlerutils.ContentTypeCSV)
 
 	params := handlerutils.Params(r)
 	id, ok := params.Get("id")
@@ -124,7 +124,7 @@ func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	datasource, err := c.DatasourceStore.Get(query.DatasourceId)
+	datasource, err := c.DatasourceStore.Get(query.DatasourceID)
 	if err != nil {
 		return err
 	}

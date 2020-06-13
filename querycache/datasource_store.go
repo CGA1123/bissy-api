@@ -9,8 +9,10 @@ import (
 	"github.com/cga1123/bissy-api/utils"
 )
 
+// Datasource describes a database that Queries may be related to and executed
+// against
 type Datasource struct {
-	Id        string    `json:"id" db:"id"`
+	ID        string    `json:"id" db:"id"`
 	Name      string    `json:"name"`
 	Type      string    `json:"type"`
 	Options   string    `json:"options"`
@@ -18,18 +20,21 @@ type Datasource struct {
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
 }
 
+// UpdateDatasource describes the paramater which may be updated on a Datasource
 type UpdateDatasource struct {
 	Name    *string `json:"name"`
 	Type    *string `json:"type"`
 	Options *string `json:"options"`
 }
 
+// CreateDatasource describes the required paramater to create a new Datasource
 type CreateDatasource struct {
 	Name    string `json:"name"`
 	Type    string `json:"type"`
 	Options string `json:"options"`
 }
 
+// DatasourceStore describes a generic Store for Datasources
 type DatasourceStore interface {
 	Get(string) (*Datasource, error)
 	Create(*CreateDatasource) (*Datasource, error)
@@ -38,13 +43,16 @@ type DatasourceStore interface {
 	Update(string, *UpdateDatasource) (*Datasource, error)
 }
 
+// InMemoryDatasourceStore implements an in-memory DatasourceStore
 type InMemoryDatasourceStore struct {
 	Store       map[string]*Datasource
 	clock       utils.Clock
-	idGenerator utils.IdGenerator
+	idGenerator utils.IDGenerator
 	lock        sync.RWMutex
 }
 
+// NewExecutor returns a new SQLExecutor configured against this Datasource
+// Will return a TestExecutor if the datasources "Type" is "test"
 func (a *Datasource) NewExecutor() (Executor, error) {
 	switch a.Type {
 	case "test":
@@ -55,7 +63,8 @@ func (a *Datasource) NewExecutor() (Executor, error) {
 	}
 }
 
-func NewInMemoryDatasourceStore(clock utils.Clock, idGenerator utils.IdGenerator) *InMemoryDatasourceStore {
+// NewInMemoryDatasourceStore returns a new InMemoryDatasourceStore
+func NewInMemoryDatasourceStore(clock utils.Clock, idGenerator utils.IDGenerator) *InMemoryDatasourceStore {
 	return &InMemoryDatasourceStore{
 		clock:       clock,
 		idGenerator: idGenerator,
@@ -63,13 +72,14 @@ func NewInMemoryDatasourceStore(clock utils.Clock, idGenerator utils.IdGenerator
 	}
 }
 
+// Create creates and persists a new Datasource to the Store
 func (s *InMemoryDatasourceStore) Create(a *CreateDatasource) (*Datasource, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	id := s.idGenerator.Generate()
 	datasource := Datasource{
-		Id:        id,
+		ID:        id,
 		Name:      a.Name,
 		Type:      a.Type,
 		Options:   a.Options,
@@ -82,6 +92,7 @@ func (s *InMemoryDatasourceStore) Create(a *CreateDatasource) (*Datasource, erro
 	return &datasource, nil
 }
 
+// Delete removes the Datasource with given id from the Store
 func (s *InMemoryDatasourceStore) Delete(id string) (*Datasource, error) {
 	datasource, err := s.Get(id)
 	if err != nil {
@@ -96,6 +107,7 @@ func (s *InMemoryDatasourceStore) Delete(id string) (*Datasource, error) {
 	return datasource, nil
 }
 
+// Get returns the Datasource with associated id from the store
 func (s *InMemoryDatasourceStore) Get(id string) (*Datasource, error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -108,6 +120,7 @@ func (s *InMemoryDatasourceStore) Get(id string) (*Datasource, error) {
 	return datasource, nil
 }
 
+// Update updates the Datasource with associated id from the store
 func (s *InMemoryDatasourceStore) Update(id string, u *UpdateDatasource) (*Datasource, error) {
 	datasource, err := s.Get(id)
 	if err != nil {
@@ -132,6 +145,7 @@ func (s *InMemoryDatasourceStore) Update(id string, u *UpdateDatasource) (*Datas
 	return datasource, nil
 }
 
+// List returns the requests Datasources from the Store, ordered by createdAt
 func (s *InMemoryDatasourceStore) List(page, per int) ([]*Datasource, error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()

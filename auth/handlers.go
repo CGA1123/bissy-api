@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// SetupHandlers mounts the auth HTTP handlers on the given router
 func (c *Config) SetupHandlers(router *mux.Router) {
 	router.
 		Handle("/github/signin", &handlerutils.Handler{H: c.githubSignin}).
@@ -30,25 +31,25 @@ func (c *Config) token(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("code not set"), Status: http.StatusBadRequest}
 	}
 
-	userId, err := c.redis.Get(code)
-	if err != nil || userId == "" {
+	userID, err := c.redis.Get(code)
+	if err != nil || userID == "" {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("bad token"), Status: http.StatusBadRequest}
 	}
 
-	user, err := c.userStore.Get(userId)
-	if err != nil || userId == "" {
+	user, err := c.userStore.Get(userID)
+	if err != nil || userID == "" {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("bad user id"), Status: http.StatusBadRequest}
 	}
 
 	token, err := c.SignedToken(user)
-	if err != nil || userId == "" {
+	if err != nil || userID == "" {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("error signing token"), Status: http.StatusInternalServerError}
 	}
 
-	handlerutils.ContentType(w, handlerutils.ContentTypeJson)
+	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 	return json.NewEncoder(w).Encode(struct {
 		Token string `json:"token"`
 	}{Token: token})
