@@ -177,53 +177,6 @@ func testDatasourceList(t *testing.T, store querycache.DatasourceStore) {
 	expect.Equal(t, expectedDatasources, datasources)
 }
 
-func TestInMemoryDatasourceCreate(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestDatasourceStore(now, id)
-
-	testDatasourceCreate(t, store, id, now)
-}
-
-func TestInMemoryDatasourceUpdate(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestDatasourceStore(now, id)
-
-	testDatasourceUpdate(t, store, id, now)
-}
-
-func TestInMemoryDatasourceDelete(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestDatasourceStore(now, id)
-
-	testDatasourceDelete(t, store, id, now)
-}
-
-func TestInMemoryDatasourceList(t *testing.T) {
-	t.Parallel()
-
-	testDatasourceList(t,
-		querycache.NewInMemoryDatasourceStore(&utils.RealClock{}, &utils.UUIDGenerator{}))
-}
-
-func TestInMemoryDatasourceGet(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	id := uuid.New().String()
-	store := newTestDatasourceStore(now, id)
-
-	testDatasourceGet(t, store, id, now)
-}
-
 func init() {
 	url, ok := os.LookupEnv("DATABASE_URL")
 	if !ok {
@@ -247,12 +200,8 @@ func testSQLDatasourceStore(now time.Time, id string, db *hnysqlx.DB) *querycach
 }
 
 func withTestSQLDatasourceStore(t *testing.T, f func(*testing.T, querycache.DatasourceStore, string, time.Time)) {
-	db, err := testDb(uuid.New().String())
-	expect.Ok(t, err)
-	defer db.Close()
-
-	err = db.Ping()
-	expect.Ok(t, err)
+	db, teardown := utils.TestDB(t)
+	defer teardown()
 
 	now := time.Now().Truncate(time.Millisecond)
 	id := uuid.New().String()
@@ -282,9 +231,8 @@ func TestSQLDatasourceDelete(t *testing.T) {
 func TestSQLDatasourceList(t *testing.T) {
 	t.Parallel()
 
-	db, err := testDb(uuid.New().String())
-	expect.Ok(t, err)
-	defer db.Close()
+	db, teardown := utils.TestDB(t)
+	defer teardown()
 
 	store := querycache.NewSQLDatasourceStore(db,
 		&utils.RealClock{}, &utils.UUIDGenerator{})
