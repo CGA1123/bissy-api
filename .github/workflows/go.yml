@@ -76,4 +76,6 @@ jobs:
           ${{github.workspace}}/cover.out:gocov
 
     - name: Lint
-      run: golint ./... -set_exit_status
+      run: |
+        go get -u golang.org/x/lint/golint
+        golint -set_exit_status ./...
