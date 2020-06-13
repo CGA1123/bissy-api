@@ -164,11 +164,20 @@ func (sql *SQLExecutor) Execute(query *Query) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	defer rows.Close()
-	cols, err := rows.Columns()
+
+	results, err := parseRows(rows)
 	if err != nil {
 		return "", err
+	}
+
+	return resultsToCSVString(*results)
+}
+
+func parseRows(rows *sql.Rows) (*[][]string, error) {
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, err
 	}
 
 	results := [][]string{cols}
@@ -176,6 +185,7 @@ func (sql *SQLExecutor) Execute(query *Query) (string, error) {
 	count := len(cols)
 	vals := make([]interface{}, count)
 	ptrs := make([]interface{}, count)
+
 	for rows.Next() {
 		row := make([]string, count)
 		for i := range cols {
@@ -183,44 +193,46 @@ func (sql *SQLExecutor) Execute(query *Query) (string, error) {
 		}
 
 		if err = rows.Scan(ptrs...); err != nil {
-			return "", err
+			return nil, err
 		}
 
 		for i := range cols {
-			var value interface{}
-			rawValue := vals[i]
-
-			byteArray, ok := rawValue.([]byte)
-			if ok {
-				value = string(byteArray)
-			} else {
-				value = rawValue
-			}
-
-			timeValue, ok := value.(time.Time)
-			if ok {
-				value = timeValue.Format(time.RFC3339)
-			}
-
-			if value == nil {
-				row[i] = ""
-			} else {
-				row[i] = fmt.Sprintf("%v", value)
-			}
+			row[i] = parseColumnValue(vals[i])
 		}
 
 		results = append(results, row)
 	}
 
 	if err := rows.Err(); err != nil {
-		return "", err
+		return nil, err
 	}
 
+	return &results, nil
+}
+
+func resultsToCSVString(rows [][]string) (string, error) {
 	buffer := bytes.Buffer{}
 	csvWriter := csv.NewWriter(&buffer)
-	if err := csvWriter.WriteAll(results); err != nil {
+	if err := csvWriter.WriteAll(rows); err != nil {
 		return "", err
 	}
 
 	return buffer.String(), nil
+}
+
+func parseColumnValue(rawValue interface{}) string {
+	var value interface{}
+
+	switch v := rawValue.(type) {
+	case []byte:
+		value = string(v)
+	default:
+		value = v
+	}
+
+	if value == nil {
+		return ""
+	}
+
+	return fmt.Sprintf("%v", value)
 }
