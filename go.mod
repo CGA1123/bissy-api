@@ -19,6 +19,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.3.0 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.7.0
+	github.com/rs/cors v1.7.0
 	github.com/snowflakedb/gosnowflake v1.3.5
 	golang.org/x/net v0.0.0-20200528225125-3c3fba18258b // indirect
 	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
