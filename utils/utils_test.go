@@ -2,16 +2,29 @@ package utils_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-txdb"
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/utils"
+	_ "github.com/lib/pq"
 )
+
+func init() {
+	url, ok := os.LookupEnv("DATABASE_URL")
+	if !ok {
+		log.Fatal("DATABASE_URL not set")
+	}
+
+	txdb.Register("pgx", "postgres", url)
+}
 
 func TestHTTPClient(t *testing.T) {
 	t.Parallel()
@@ -112,4 +125,52 @@ func TestClocks(t *testing.T) {
 
 	clock := &utils.RealClock{}
 	expect.Equal(t, clock.Now().Truncate(time.Millisecond), time.Now().Truncate(time.Millisecond))
+}
+
+func TestTestDB(t *testing.T) {
+	t.Parallel()
+
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	err := db.Ping()
+	expect.Ok(t, err)
+}
+
+func TestTestRedis(t *testing.T) {
+	t.Parallel()
+
+	redis, teardown := utils.TestRedis(t)
+	defer teardown()
+
+	err := redis.Ping(context.TODO()).Err()
+	expect.Ok(t, err)
+}
+
+func TestJSONBody(t *testing.T) {
+	createdAt, err := time.Parse(time.RFC3339, "1997-05-04T12:00:05+01:00")
+	expect.Ok(t, err)
+
+	json := struct {
+		ID        string `json:"id"`
+		Name      string
+		CreatedAt time.Time `json:"createdAt"`
+	}{
+		ID:        "my=id",
+		Name:      "Christian",
+		CreatedAt: createdAt,
+	}
+
+	reader, err := utils.JSONBody(json)
+	expect.Ok(t, err)
+
+	var target struct {
+		ID        string `json:"id"`
+		Name      string
+		CreatedAt time.Time `json:"createdAt"`
+	}
+
+	err = utils.ParseJSONBody(ioutil.NopCloser(reader), &target)
+	expect.Ok(t, err)
+	expect.Equal(t, json, target)
 }
