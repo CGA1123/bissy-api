@@ -25,7 +25,6 @@ func TestExecutePostgres(t *testing.T) {
 	csv, err := executor.Execute(query)
 	expect.Ok(t, err)
 	expect.Equal(t, "a,b\n1,2\n", csv)
-
 }
 
 func TestCachedExecutorExecute(t *testing.T) {
