@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/honeycombio/beeline-go"
@@ -81,6 +82,31 @@ func (c *Config) Middleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// TestMiddleware will return a middleware which injects the given claim into
+// requests.
+func TestMiddleware(claim *Claims) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), userContextKey, claim)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// BuildHandler builds a ErrorHandler and passes in the *Claims if set,
+// returns http.StatusUnauthorized if not.
+func BuildHandler(next func(*Claims, http.ResponseWriter, *http.Request) error) func(http.ResponseWriter, *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		claim, ok := UserFromContext(r.Context())
+		if !ok {
+			return &handlerutils.HandlerError{Status: http.StatusUnauthorized, Err: fmt.Errorf("no claim present")}
+		}
+
+		return next(claim, w, r)
+	}
 }
 
 func authenticate(c *Config, r *http.Request) (*Claims, error) {
