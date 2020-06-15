@@ -141,3 +141,71 @@ func TestTokenHandler(t *testing.T) {
 	expecthttp.JSONBody(t, map[string]interface{}{"token": token}, response.Body)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 }
+
+func TestTestMiddleware(t *testing.T) {
+	t.Parallel()
+
+	request, err := http.NewRequest("GET", "/", nil)
+	expect.Ok(t, err)
+
+	recorder := httptest.NewRecorder()
+	claims := &auth.Claims{UserID: "user-id"}
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		claim, ok := auth.UserFromContext(r.Context())
+		expect.True(t, ok)
+		expect.Equal(t, claims, claim)
+	}
+
+	router := mux.NewRouter()
+	router.Use(auth.TestMiddleware(claims))
+	router.Handle("/", http.HandlerFunc(handler)).Methods("GET")
+
+	router.ServeHTTP(recorder, request)
+
+	expecthttp.Ok(t, recorder)
+}
+
+func TestBuildHandler(t *testing.T) {
+	t.Parallel()
+
+	expectedClaims := &auth.Claims{UserID: uuid.New().String()}
+	handler := func(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
+		expect.Equal(t, expectedClaims, claims)
+
+		return nil
+	}
+
+	// With Claim
+	wrappedHandler := http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			err := auth.BuildHandler(handler)(w, r)
+			expect.Ok(t, err)
+		})
+
+	router := mux.NewRouter()
+	router.Use(auth.TestMiddleware(expectedClaims))
+	router.Handle("/", wrappedHandler).Methods("GET")
+	recorder := httptest.NewRecorder()
+	request, err := http.NewRequest("GET", "/", nil)
+	expect.Ok(t, err)
+
+	router.ServeHTTP(recorder, request)
+	expecthttp.Ok(t, recorder)
+
+	// Without Claim
+	wrappedHandler = http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			err := auth.BuildHandler(handler)(w, r)
+			expect.Error(t, err)
+		})
+
+	router = mux.NewRouter()
+	router.Handle("/", wrappedHandler).Methods("GET")
+	recorder = httptest.NewRecorder()
+	request, err = http.NewRequest("GET", "/", nil)
+	expect.Ok(t, err)
+
+	router.ServeHTTP(recorder, request)
+	expecthttp.Ok(t, recorder)
+}
