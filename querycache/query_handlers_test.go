@@ -37,7 +37,8 @@ func TestQueryCreate(t *testing.T) {
 	request, err := http.NewRequest("POST", "/queries", json)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 
 	actual, err := config.QueryStore.Get(id)
@@ -66,7 +67,8 @@ func TestQueryCreateBadRequest(t *testing.T) {
 	expect.Ok(t, err)
 
 	_, _, config := testConfig(db)
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 
 	expecthttp.Status(t, http.StatusUnprocessableEntity, response)
 }
@@ -93,7 +95,8 @@ func TestQueryGet(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries/"+id, nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, query, response.Body)
@@ -112,7 +115,8 @@ func TestQueryGetNotFound(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries/"+uuid.New().String(), nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Status(t, http.StatusInternalServerError, response)
 }
 
@@ -136,7 +140,8 @@ func TestQueryDelete(t *testing.T) {
 	request, err := http.NewRequest("DELETE", "/queries/"+id, nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, query, response.Body)
@@ -159,7 +164,8 @@ func TestQueryDeleteNotFound(t *testing.T) {
 	request, err := http.NewRequest("DELETE", "/queries/"+uuid.New().String(), nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Status(t, http.StatusInternalServerError, response)
 }
 
@@ -198,7 +204,8 @@ func TestQueryUpdate(t *testing.T) {
 	query.Lifetime = querycache.Duration(time.Hour + time.Minute)
 	query.LastRefresh = oneHourAgo
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, query, response.Body)
@@ -225,7 +232,8 @@ func TestQueryUpdateNotFound(t *testing.T) {
 	request, err := http.NewRequest("PATCH", "/queries/"+id, json)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Status(t, http.StatusInternalServerError, response)
 }
 
@@ -257,7 +265,8 @@ func TestQueryList(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries", nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, queries[:25], response.Body)
@@ -266,7 +275,7 @@ func TestQueryList(t *testing.T) {
 	request, err = http.NewRequest("GET", "/queries?page=2&per=5", nil)
 	expect.Ok(t, err)
 
-	response = testHandler(config, request)
+	response = testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, queries[5:10], response.Body)
@@ -295,7 +304,8 @@ func TestQueryResult(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries/"+query.ID+"/result", nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeCSV, response)
 	expecthttp.StringBody(t, "Got: SELECT * FROM users", response)
@@ -325,7 +335,8 @@ func TestQueryResultPostgres(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries/"+query.ID+"/result", nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeCSV, response)
 	expecthttp.StringBody(t, "?column?\n1\n", response)

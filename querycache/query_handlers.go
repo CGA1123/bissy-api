@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/utils"
 )
 
-func (c *Config) queriesList(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) queriesList(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
@@ -25,7 +26,7 @@ func (c *Config) queriesList(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(queries)
 }
 
-func (c *Config) queriesCreate(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) queriesCreate(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	var createQuery CreateQuery
@@ -49,7 +50,7 @@ func (c *Config) queriesCreate(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (c *Config) queryGet(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) queryGet(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
@@ -67,7 +68,7 @@ func (c *Config) queryGet(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(query)
 }
 
-func (c *Config) queryDelete(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) queryDelete(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
@@ -85,7 +86,7 @@ func (c *Config) queryDelete(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(query)
 }
 
-func (c *Config) queryUpdate(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) queryUpdate(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
@@ -109,7 +110,7 @@ func (c *Config) queryUpdate(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(query)
 }
 
-func (c *Config) queryResult(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) queryResult(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeCSV)
 
 	params := handlerutils.Params(r)

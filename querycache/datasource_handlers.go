@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/utils"
 )
 
-func (c *Config) datasourcesList(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourcesList(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
@@ -25,7 +26,7 @@ func (c *Config) datasourcesList(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(datasources)
 }
 
-func (c *Config) datasourcesCreate(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourcesCreate(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	var createDatasource CreateDatasource
@@ -49,7 +50,7 @@ func (c *Config) datasourcesCreate(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-func (c *Config) datasourceGet(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourceGet(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
@@ -67,7 +68,7 @@ func (c *Config) datasourceGet(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(datasource)
 }
 
-func (c *Config) datasourceDelete(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourceDelete(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)
@@ -85,7 +86,7 @@ func (c *Config) datasourceDelete(w http.ResponseWriter, r *http.Request) error 
 	return json.NewEncoder(w).Encode(datasource)
 }
 
-func (c *Config) datasourceUpdate(w http.ResponseWriter, r *http.Request) error {
+func (c *Config) datasourceUpdate(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
 	params := handlerutils.Params(r)

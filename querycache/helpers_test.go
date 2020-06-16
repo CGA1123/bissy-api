@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
@@ -28,6 +29,10 @@ func newTestDatasourceStore(db *hnysqlx.DB, now time.Time, id string) *querycach
 		&utils.TestIDGenerator{ID: id})
 }
 
+func testClaims() *auth.Claims {
+	return &auth.Claims{UserID: uuid.New().String()}
+}
+
 func testConfig(db *hnysqlx.DB) (time.Time, string, *querycache.Config) {
 	now := time.Now().Truncate(time.Millisecond)
 	id := uuid.New().String()
@@ -38,10 +43,11 @@ func testConfig(db *hnysqlx.DB) (time.Time, string, *querycache.Config) {
 		Executor:        &querycache.TestExecutor{}}
 }
 
-func testHandler(c *querycache.Config, r *http.Request) *httptest.ResponseRecorder {
+func testHandler(claims *auth.Claims, c *querycache.Config, r *http.Request) *httptest.ResponseRecorder {
 	recorder := httptest.NewRecorder()
 
 	router := mux.NewRouter()
+	router.Use(auth.TestMiddleware(claims))
 	c.SetupHandlers(router)
 
 	router.ServeHTTP(recorder, r)
