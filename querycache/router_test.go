@@ -20,7 +20,8 @@ func TestHome(t *testing.T) {
 	request, err := http.NewRequest("GET", "/", nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 
 	expectedBody := "querycache: using cache, saving cash\n"
 

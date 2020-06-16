@@ -38,7 +38,8 @@ func TestDatasourceCreate(t *testing.T) {
 		UpdatedAt: now,
 	}
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.JSONBody(t, expected, response.Body)
 
@@ -65,7 +66,8 @@ func TestDatasourceGet(t *testing.T) {
 	request, err := http.NewRequest("GET", "/datasources/"+id, nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasource, response.Body)
@@ -88,7 +90,8 @@ func TestDatasourceDelete(t *testing.T) {
 	request, err := http.NewRequest("DELETE", "/datasources/"+id, nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasource, response.Body)
@@ -124,7 +127,8 @@ func TestDatasourceUpdate(t *testing.T) {
 	datasource.Type = "snowflake"
 	datasource.Options = ""
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasource, response.Body)
@@ -159,7 +163,8 @@ func TestDatasourceList(t *testing.T) {
 	request, err := http.NewRequest("GET", "/datasources", nil)
 	expect.Ok(t, err)
 
-	response := testHandler(config, request)
+	claims := testClaims()
+	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasources[:25], response.Body)
@@ -168,7 +173,7 @@ func TestDatasourceList(t *testing.T) {
 	request, err = http.NewRequest("GET", "/datasources?page=2&per=5", nil)
 	expect.Ok(t, err)
 
-	response = testHandler(config, request)
+	response = testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasources[5:10], response.Body)
