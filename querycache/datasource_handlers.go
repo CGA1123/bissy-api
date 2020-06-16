@@ -2,7 +2,6 @@ package querycache
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/cga1123/bissy-api/auth"
@@ -50,16 +49,7 @@ func (c *Config) datasourcesCreate(claims *auth.Claims, w http.ResponseWriter, r
 	return nil
 }
 
-func (c *Config) datasourceGet(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
-
-	params := handlerutils.Params(r)
-	id, ok := params.Get("id")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
-	}
-
+func (c *Config) datasourceGet(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
 	datasource, err := c.DatasourceStore.Get(id)
 	if err != nil {
 		return err
@@ -68,16 +58,7 @@ func (c *Config) datasourceGet(claims *auth.Claims, w http.ResponseWriter, r *ht
 	return json.NewEncoder(w).Encode(datasource)
 }
 
-func (c *Config) datasourceDelete(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
-
-	params := handlerutils.Params(r)
-	id, ok := params.Get("id")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
-	}
-
+func (c *Config) datasourceDelete(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
 	datasource, err := c.DatasourceStore.Delete(id)
 	if err != nil {
 		return err
@@ -86,16 +67,7 @@ func (c *Config) datasourceDelete(claims *auth.Claims, w http.ResponseWriter, r 
 	return json.NewEncoder(w).Encode(datasource)
 }
 
-func (c *Config) datasourceUpdate(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
-
-	params := handlerutils.Params(r)
-	id, ok := params.Get("id")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
-	}
-
+func (c *Config) datasourceUpdate(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
 	var updateDatasource UpdateDatasource
 	if err := utils.ParseJSONBody(r.Body, &updateDatasource); err != nil {
 		return &handlerutils.HandlerError{
