@@ -176,12 +176,7 @@ func TestQueryUpdate(t *testing.T) {
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{}),
 		Executor:        &querycache.TestExecutor{}}
 
-	datasource, err := config.DatasourceStore.Create(
-		&querycache.CreateDatasource{Type: "test", Name: "Test"})
-	expect.Ok(t, err)
-
-	otherDatasource, err := config.DatasourceStore.Create(
-		&querycache.CreateDatasource{Type: "test", Name: "Test"})
+	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
@@ -193,19 +188,15 @@ func TestQueryUpdate(t *testing.T) {
 
 	oneHourAgo := now.Add(-time.Hour)
 	json, err := jsonBody(map[string]string{
-		"lifetime":     "1h01m",
-		"query":        "SELECT 2;",
-		"lastRefresh":  oneHourAgo.Format(time.RFC3339Nano),
-		"datasourceId": otherDatasource.ID})
+		"lifetime":    "1h01m",
+		"lastRefresh": oneHourAgo.Format(time.RFC3339Nano)})
 	expect.Ok(t, err)
 
 	request, err := http.NewRequest("PATCH", "/queries/"+id, json)
 	expect.Ok(t, err)
 
 	query.Lifetime = querycache.Duration(time.Hour + time.Minute)
-	query.Query = "SELECT 2;"
 	query.LastRefresh = oneHourAgo
-	query.DatasourceID = otherDatasource.ID
 
 	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
@@ -216,7 +207,6 @@ func TestQueryUpdate(t *testing.T) {
 	expect.Ok(t, err)
 
 	expect.Equal(t, querycache.Duration(time.Hour+time.Minute), query.Lifetime)
-	expect.Equal(t, "SELECT 2;", query.Query)
 }
 
 func TestQueryUpdateNotFound(t *testing.T) {
@@ -309,29 +299,33 @@ func TestQueryResult(t *testing.T) {
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeCSV, response)
 	expecthttp.StringBody(t, "Got: SELECT * FROM users", response)
+}
 
-	// PG Test
-	newType := "postgres"
-	newName := "PG Test"
-	newOptions, ok := os.LookupEnv("DATABASE_URL")
-	if !ok {
-		t.Fatal("DATABASE_URL is not set")
+func TestQueryResultPostgres(t *testing.T) {
+	t.Parallel()
+
+	db, teardown := utils.TestDB(t)
+	defer teardown()
+
+	clock := &utils.RealClock{}
+	generator := &utils.UUIDGenerator{}
+	config := &querycache.Config{
+		QueryStore:      querycache.NewSQLQueryStore(db, clock, generator),
+		DatasourceStore: querycache.NewSQLDatasourceStore(db, clock, generator),
 	}
 
-	datasource, err = config.DatasourceStore.Update(datasource.ID, &querycache.UpdateDatasource{
-		Type: &newType, Name: &newName, Options: &newOptions})
-
+	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
+		Type: "postgres", Name: "PG Test", Options: os.Getenv("DATABASE_URL")})
 	expect.Ok(t, err)
 
-	newQuery := "SELECT 1"
-	query, err = config.QueryStore.Update(query.ID, &querycache.UpdateQuery{
-		Query: &newQuery})
+	query, err := config.QueryStore.Create(&querycache.CreateQuery{
+		Query: "SELECT 1;", DatasourceID: datasource.ID})
 	expect.Ok(t, err)
 
-	request, err = http.NewRequest("GET", "/queries/"+query.ID+"/result", nil)
+	request, err := http.NewRequest("GET", "/queries/"+query.ID+"/result", nil)
 	expect.Ok(t, err)
 
-	response = testHandler(config, request)
+	response := testHandler(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeCSV, response)
 	expecthttp.StringBody(t, "?column?\n1\n", response)

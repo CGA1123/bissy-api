@@ -32,19 +32,8 @@ func TestFresh(t *testing.T) {
 	query = freshQuery(now)
 	expect.True(t, query.Fresh(now))
 
-	// query updated after last refresh
-	query = freshQuery(now)
-	query.UpdatedAt = query.LastRefresh.Add(time.Second)
-	expect.False(t, query.Fresh(now))
-
 	// last refresh longer than lifetime ago
 	query = freshQuery(now)
-	query.LastRefresh = now.Add(-time.Duration(query.Lifetime)).Add(-time.Second)
-	expect.False(t, query.Fresh(now))
-
-	// last refresh longer than lifetime ago and updated after last refresh
-	query = freshQuery(now)
-	query.UpdatedAt = query.LastRefresh.Add(time.Second)
 	query.LastRefresh = now.Add(-time.Duration(query.Lifetime)).Add(-time.Second)
 	expect.False(t, query.Fresh(now))
 }
@@ -203,23 +192,16 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 		Lifetime:     3 * querycache.Duration(time.Hour),
 	}
 
-	datasourceTwo, err := datasourceStore.Create(&querycache.CreateDatasource{})
-	expect.Ok(t, err)
-
-	newQuery := "SELECT 2;"
 	newLifetime := querycache.Duration(time.Hour)
-	newDatasourceID := datasourceTwo.ID
 	updateQuery := querycache.UpdateQuery{
-		Query:        &newQuery,
-		Lifetime:     &newLifetime,
-		DatasourceID: &newDatasourceID,
+		Lifetime: &newLifetime,
 	}
 
 	expected := querycache.Query{
 		ID:           id,
-		Query:        "SELECT 2;",
-		DatasourceID: datasourceTwo.ID,
-		Lifetime:     querycache.Duration(time.Hour),
+		Query:        "SELECT 1;",
+		DatasourceID: datasource.ID,
+		Lifetime:     newLifetime,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 		LastRefresh:  now,
@@ -238,23 +220,16 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 	expect.Ok(t, err)
 	expect.Equal(t, expected, *query)
 
-	// Test partial update
-	newQuery = "SELECT 15;"
-	query, err = store.Update(id, &querycache.UpdateQuery{Query: &newQuery})
-	expect.Ok(t, err)
-	expect.Equal(t, newQuery, query.Query)
-	expect.Equal(t, newLifetime, query.Lifetime)
-
+	// Partial update
 	newLifetime = 15 * querycache.Duration(time.Second)
 	query, err = store.Update(id, &querycache.UpdateQuery{Lifetime: &newLifetime})
 	expect.Ok(t, err)
 	expect.Equal(t, newLifetime, query.Lifetime)
-	expect.Equal(t, newQuery, query.Query)
 
 	// Test updating lastrefresh
-	query, err = store.Update(id, &querycache.UpdateQuery{LastRefresh: now.Add(time.Hour)})
+	query, err = store.Update(id,
+		&querycache.UpdateQuery{LastRefresh: now.Add(time.Hour)})
 	expect.Ok(t, err)
-	expect.Equal(t, newQuery, query.Query)
 	expect.Equal(t, newLifetime, query.Lifetime)
 	expect.Equal(t, now.Add(time.Hour), query.LastRefresh)
 

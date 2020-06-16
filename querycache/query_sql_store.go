@@ -70,11 +70,9 @@ func (s *SQLQueryStore) Update(id string, uq *UpdateQuery) (*Query, error) {
 
 	queryStr := `
 		UPDATE querycache_queries
-		SET query = COALESCE($2, query),
-				datasource_id = COALESCE($3, datasource_id),
-				lifetime = COALESCE($4, lifetime),
-				last_refresh = COALESCE($5, last_refresh),
-				updated_at = $6
+		SET lifetime = COALESCE($2, lifetime),
+				last_refresh = COALESCE($3, last_refresh),
+				updated_at = $4
 		WHERE id = $1
 		RETURNING *`
 
@@ -85,7 +83,8 @@ func (s *SQLQueryStore) Update(id string, uq *UpdateQuery) (*Query, error) {
 		lastRefresh = sql.NullTime{Time: uq.LastRefresh, Valid: true}
 	}
 
-	if err := s.db.Get(&query, queryStr, id, uq.Query, uq.DatasourceID, uq.Lifetime, lastRefresh, s.clock.Now()); err != nil {
+	err := s.db.Get(&query, queryStr, id, uq.Lifetime, lastRefresh, s.clock.Now())
+	if err != nil {
 		return nil, err
 	}
 
