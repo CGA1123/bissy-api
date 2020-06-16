@@ -50,16 +50,7 @@ func (c *Config) queriesCreate(claims *auth.Claims, w http.ResponseWriter, r *ht
 	return nil
 }
 
-func (c *Config) queryGet(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
-
-	params := handlerutils.Params(r)
-	id, ok := params.Get("id")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
-	}
-
+func (c *Config) queryGet(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
 	query, err := c.QueryStore.Get(id)
 	if err != nil {
 		return err
@@ -68,16 +59,7 @@ func (c *Config) queryGet(claims *auth.Claims, w http.ResponseWriter, r *http.Re
 	return json.NewEncoder(w).Encode(query)
 }
 
-func (c *Config) queryDelete(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
-
-	params := handlerutils.Params(r)
-	id, ok := params.Get("id")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
-	}
-
+func (c *Config) queryDelete(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
 	query, err := c.QueryStore.Delete(id)
 	if err != nil {
 		return err
@@ -86,16 +68,7 @@ func (c *Config) queryDelete(claims *auth.Claims, w http.ResponseWriter, r *http
 	return json.NewEncoder(w).Encode(query)
 }
 
-func (c *Config) queryUpdate(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
-	handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
-
-	params := handlerutils.Params(r)
-	id, ok := params.Get("id")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
-	}
-
+func (c *Config) queryUpdate(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
 	var updateQuery UpdateQuery
 	if err := utils.ParseJSONBody(r.Body, &updateQuery); err != nil {
 		return &handlerutils.HandlerError{
@@ -110,15 +83,8 @@ func (c *Config) queryUpdate(claims *auth.Claims, w http.ResponseWriter, r *http
 	return json.NewEncoder(w).Encode(query)
 }
 
-func (c *Config) queryResult(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
+func (c *Config) queryResult(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeCSV)
-
-	params := handlerutils.Params(r)
-	id, ok := params.Get("id")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
-	}
 
 	query, err := c.QueryStore.Get(id)
 	if err != nil {

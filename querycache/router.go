@@ -25,6 +25,23 @@ func handler(next func(*auth.Claims, http.ResponseWriter, *http.Request) error) 
 	}
 }
 
+func memberHandler(next func(*auth.Claims, string, http.ResponseWriter, *http.Request) error) http.Handler {
+	return &handlerutils.Handler{
+		H: auth.BuildHandler(
+			func(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
+				handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
+
+				params := handlerutils.Params(r)
+				id, ok := params.Get("id")
+				if !ok {
+					return &handlerutils.HandlerError{
+						Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
+				}
+
+				return next(claims, id, w, r)
+			})}
+}
+
 // SetupHandlers mounts the querycache handlers onto the given mux
 func (c *Config) SetupHandlers(router *mux.Router) {
 	router.HandleFunc("/", c.home).Methods("GET")
@@ -39,19 +56,19 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 		Methods("POST")
 
 	router.
-		Handle("/queries/{id}", handler(c.queryGet)).
+		Handle("/queries/{id}", memberHandler(c.queryGet)).
 		Methods("GET")
 
 	router.
-		Handle("/queries/{id}", handler(c.queryDelete)).
+		Handle("/queries/{id}", memberHandler(c.queryDelete)).
 		Methods("DELETE")
 
 	router.
-		Handle("/queries/{id}", handler(c.queryUpdate)).
+		Handle("/queries/{id}", memberHandler(c.queryUpdate)).
 		Methods("PATCH")
 
 	router.
-		Handle("/queries/{id}/result", handler(c.queryResult)).
+		Handle("/queries/{id}/result", memberHandler(c.queryResult)).
 		Methods("GET")
 
 	// Datasources
@@ -64,15 +81,15 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 		Methods("POST")
 
 	router.
-		Handle("/datasources/{id}", handler(c.datasourceGet)).
+		Handle("/datasources/{id}", memberHandler(c.datasourceGet)).
 		Methods("GET")
 
 	router.
-		Handle("/datasources/{id}", handler(c.datasourceDelete)).
+		Handle("/datasources/{id}", memberHandler(c.datasourceDelete)).
 		Methods("DELETE")
 
 	router.
-		Handle("/datasources/{id}", handler(c.datasourceUpdate)).
+		Handle("/datasources/{id}", memberHandler(c.datasourceUpdate)).
 		Methods("PATCH")
 }
 
