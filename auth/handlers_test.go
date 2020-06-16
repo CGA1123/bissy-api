@@ -127,19 +127,49 @@ func TestTokenHandler(t *testing.T) {
 	user, err := store.Create(&auth.CreateUser{GithubID: "github-id", Name: "Chritian"})
 	expect.Ok(t, err)
 
-	_, err = redis.Set(user.ID, time.Minute*5)
+	redisKey, err := redis.Set(user.ID, time.Minute*5)
 	expect.Ok(t, err)
 
 	token, err := config.SignedToken(user)
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("GET", "/token?code="+redisID, nil)
+	request, err := http.NewRequest("GET", "/token?code="+redisKey, nil)
 	expect.Ok(t, err)
 
 	response := testRouter(config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.JSONBody(t, map[string]interface{}{"token": token}, response.Body)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
+
+	// code expired
+	_, err = redis.Del(redisKey)
+	expect.Ok(t, err)
+
+	request, err = http.NewRequest("GET", "/token?code="+redisKey, nil)
+	expect.Ok(t, err)
+
+	response = testRouter(config, request)
+	expecthttp.Status(t, http.StatusBadRequest, response)
+	expecthttp.StringBody(t, "bad token\n", response)
+
+	// code linked to non-existing user
+	redisKey, err = redis.Set(uuid.New().String(), time.Minute*5)
+	expect.Ok(t, err)
+
+	request, err = http.NewRequest("GET", "/token?code="+redisKey, nil)
+	expect.Ok(t, err)
+
+	response = testRouter(config, request)
+	expecthttp.Status(t, http.StatusBadRequest, response)
+	expecthttp.StringBody(t, "bad user id\n", response)
+
+	// without code parameter
+	request, err = http.NewRequest("GET", "/token", nil)
+	expect.Ok(t, err)
+
+	response = testRouter(config, request)
+	expecthttp.Status(t, http.StatusBadRequest, response)
+	expecthttp.StringBody(t, "code not set\n", response)
 }
 
 func TestTestMiddleware(t *testing.T) {
