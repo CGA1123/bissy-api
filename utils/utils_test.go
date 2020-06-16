@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"testing"
@@ -173,4 +174,8 @@ func TestJSONBody(t *testing.T) {
 	err = utils.ParseJSONBody(ioutil.NopCloser(reader), &target)
 	expect.Ok(t, err)
 	expect.Equal(t, json, target)
+
+	// when passed junk
+	_, err = utils.JSONBody(math.Inf(1))
+	expect.Error(t, err)
 }
