@@ -41,13 +41,7 @@ func (c *Config) queriesCreate(claims *auth.Claims, w http.ResponseWriter, r *ht
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	err = json.NewEncoder(w).Encode(query)
-	if err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-
-	return nil
+	return json.NewEncoder(w).Encode(query)
 }
 
 func (c *Config) queryGet(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {

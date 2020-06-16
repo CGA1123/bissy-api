@@ -40,13 +40,7 @@ func (c *Config) datasourcesCreate(claims *auth.Claims, w http.ResponseWriter, r
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	err = json.NewEncoder(w).Encode(datasource)
-	if err != nil {
-		return &handlerutils.HandlerError{
-			Err: err, Status: http.StatusInternalServerError}
-	}
-
-	return nil
+	return json.NewEncoder(w).Encode(datasource)
 }
 
 func (c *Config) datasourceGet(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
