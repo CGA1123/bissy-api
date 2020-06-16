@@ -59,14 +59,13 @@ func (cache *InMemoryCache) Set(query *Query, result string) error {
 // RedisCache is a redis-backed implementation of QueryCache
 type RedisCache struct {
 	Client *redis.Client
-	Prefix string
 }
 
 // Get returns the cached results for a given query
 func (cache *RedisCache) Get(query *Query) (string, bool) {
 	value, err := cache.Client.Get(
 		context.TODO(),
-		cache.Prefix+":"+query.ID,
+		"querycache:"+query.ID,
 	).Result()
 
 	return value, err == nil
@@ -76,7 +75,7 @@ func (cache *RedisCache) Get(query *Query) (string, bool) {
 func (cache *RedisCache) Set(query *Query, result string) error {
 	set := cache.Client.Set(
 		context.TODO(),
-		cache.Prefix+":"+query.ID,
+		"querycache:"+query.ID,
 		result,
 		time.Duration(query.Lifetime))
 
@@ -110,7 +109,7 @@ func updateCache(cache *CachedExecutor, query *Query, result string) {
 		return
 	}
 
-	cache.Store.Update(query.ID, &UpdateQuery{LastRefresh: time.Now()})
+	cache.Store.Update(query.ID, &UpdateQuery{LastRefresh: cache.Clock.Now()})
 }
 
 // NewCachedExecutor sets up a new CachedExecutor

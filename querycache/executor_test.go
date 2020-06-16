@@ -48,7 +48,6 @@ func TestCachedExecutorExecute(t *testing.T) {
 	query := &querycache.Query{
 		ID:          "1",
 		LastRefresh: now,
-		UpdatedAt:   now.Add(-time.Second),
 		Lifetime:    querycache.Duration(time.Hour),
 		Query:       "SELECT 1;"}
 
@@ -61,17 +60,10 @@ func TestCachedExecutorExecute(t *testing.T) {
 	expect.Ok(t, err)
 	expect.Equal(t, "Got: SELECT 1;", result)
 
-	// When updated after last refresh
-	query.UpdatedAt = query.LastRefresh.Add(time.Second)
-	query.Query = "SELECT 3;"
-	result, err = executor.Execute(query)
-	expect.Ok(t, err)
-	expect.Equal(t, "Got: SELECT 3;", result)
-
 	// When LastRefresh longer than Lifetime ago
 	result, err = executor.Execute(query)
 	expect.Ok(t, err)
-	expect.Equal(t, "Got: SELECT 3;", result)
+	expect.Equal(t, "Got: SELECT 1;", result)
 
 	query.LastRefresh = now.Add(-time.Duration(query.Lifetime)).Add(-time.Second)
 	query.Query = "SELECT 4;"

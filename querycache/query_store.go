@@ -23,9 +23,8 @@ type Query struct {
 func (query *Query) Fresh(now time.Time) bool {
 	timeSinceLastRefresh := now.Sub(query.LastRefresh)
 	refreshedRecently := Duration(timeSinceLastRefresh) < query.Lifetime
-	updatedRecently := query.UpdatedAt.After(query.LastRefresh)
 
-	return refreshedRecently && !updatedRecently
+	return refreshedRecently
 }
 
 // CreateQuery describes the required parameter to create a new Query
@@ -37,10 +36,8 @@ type CreateQuery struct {
 
 // UpdateQuery describes the paramater which may be updated on a Query
 type UpdateQuery struct {
-	Query        *string   `json:"query"`
-	DatasourceID *string   `json:"datasourceId"`
-	Lifetime     *Duration `json:"lifetime"`
-	LastRefresh  time.Time `json:"lastRefresh"`
+	Lifetime    *Duration `json:"lifetime"`
+	LastRefresh time.Time `json:"lastRefresh"`
 }
 
 // Duration is an alias to time.Duration to allow for defining JSON marshalling
