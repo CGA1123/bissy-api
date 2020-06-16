@@ -38,13 +38,13 @@ func (c *Config) token(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	user, err := c.userStore.Get(userID)
-	if err != nil || userID == "" {
+	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("bad user id"), Status: http.StatusBadRequest}
 	}
 
 	token, err := c.SignedToken(user)
-	if err != nil || userID == "" {
+	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("error signing token"), Status: http.StatusInternalServerError}
 	}
