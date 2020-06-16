@@ -85,21 +85,7 @@ func (c *Config) queryResult(claims *auth.Claims, id string, w http.ResponseWrit
 		return err
 	}
 
-	datasource, err := c.DatasourceStore.Get(query.DatasourceID)
-	if err != nil {
-		return err
-	}
-
-	executor, err := datasource.NewExecutor()
-	if err != nil {
-		return err
-	}
-
-	if c.Cache != nil {
-		executor = NewCachedExecutor(c.Cache, c.QueryStore, c.Clock, executor)
-	}
-
-	result, err := executor.Execute(query)
+	result, err := c.executeQuery(query)
 	if err != nil {
 		return err
 	}
@@ -107,4 +93,22 @@ func (c *Config) queryResult(claims *auth.Claims, id string, w http.ResponseWrit
 	_, err = fmt.Fprintf(w, result)
 
 	return err
+}
+
+func (c *Config) executeQuery(query *Query) (string, error) {
+	datasource, err := c.DatasourceStore.Get(query.DatasourceID)
+	if err != nil {
+		return "", err
+	}
+
+	executor, err := datasource.NewExecutor()
+	if err != nil {
+		return "", err
+	}
+
+	if c.Cache != nil {
+		executor = NewCachedExecutor(c.Cache, c.QueryStore, c.Clock, executor)
+	}
+
+	return executor.Execute(query)
 }
