@@ -39,7 +39,8 @@ func TestFresh(t *testing.T) {
 }
 
 func testQueryCreate(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore, id string, now time.Time) {
-	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
+	userID := uuid.New().String()
+	datasource, err := datasourceStore.Create(userID, &querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	createQuery := querycache.CreateQuery{
@@ -69,7 +70,8 @@ func testQueryCreate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 }
 
 func testQueryGet(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore, id string, now time.Time) {
-	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
+	userID := uuid.New().String()
+	datasource, err := datasourceStore.Create(userID, &querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	createQuery := querycache.CreateQuery{
@@ -102,7 +104,8 @@ func testQueryGet(t *testing.T, datasourceStore querycache.DatasourceStore, stor
 }
 
 func testQueryList(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore) {
-	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
+	userID := uuid.New().String()
+	datasource, err := datasourceStore.Create(userID, &querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	expectedQueries := []*querycache.Query{}
@@ -147,7 +150,8 @@ func testQueryList(t *testing.T, datasourceStore querycache.DatasourceStore, sto
 }
 
 func testQueryDelete(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore, id string, now time.Time) {
-	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
+	userID := uuid.New().String()
+	datasource, err := datasourceStore.Create(userID, &querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	createQuery := querycache.CreateQuery{
@@ -183,7 +187,8 @@ func testQueryDelete(t *testing.T, datasourceStore querycache.DatasourceStore, s
 }
 
 func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore, id string, now time.Time) {
-	datasource, err := datasourceStore.Create(&querycache.CreateDatasource{})
+	userID := uuid.New().String()
+	datasource, err := datasourceStore.Create(userID, &querycache.CreateDatasource{})
 	expect.Ok(t, err)
 
 	createQuery := querycache.CreateQuery{

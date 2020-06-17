@@ -24,7 +24,8 @@ func TestQueryCreate(t *testing.T) {
 	defer teardown()
 
 	now, id, config := testConfig(db)
-	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{Type: "test", Name: "Test"})
+	userID := uuid.New().String()
+	datasource, err := config.DatasourceStore.Create(userID, &querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
 	json, err := jsonBody(map[string]string{
@@ -81,7 +82,8 @@ func TestQueryGet(t *testing.T) {
 
 	_, id, config := testConfig(db)
 
-	datasource, err := config.DatasourceStore.Create(
+	userID := uuid.New().String()
+	datasource, err := config.DatasourceStore.Create(userID,
 		&querycache.CreateDatasource{Type: "test", Name: "Test"})
 
 	expect.Ok(t, err)
@@ -127,7 +129,8 @@ func TestQueryDelete(t *testing.T) {
 	defer teardown()
 
 	_, id, config := testConfig(db)
-	datasource, err := config.DatasourceStore.Create(
+	userID := uuid.New().String()
+	datasource, err := config.DatasourceStore.Create(userID,
 		&querycache.CreateDatasource{Type: "test", Name: "Test"})
 
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
@@ -182,7 +185,8 @@ func TestQueryUpdate(t *testing.T) {
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{}),
 		Executor:        &querycache.TestExecutor{}}
 
-	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{Type: "test", Name: "Test"})
+	userID := uuid.New().String()
+	datasource, err := config.DatasourceStore.Create(userID, &querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
@@ -249,7 +253,8 @@ func TestQueryList(t *testing.T) {
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{}),
 	}
 
-	datasource, err := config.DatasourceStore.Create(
+	userID := uuid.New().String()
+	datasource, err := config.DatasourceStore.Create(userID,
 		&querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
@@ -294,7 +299,8 @@ func TestQueryResult(t *testing.T) {
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, clock, generator),
 	}
 
-	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{Type: "test", Name: "Test"})
+	userID := uuid.New().String()
+	datasource, err := config.DatasourceStore.Create(userID, &querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
@@ -324,7 +330,8 @@ func TestQueryResultPostgres(t *testing.T) {
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, clock, generator),
 	}
 
-	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
+	userID := uuid.New().String()
+	datasource, err := config.DatasourceStore.Create(userID, &querycache.CreateDatasource{
 		Type: "postgres", Name: "PG Test", Options: os.Getenv("DATABASE_URL")})
 	expect.Ok(t, err)
 

@@ -26,7 +26,8 @@ func testDatasourceCreate(t *testing.T, store querycache.DatasourceStore, id str
 		UpdatedAt: now,
 	}
 
-	datasource, err := store.Create(&querycache.CreateDatasource{
+	userID := uuid.New().String()
+	datasource, err := store.Create(userID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable",
@@ -51,7 +52,8 @@ func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id str
 		UpdatedAt: now,
 	}
 
-	_, err := store.Create(&querycache.CreateDatasource{
+	userID := uuid.New().String()
+	_, err := store.Create(userID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable",
@@ -78,7 +80,8 @@ func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string
 		UpdatedAt: now,
 	}
 
-	_, err := store.Create(&querycache.CreateDatasource{
+	userID := uuid.New().String()
+	_, err := store.Create(userID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable",
@@ -100,7 +103,8 @@ func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id str
 		UpdatedAt: now,
 	}
 
-	_, err := store.Create(&querycache.CreateDatasource{
+	userID := uuid.New().String()
+	_, err := store.Create(userID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable",
@@ -141,10 +145,11 @@ func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id str
 func testDatasourceList(t *testing.T, store querycache.DatasourceStore) {
 	expectedDatasources := []*querycache.Datasource{}
 
+	userID := uuid.New().String()
 	for i := 0; i < 10; i++ {
 		s := fmt.Sprintf("name %v;", i)
 		q := &querycache.CreateDatasource{Name: s}
-		datasource, err := store.Create(q)
+		datasource, err := store.Create(userID, q)
 		expect.Ok(t, err)
 
 		expectedDatasources = append(expectedDatasources, datasource)
