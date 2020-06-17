@@ -44,7 +44,7 @@ func (c *Config) datasourcesCreate(claims *auth.Claims, w http.ResponseWriter, r
 }
 
 func (c *Config) datasourceGet(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
-	datasource, err := c.DatasourceStore.Get(id)
+	datasource, err := c.DatasourceStore.Get(claims.UserID, id)
 	if err != nil {
 		return err
 	}

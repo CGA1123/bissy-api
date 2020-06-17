@@ -44,7 +44,7 @@ func TestDatasourceCreate(t *testing.T) {
 	expecthttp.Ok(t, response)
 	expecthttp.JSONBody(t, expected, response.Body)
 
-	actual, err := config.DatasourceStore.Get(id)
+	actual, err := config.DatasourceStore.Get(claims.UserID, id)
 
 	expect.Ok(t, err)
 	expect.Equal(t, expected, actual)
@@ -134,7 +134,7 @@ func TestDatasourceUpdate(t *testing.T) {
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasource, response.Body)
 
-	datasource, err = config.DatasourceStore.Get(id)
+	datasource, err = config.DatasourceStore.Get(claims.UserID, id)
 	expect.Ok(t, err)
 
 	expect.Equal(t, "test", datasource.Name)

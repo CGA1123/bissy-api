@@ -32,7 +32,7 @@ type CreateDatasource struct {
 
 // DatasourceStore describes a generic Store for Datasources
 type DatasourceStore interface {
-	Get(string) (*Datasource, error)
+	Get(string, string) (*Datasource, error)
 	Create(string, *CreateDatasource) (*Datasource, error)
 	List(page int, per int) ([]*Datasource, error)
 	Delete(string) (*Datasource, error)

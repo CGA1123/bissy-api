@@ -37,7 +37,7 @@ func testDatasourceCreate(t *testing.T, store querycache.DatasourceStore, id str
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
 
-	datasource, err = store.Get(id)
+	datasource, err = store.Get(userID, id)
 	expect.Ok(t, err)
 
 	expect.Equal(t, expected, datasource)
@@ -91,7 +91,7 @@ func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string
 	})
 	expect.Ok(t, err)
 
-	datasource, err := store.Get(id)
+	datasource, err := store.Get(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
 }
@@ -127,7 +127,7 @@ func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id str
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
 
-	datasource, err = store.Get(id)
+	datasource, err = store.Get(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
 
@@ -141,7 +141,7 @@ func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id str
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
 
-	datasource, err = store.Get(id)
+	datasource, err = store.Get(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
 }

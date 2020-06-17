@@ -38,7 +38,7 @@ func (s *SQLDatasourceStore) Create(userID string, ca *CreateDatasource) (*Datas
 }
 
 // Get returns the Datasource with associated id from the store
-func (s *SQLDatasourceStore) Get(id string) (*Datasource, error) {
+func (s *SQLDatasourceStore) Get(userID, id string) (*Datasource, error) {
 	var datasource Datasource
 
 	query := "SELECT * FROM querycache_datasources WHERE id = $1"
