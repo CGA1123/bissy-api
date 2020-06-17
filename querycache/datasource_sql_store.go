@@ -41,9 +41,9 @@ func (s *SQLDatasourceStore) Create(userID string, ca *CreateDatasource) (*Datas
 func (s *SQLDatasourceStore) Get(userID, id string) (*Datasource, error) {
 	var datasource Datasource
 
-	query := "SELECT * FROM querycache_datasources WHERE id = $1"
+	query := "SELECT * FROM querycache_datasources WHERE id = $1 AND user_id = $2"
 
-	if err := s.db.Get(&datasource, query, id); err != nil {
+	if err := s.db.Get(&datasource, query, id, userID); err != nil {
 		return nil, err
 	}
 
