@@ -78,5 +78,5 @@ type QueryStore interface {
 	Create(string, *CreateQuery) (*Query, error)
 	List(page int, per int) ([]*Query, error)
 	Delete(string) (*Query, error)
-	Update(string, *UpdateQuery) (*Query, error)
+	Update(string, string, *UpdateQuery) (*Query, error)
 }

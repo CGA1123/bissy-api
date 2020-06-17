@@ -65,15 +65,17 @@ func (s *SQLQueryStore) Delete(id string) (*Query, error) {
 }
 
 // Update updates the Query with associated id from the store
-func (s *SQLQueryStore) Update(id string, uq *UpdateQuery) (*Query, error) {
+func (s *SQLQueryStore) Update(userID, id string, uq *UpdateQuery) (*Query, error) {
 	var query Query
 
 	queryStr := `
 		UPDATE querycache_queries
-		SET lifetime = COALESCE($2, lifetime),
-				last_refresh = COALESCE($3, last_refresh),
-				updated_at = $4
-		WHERE id = $1
+		SET lifetime = COALESCE($3, lifetime),
+				last_refresh = COALESCE($4, last_refresh),
+				updated_at = $5
+		WHERE 1=1
+		AND id = $1
+		AND user_id = $2
 		RETURNING *`
 
 	var lastRefresh sql.NullTime
@@ -83,7 +85,7 @@ func (s *SQLQueryStore) Update(id string, uq *UpdateQuery) (*Query, error) {
 		lastRefresh = sql.NullTime{Time: uq.LastRefresh, Valid: true}
 	}
 
-	err := s.db.Get(&query, queryStr, id, uq.Lifetime, lastRefresh, s.clock.Now())
+	err := s.db.Get(&query, queryStr, id, userID, uq.Lifetime, lastRefresh, s.clock.Now())
 	if err != nil {
 		return nil, err
 	}
