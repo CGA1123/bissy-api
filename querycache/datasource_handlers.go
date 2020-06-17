@@ -53,7 +53,7 @@ func (c *Config) datasourceGet(claims *auth.Claims, id string, w http.ResponseWr
 }
 
 func (c *Config) datasourceDelete(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
-	datasource, err := c.DatasourceStore.Delete(id)
+	datasource, err := c.DatasourceStore.Delete(claims.UserID, id)
 	if err != nil {
 		return err
 	}

@@ -63,7 +63,13 @@ func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id str
 	})
 	expect.Ok(t, err)
 
-	datasource, err := store.Delete(id)
+	// When a different user is trying to delete
+	_, err = store.Delete(uuid.New().String(), id)
+	expect.Error(t, err)
+	expect.True(t, err == sql.ErrNoRows)
+
+	// When the owner is trying to delete
+	datasource, err := store.Delete(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
 
@@ -71,6 +77,7 @@ func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id str
 	expect.Ok(t, err)
 
 	expect.Equal(t, []*querycache.Datasource{}, datasources)
+
 }
 
 func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
