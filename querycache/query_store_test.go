@@ -179,10 +179,18 @@ func testQueryDelete(t *testing.T, datasourceStore querycache.DatasourceStore, s
 		LastRefresh:  now,
 	}
 
-	_, err = store.Create(userID, &createQuery)
+	expectedQuery, err := store.Create(userID, &createQuery)
 	expect.Ok(t, err)
 
-	query, err := store.Delete(id)
+	_, err = store.Delete(uuid.New().String(), id)
+	expect.Error(t, err)
+	expect.True(t, err == sql.ErrNoRows)
+
+	query, err := store.Get(userID, id)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedQuery, query)
+
+	query, err = store.Delete(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, *query)
 
@@ -191,8 +199,9 @@ func testQueryDelete(t *testing.T, datasourceStore querycache.DatasourceStore, s
 
 	expect.Equal(t, []*querycache.Query{}, queries)
 
-	_, err = store.Delete(id)
+	_, err = store.Delete(userID, id)
 	expect.Error(t, err)
+
 }
 
 func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore, id string, now time.Time) {
