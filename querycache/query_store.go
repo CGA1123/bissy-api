@@ -76,7 +76,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 type QueryStore interface {
 	Get(string, string) (*Query, error)
 	Create(string, *CreateQuery) (*Query, error)
-	List(page int, per int) ([]*Query, error)
+	List(string, int, int) ([]*Query, error)
 	Delete(string, string) (*Query, error)
 	Update(string, string, *UpdateQuery) (*Query, error)
 }

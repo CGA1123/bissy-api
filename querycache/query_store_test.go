@@ -130,29 +130,34 @@ func testQueryList(t *testing.T, datasourceStore querycache.DatasourceStore, sto
 		expectedQueries = append(expectedQueries, query)
 	}
 
-	_, err = store.List(0, 1)
+	_, err = store.List(userID, 0, 1)
 	expect.Error(t, err)
 
-	_, err = store.List(1, 0)
+	_, err = store.List(userID, 1, 0)
 	expect.Error(t, err)
 
-	queries, err := store.List(1, 10)
-	expect.Ok(t, err)
-	expect.Equal(t, expectedQueries, queries)
-
-	queries, err = store.List(2, 3)
-	expect.Ok(t, err)
-	expect.Equal(t, expectedQueries[3:6], queries)
-
-	queries, err = store.List(4, 3)
-	expect.Ok(t, err)
-	expect.Equal(t, expectedQueries[9:10], queries)
-
-	queries, err = store.List(10, 3)
+	// with another user
+	queries, err := store.List(uuid.New().String(), 1, 10)
 	expect.Ok(t, err)
 	expect.Equal(t, []*querycache.Query{}, queries)
 
-	queries, err = store.List(1, 30)
+	queries, err = store.List(userID, 1, 10)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedQueries, queries)
+
+	queries, err = store.List(userID, 2, 3)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedQueries[3:6], queries)
+
+	queries, err = store.List(userID, 4, 3)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedQueries[9:10], queries)
+
+	queries, err = store.List(userID, 10, 3)
+	expect.Ok(t, err)
+	expect.Equal(t, []*querycache.Query{}, queries)
+
+	queries, err = store.List(userID, 1, 30)
 	expect.Ok(t, err)
 	expect.Equal(t, expectedQueries, queries)
 }
@@ -194,7 +199,7 @@ func testQueryDelete(t *testing.T, datasourceStore querycache.DatasourceStore, s
 	expect.Ok(t, err)
 	expect.Equal(t, expected, *query)
 
-	queries, err := store.List(1, 1)
+	queries, err := store.List(userID, 1, 1)
 	expect.Ok(t, err)
 
 	expect.Equal(t, []*querycache.Query{}, queries)

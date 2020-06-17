@@ -94,7 +94,7 @@ func (s *SQLQueryStore) Update(userID, id string, uq *UpdateQuery) (*Query, erro
 }
 
 // List returns the requests Queries from the Store, ordered by createdAt
-func (s *SQLQueryStore) List(page, per int) ([]*Query, error) {
+func (s *SQLQueryStore) List(userID string, page, per int) ([]*Query, error) {
 	if page < 1 || per < 1 {
 		return nil,
 			fmt.Errorf("page and per must be greater than 0 (page %v) (per %v)",
@@ -103,8 +103,14 @@ func (s *SQLQueryStore) List(page, per int) ([]*Query, error) {
 
 	queries := []*Query{}
 
-	queryStr := `SELECT * FROM querycache_queries ORDER BY created_at OFFSET $1 LIMIT $2`
-	if err := s.db.Select(&queries, queryStr, (page-1)*per, per); err != nil {
+	queryStr := `
+		SELECT *
+		FROM querycache_queries
+		WHERE user_id = $1
+		ORDER BY created_at
+		OFFSET $2
+		LIMIT $3`
+	if err := s.db.Select(&queries, queryStr, userID, (page-1)*per, per); err != nil {
 		return nil, err
 	}
 
