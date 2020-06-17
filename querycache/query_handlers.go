@@ -45,7 +45,7 @@ func (c *Config) queriesCreate(claims *auth.Claims, w http.ResponseWriter, r *ht
 }
 
 func (c *Config) queryGet(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
-	query, err := c.QueryStore.Get(id)
+	query, err := c.QueryStore.Get(claims.UserID, id)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (c *Config) queryUpdate(claims *auth.Claims, id string, w http.ResponseWrit
 func (c *Config) queryResult(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
 	handlerutils.ContentType(w, handlerutils.ContentTypeCSV)
 
-	query, err := c.QueryStore.Get(id)
+	query, err := c.QueryStore.Get(claims.UserID, id)
 	if err != nil {
 		return err
 	}

@@ -21,7 +21,7 @@ func NewSQLQueryStore(db *hnysqlx.DB, clock utils.Clock, generator utils.IDGener
 }
 
 // Get returns the Query with associated id from the store
-func (s *SQLQueryStore) Get(id string) (*Query, error) {
+func (s *SQLQueryStore) Get(userID, id string) (*Query, error) {
 	var query Query
 
 	queryStr := "SELECT * FROM querycache_queries WHERE id = $1"
