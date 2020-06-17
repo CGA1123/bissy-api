@@ -16,7 +16,7 @@ func (c *Config) datasourcesList(claims *auth.Claims, w http.ResponseWriter, r *
 	page := params.MaybeInt("page", 1)
 	per := params.MaybeInt("per", 25)
 
-	datasources, err := c.DatasourceStore.List(page, per)
+	datasources, err := c.DatasourceStore.List(claims.UserID, page, per)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusInternalServerError}

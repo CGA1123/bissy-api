@@ -97,7 +97,7 @@ func TestDatasourceDelete(t *testing.T) {
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, datasource, response.Body)
 
-	datasources, err := config.DatasourceStore.List(1, 1)
+	datasources, err := config.DatasourceStore.List(claims.UserID, 1, 1)
 	expect.Ok(t, err)
 	expect.Equal(t, []*querycache.Datasource{}, datasources)
 }

@@ -64,7 +64,7 @@ func (s *SQLDatasourceStore) Delete(userID, id string) (*Datasource, error) {
 }
 
 // List returns the requests Datasources from the Store, ordered by createdAt
-func (s *SQLDatasourceStore) List(page, per int) ([]*Datasource, error) {
+func (s *SQLDatasourceStore) List(userID string, page, per int) ([]*Datasource, error) {
 	if page < 1 || per < 1 {
 		return nil,
 			fmt.Errorf("page and per must be greater than 0 (page %v) (per %v)",
@@ -73,8 +73,15 @@ func (s *SQLDatasourceStore) List(page, per int) ([]*Datasource, error) {
 
 	datasources := []*Datasource{}
 
-	query := `SELECT * FROM querycache_datasources ORDER BY created_at OFFSET $1 LIMIT $2`
-	if err := s.db.Select(&datasources, query, (page-1)*per, per); err != nil {
+	query := `
+		SELECT *
+		FROM querycache_datasources
+		WHERE user_id = $1
+		ORDER BY created_at
+		OFFSET $2
+		LIMIT $3`
+
+	if err := s.db.Select(&datasources, query, userID, (page-1)*per, per); err != nil {
 		return nil, err
 	}
 

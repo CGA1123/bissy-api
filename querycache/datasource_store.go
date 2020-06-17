@@ -34,7 +34,7 @@ type CreateDatasource struct {
 type DatasourceStore interface {
 	Get(string, string) (*Datasource, error)
 	Create(string, *CreateDatasource) (*Datasource, error)
-	List(page int, per int) ([]*Datasource, error)
+	List(string, int, int) ([]*Datasource, error)
 	Delete(string, string) (*Datasource, error)
 	Update(string, string, *UpdateDatasource) (*Datasource, error)
 }
