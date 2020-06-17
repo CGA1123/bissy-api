@@ -51,12 +51,12 @@ func (s *SQLDatasourceStore) Get(userID, id string) (*Datasource, error) {
 }
 
 // Delete removes the Datasource with given id from the Store
-func (s *SQLDatasourceStore) Delete(id string) (*Datasource, error) {
+func (s *SQLDatasourceStore) Delete(userID, id string) (*Datasource, error) {
 	var datasource Datasource
 
-	query := "DELETE FROM querycache_datasources WHERE id = $1 RETURNING *"
+	query := "DELETE FROM querycache_datasources WHERE id = $1 AND user_id = $2 RETURNING *"
 
-	if err := s.db.Get(&datasource, query, id); err != nil {
+	if err := s.db.Get(&datasource, query, id, userID); err != nil {
 		return nil, err
 	}
 
