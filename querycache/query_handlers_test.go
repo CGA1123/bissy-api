@@ -44,6 +44,7 @@ func TestQueryCreate(t *testing.T) {
 	actual, err := config.QueryStore.Get(claims.UserID, id)
 	expected := &querycache.Query{
 		ID:           id,
+		UserID:       claims.UserID,
 		Lifetime:     querycache.Duration(time.Hour + time.Minute),
 		Query:        "SELECT 1;",
 		DatasourceID: datasource.ID,

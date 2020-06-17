@@ -39,12 +39,12 @@ func (s *SQLQueryStore) Create(userID string, ca *CreateQuery) (*Query, error) {
 	id := s.idGenerator.Generate()
 
 	queryStr := `
-		INSERT INTO querycache_queries (id, query, lifetime, datasource_id, created_at, updated_at, last_refresh)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO querycache_queries (id, user_id, query, lifetime, datasource_id, created_at, updated_at, last_refresh)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING *`
 
 	var query Query
-	if err := s.db.Get(&query, queryStr, id, ca.Query, ca.Lifetime, ca.DatasourceID, now, now, now); err != nil {
+	if err := s.db.Get(&query, queryStr, id, userID, ca.Query, ca.Lifetime, ca.DatasourceID, now, now, now); err != nil {
 		return nil, err
 	}
 

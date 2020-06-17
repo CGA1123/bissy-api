@@ -51,6 +51,7 @@ func testQueryCreate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 
 	expected := &querycache.Query{
 		ID:           id,
+		UserID:       userID,
 		Query:        "SELECT 1;",
 		DatasourceID: datasource.ID,
 		Lifetime:     3 * querycache.Duration(time.Hour),
@@ -82,6 +83,7 @@ func testQueryGet(t *testing.T, datasourceStore querycache.DatasourceStore, stor
 
 	expected := querycache.Query{
 		ID:           id,
+		UserID:       userID,
 		Query:        "SELECT 1;",
 		DatasourceID: datasource.ID,
 		Lifetime:     3 * querycache.Duration(time.Hour),
@@ -162,6 +164,7 @@ func testQueryDelete(t *testing.T, datasourceStore querycache.DatasourceStore, s
 
 	expected := querycache.Query{
 		ID:           id,
+		UserID:       userID,
 		Query:        "SELECT 1;",
 		DatasourceID: datasource.ID,
 		Lifetime:     3 * querycache.Duration(time.Hour),
@@ -204,6 +207,7 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 
 	expected := querycache.Query{
 		ID:           id,
+		UserID:       userID,
 		Query:        "SELECT 1;",
 		DatasourceID: datasource.ID,
 		Lifetime:     newLifetime,

@@ -10,6 +10,7 @@ import (
 // a given Lifetime value
 type Query struct {
 	ID           string    `json:"id"`
+	UserID       string    `json:"userId" db:"user_id"`
 	Query        string    `json:"query"`
 	DatasourceID string    `json:"datasourceId" db:"datasource_id"`
 	Lifetime     Duration  `json:"lifetime"`
