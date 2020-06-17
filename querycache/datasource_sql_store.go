@@ -82,18 +82,20 @@ func (s *SQLDatasourceStore) List(page, per int) ([]*Datasource, error) {
 }
 
 // Update updates the Datasource with associated id from the store
-func (s *SQLDatasourceStore) Update(id string, ua *UpdateDatasource) (*Datasource, error) {
+func (s *SQLDatasourceStore) Update(userID, id string, ua *UpdateDatasource) (*Datasource, error) {
 	var datasource Datasource
 
 	query := `
 		UPDATE querycache_datasources
-		SET name = COALESCE($2, name),
-				type = COALESCE($3, type),
-				options = COALESCE($4, options)
-		WHERE id = $1
+		SET name = COALESCE($3, name),
+				type = COALESCE($4, type),
+				options = COALESCE($5, options)
+		WHERE 1=1
+		AND id = $1
+		AND user_id = $2
 		RETURNING *`
 
-	if err := s.db.Get(&datasource, query, id, ua.Name, ua.Type, ua.Options); err != nil {
+	if err := s.db.Get(&datasource, query, id, userID, ua.Name, ua.Type, ua.Options); err != nil {
 		return nil, err
 	}
 

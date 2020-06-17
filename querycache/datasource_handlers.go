@@ -68,7 +68,7 @@ func (c *Config) datasourceUpdate(claims *auth.Claims, id string, w http.Respons
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	datasource, err := c.DatasourceStore.Update(id, &updateDatasource)
+	datasource, err := c.DatasourceStore.Update(claims.UserID, id, &updateDatasource)
 	if err != nil {
 		return err
 	}
