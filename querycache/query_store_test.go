@@ -59,7 +59,7 @@ func testQueryCreate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 		LastRefresh:  now,
 	}
 
-	query, err := store.Create(&createQuery)
+	query, err := store.Create(userID, &createQuery)
 
 	expect.Ok(t, err)
 	expect.Equal(t, expected, query)
@@ -90,7 +90,7 @@ func testQueryGet(t *testing.T, datasourceStore querycache.DatasourceStore, stor
 		LastRefresh:  now,
 	}
 
-	_, err = store.Create(&createQuery)
+	_, err = store.Create(userID, &createQuery)
 	expect.Ok(t, err)
 
 	// when id is found
@@ -116,7 +116,7 @@ func testQueryList(t *testing.T, datasourceStore querycache.DatasourceStore, sto
 			Lifetime:     querycache.Duration(time.Duration(i) * time.Hour),
 			DatasourceID: datasource.ID,
 		}
-		query, err := store.Create(q)
+		query, err := store.Create(userID, q)
 		expect.Ok(t, err)
 
 		expectedQueries = append(expectedQueries, query)
@@ -170,7 +170,7 @@ func testQueryDelete(t *testing.T, datasourceStore querycache.DatasourceStore, s
 		LastRefresh:  now,
 	}
 
-	_, err = store.Create(&createQuery)
+	_, err = store.Create(userID, &createQuery)
 	expect.Ok(t, err)
 
 	query, err := store.Delete(id)
@@ -212,7 +212,7 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 		LastRefresh:  now,
 	}
 
-	_, err = store.Create(&createQuery)
+	_, err = store.Create(userID, &createQuery)
 	expect.Ok(t, err)
 
 	// Test returned query

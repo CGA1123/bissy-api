@@ -24,8 +24,8 @@ func TestQueryCreate(t *testing.T) {
 	defer teardown()
 
 	now, id, config := testConfig(db)
-	userID := uuid.New().String()
-	datasource, err := config.DatasourceStore.Create(userID, &querycache.CreateDatasource{Type: "test", Name: "Test"})
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID, &querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
 	json, err := jsonBody(map[string]string{
@@ -38,7 +38,6 @@ func TestQueryCreate(t *testing.T) {
 	request, err := http.NewRequest("POST", "/queries", json)
 	expect.Ok(t, err)
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 
@@ -82,12 +81,12 @@ func TestQueryGet(t *testing.T) {
 
 	_, id, config := testConfig(db)
 
-	userID := uuid.New().String()
-	datasource, err := config.DatasourceStore.Create(userID,
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID,
 		&querycache.CreateDatasource{Type: "test", Name: "Test"})
 
 	expect.Ok(t, err)
-	query, err := config.QueryStore.Create(&querycache.CreateQuery{
+	query, err := config.QueryStore.Create(claims.UserID, &querycache.CreateQuery{
 		Query:        "SELECT 1;",
 		Lifetime:     querycache.Duration(time.Hour),
 		DatasourceID: datasource.ID,
@@ -97,7 +96,6 @@ func TestQueryGet(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries/"+id, nil)
 	expect.Ok(t, err)
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
@@ -129,11 +127,11 @@ func TestQueryDelete(t *testing.T) {
 	defer teardown()
 
 	_, id, config := testConfig(db)
-	userID := uuid.New().String()
-	datasource, err := config.DatasourceStore.Create(userID,
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID,
 		&querycache.CreateDatasource{Type: "test", Name: "Test"})
 
-	query, err := config.QueryStore.Create(&querycache.CreateQuery{
+	query, err := config.QueryStore.Create(claims.UserID, &querycache.CreateQuery{
 		Query:        "SELECT 1;",
 		Lifetime:     querycache.Duration(time.Hour),
 		DatasourceID: datasource.ID,
@@ -143,7 +141,6 @@ func TestQueryDelete(t *testing.T) {
 	request, err := http.NewRequest("DELETE", "/queries/"+id, nil)
 	expect.Ok(t, err)
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
@@ -185,11 +182,11 @@ func TestQueryUpdate(t *testing.T) {
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{}),
 		Executor:        &querycache.TestExecutor{}}
 
-	userID := uuid.New().String()
-	datasource, err := config.DatasourceStore.Create(userID, &querycache.CreateDatasource{Type: "test", Name: "Test"})
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID, &querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
-	query, err := config.QueryStore.Create(&querycache.CreateQuery{
+	query, err := config.QueryStore.Create(claims.UserID, &querycache.CreateQuery{
 		Query:        "SELECT 1;",
 		Lifetime:     querycache.Duration(time.Hour),
 		DatasourceID: datasource.ID,
@@ -208,7 +205,6 @@ func TestQueryUpdate(t *testing.T) {
 	query.Lifetime = querycache.Duration(time.Hour + time.Minute)
 	query.LastRefresh = oneHourAgo
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
@@ -253,13 +249,13 @@ func TestQueryList(t *testing.T) {
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{}),
 	}
 
-	userID := uuid.New().String()
-	datasource, err := config.DatasourceStore.Create(userID,
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID,
 		&querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
 	for i := 0; i < 30; i++ {
-		query, err := config.QueryStore.Create(&querycache.CreateQuery{
+		query, err := config.QueryStore.Create(claims.UserID, &querycache.CreateQuery{
 			DatasourceID: datasource.ID,
 			Query:        fmt.Sprintf("SELECT %v", i)})
 
@@ -270,7 +266,6 @@ func TestQueryList(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries", nil)
 	expect.Ok(t, err)
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
@@ -304,7 +299,7 @@ func TestQueryResult(t *testing.T) {
 		&querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
-	query, err := config.QueryStore.Create(&querycache.CreateQuery{
+	query, err := config.QueryStore.Create(claims.UserID, &querycache.CreateQuery{
 		Query: "SELECT * FROM users", DatasourceID: datasource.ID})
 	expect.Ok(t, err)
 
@@ -335,7 +330,7 @@ func TestQueryResultPostgres(t *testing.T) {
 		Type: "postgres", Name: "PG Test", Options: os.Getenv("DATABASE_URL")})
 	expect.Ok(t, err)
 
-	query, err := config.QueryStore.Create(&querycache.CreateQuery{
+	query, err := config.QueryStore.Create(claims.UserID, &querycache.CreateQuery{
 		Query: "SELECT 1;", DatasourceID: datasource.ID})
 	expect.Ok(t, err)
 
