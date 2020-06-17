@@ -34,7 +34,7 @@ func (s *SQLQueryStore) Get(userID, id string) (*Query, error) {
 }
 
 // Create creates and persist to memory a Query from a CreateQuery struct
-func (s *SQLQueryStore) Create(ca *CreateQuery) (*Query, error) {
+func (s *SQLQueryStore) Create(userID string, ca *CreateQuery) (*Query, error) {
 	now := s.clock.Now()
 	id := s.idGenerator.Generate()
 

@@ -35,7 +35,7 @@ func (c *Config) queriesCreate(claims *auth.Claims, w http.ResponseWriter, r *ht
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	query, err := c.QueryStore.Create(&createQuery)
+	query, err := c.QueryStore.Create(claims.UserID, &createQuery)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}
