@@ -24,9 +24,9 @@ func NewSQLQueryStore(db *hnysqlx.DB, clock utils.Clock, generator utils.IDGener
 func (s *SQLQueryStore) Get(userID, id string) (*Query, error) {
 	var query Query
 
-	queryStr := "SELECT * FROM querycache_queries WHERE id = $1"
+	queryStr := "SELECT * FROM querycache_queries WHERE id = $1 AND user_id = $2"
 
-	if err := s.db.Get(&query, queryStr, id); err != nil {
+	if err := s.db.Get(&query, queryStr, id, userID); err != nil {
 		return nil, err
 	}
 

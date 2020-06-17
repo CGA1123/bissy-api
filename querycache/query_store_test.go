@@ -1,6 +1,7 @@
 package querycache_test
 
 import (
+	"database/sql"
 	"fmt"
 	"testing"
 	"time"
@@ -103,6 +104,11 @@ func testQueryGet(t *testing.T, datasourceStore querycache.DatasourceStore, stor
 	// when id is not found
 	_, err = store.Get(userID, uuid.New().String())
 	expect.Error(t, err)
+
+	// when a different user
+	_, err = store.Get(uuid.New().String(), id)
+	expect.Error(t, err)
+	expect.True(t, err == sql.ErrNoRows)
 }
 
 func testQueryList(t *testing.T, datasourceStore querycache.DatasourceStore, store querycache.QueryStore) {
