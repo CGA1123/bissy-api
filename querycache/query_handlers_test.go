@@ -299,8 +299,9 @@ func TestQueryResult(t *testing.T) {
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, clock, generator),
 	}
 
-	userID := uuid.New().String()
-	datasource, err := config.DatasourceStore.Create(userID, &querycache.CreateDatasource{Type: "test", Name: "Test"})
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID,
+		&querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
 	query, err := config.QueryStore.Create(&querycache.CreateQuery{
@@ -310,7 +311,6 @@ func TestQueryResult(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries/"+query.ID+"/result", nil)
 	expect.Ok(t, err)
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeCSV, response)
@@ -330,8 +330,8 @@ func TestQueryResultPostgres(t *testing.T) {
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, clock, generator),
 	}
 
-	userID := uuid.New().String()
-	datasource, err := config.DatasourceStore.Create(userID, &querycache.CreateDatasource{
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID, &querycache.CreateDatasource{
 		Type: "postgres", Name: "PG Test", Options: os.Getenv("DATABASE_URL")})
 	expect.Ok(t, err)
 
@@ -342,7 +342,6 @@ func TestQueryResultPostgres(t *testing.T) {
 	request, err := http.NewRequest("GET", "/queries/"+query.ID+"/result", nil)
 	expect.Ok(t, err)
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeCSV, response)

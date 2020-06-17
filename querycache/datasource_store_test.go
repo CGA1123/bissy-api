@@ -1,6 +1,7 @@
 package querycache_test
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -94,6 +95,16 @@ func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string
 	datasource, err := store.Get(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
+
+	// when not found
+	datasource, err = store.Get(userID, uuid.New().String())
+	expect.Error(t, err)
+	expect.True(t, sql.ErrNoRows == err)
+
+	// when other user
+	datasource, err = store.Get(uuid.New().String(), id)
+	expect.Error(t, err)
+	expect.True(t, sql.ErrNoRows == err)
 }
 
 func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
