@@ -34,7 +34,7 @@ func (c *Config) datasourcesCreate(claims *auth.Claims, w http.ResponseWriter, r
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	datasource, err := c.DatasourceStore.Create(&createDatasource)
+	datasource, err := c.DatasourceStore.Create(claims.UserID, &createDatasource)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusUnprocessableEntity}

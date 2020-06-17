@@ -56,7 +56,8 @@ func TestDatasourceGet(t *testing.T) {
 	defer teardown()
 
 	_, id, config := testConfig(db)
-	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable",
@@ -66,7 +67,6 @@ func TestDatasourceGet(t *testing.T) {
 	request, err := http.NewRequest("GET", "/datasources/"+id, nil)
 	expect.Ok(t, err)
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
@@ -80,7 +80,8 @@ func TestDatasourceDelete(t *testing.T) {
 	defer teardown()
 
 	_, id, config := testConfig(db)
-	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable",
@@ -90,7 +91,6 @@ func TestDatasourceDelete(t *testing.T) {
 	request, err := http.NewRequest("DELETE", "/datasources/"+id, nil)
 	expect.Ok(t, err)
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
@@ -108,7 +108,8 @@ func TestDatasourceUpdate(t *testing.T) {
 	defer teardown()
 
 	_, id, config := testConfig(db)
-	datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
+	claims := testClaims()
+	datasource, err := config.DatasourceStore.Create(claims.UserID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable"})
@@ -127,7 +128,6 @@ func TestDatasourceUpdate(t *testing.T) {
 	datasource.Type = "snowflake"
 	datasource.Options = ""
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
@@ -149,11 +149,12 @@ func TestDatasourceList(t *testing.T) {
 	db, teardown := utils.TestDB(t)
 	defer teardown()
 
+	claims := testClaims()
 	config := &querycache.Config{
 		DatasourceStore: querycache.NewSQLDatasourceStore(db, &utils.RealClock{}, &utils.UUIDGenerator{})}
 
 	for i := 0; i < 30; i++ {
-		datasource, err := config.DatasourceStore.Create(&querycache.CreateDatasource{
+		datasource, err := config.DatasourceStore.Create(claims.UserID, &querycache.CreateDatasource{
 			Name: fmt.Sprintf("Name %v", i)})
 
 		expect.Ok(t, err)
@@ -163,7 +164,6 @@ func TestDatasourceList(t *testing.T) {
 	request, err := http.NewRequest("GET", "/datasources", nil)
 	expect.Ok(t, err)
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)

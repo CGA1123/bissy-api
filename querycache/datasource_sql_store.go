@@ -20,7 +20,7 @@ func NewSQLDatasourceStore(db *hnysqlx.DB, clock utils.Clock, generator utils.ID
 }
 
 // Create creates and persists a new Datasource to the Store
-func (s *SQLDatasourceStore) Create(ca *CreateDatasource) (*Datasource, error) {
+func (s *SQLDatasourceStore) Create(userID string, ca *CreateDatasource) (*Datasource, error) {
 	now := s.clock.Now()
 	id := s.idGenerator.Generate()
 
