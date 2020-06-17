@@ -85,7 +85,8 @@ func (c *Config) queryResult(claims *auth.Claims, id string, w http.ResponseWrit
 		return err
 	}
 
-	result, err := c.executeQuery(query)
+	// TODO: no need to pass claims one Query has a UserID!
+	result, err := c.executeQuery(claims.UserID, query)
 	if err != nil {
 		return err
 	}
@@ -95,8 +96,8 @@ func (c *Config) queryResult(claims *auth.Claims, id string, w http.ResponseWrit
 	return err
 }
 
-func (c *Config) executeQuery(query *Query) (string, error) {
-	datasource, err := c.DatasourceStore.Get(query.DatasourceID)
+func (c *Config) executeQuery(userID string, query *Query) (string, error) {
+	datasource, err := c.DatasourceStore.Get(userID, query.DatasourceID)
 	if err != nil {
 		return "", err
 	}
