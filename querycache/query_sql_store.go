@@ -52,12 +52,12 @@ func (s *SQLQueryStore) Create(userID string, ca *CreateQuery) (*Query, error) {
 }
 
 // Delete removes the Query with associated id from the store
-func (s *SQLQueryStore) Delete(id string) (*Query, error) {
+func (s *SQLQueryStore) Delete(userID, id string) (*Query, error) {
 	var query Query
 
-	queryStr := "DELETE FROM querycache_queries WHERE id = $1 RETURNING *"
+	queryStr := "DELETE FROM querycache_queries WHERE id = $1 AND user_id = $2 RETURNING *"
 
-	if err := s.db.Get(&query, queryStr, id); err != nil {
+	if err := s.db.Get(&query, queryStr, id, userID); err != nil {
 		return nil, err
 	}
 

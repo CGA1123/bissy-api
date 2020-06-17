@@ -54,7 +54,7 @@ func (c *Config) queryGet(claims *auth.Claims, id string, w http.ResponseWriter,
 }
 
 func (c *Config) queryDelete(claims *auth.Claims, id string, w http.ResponseWriter, r *http.Request) error {
-	query, err := c.QueryStore.Delete(id)
+	query, err := c.QueryStore.Delete(claims.UserID, id)
 	if err != nil {
 		return err
 	}
