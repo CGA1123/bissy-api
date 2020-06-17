@@ -36,7 +36,7 @@ type DatasourceStore interface {
 	Create(string, *CreateDatasource) (*Datasource, error)
 	List(page int, per int) ([]*Datasource, error)
 	Delete(string, string) (*Datasource, error)
-	Update(string, *UpdateDatasource) (*Datasource, error)
+	Update(string, string, *UpdateDatasource) (*Datasource, error)
 }
 
 // NewExecutor returns a new SQLExecutor configured against this Datasource

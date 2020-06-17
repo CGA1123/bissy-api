@@ -56,7 +56,7 @@ func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id str
 		UpdatedAt: now,
 	}
 
-	_, err := store.Create(userID, &querycache.CreateDatasource{
+	expectedDatasource, err := store.Create(userID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
 		Options: "sslmode=disable",
@@ -68,8 +68,12 @@ func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id str
 	expect.Error(t, err)
 	expect.True(t, err == sql.ErrNoRows)
 
+	datasource, err := store.Get(userID, id)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedDatasource, datasource)
+
 	// When the owner is trying to delete
-	datasource, err := store.Delete(userID, id)
+	datasource, err = store.Delete(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
 
@@ -136,7 +140,7 @@ func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id str
 	newName := "test snowdapter"
 	newType := "snowflake"
 	newOptions := ""
-	datasource, err := store.Update(id, &querycache.UpdateDatasource{
+	datasource, err := store.Update(userID, id, &querycache.UpdateDatasource{
 		Name:    &newName,
 		Type:    &newType,
 		Options: &newOptions,
@@ -152,12 +156,25 @@ func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id str
 	// partial update
 	newName = "test snowdapter 2"
 	expected.Name = newName
-	datasource, err = store.Update(id, &querycache.UpdateDatasource{
+	datasource, err = store.Update(userID, id, &querycache.UpdateDatasource{
 		Name: &newName,
 	})
 
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
+
+	datasource, err = store.Get(userID, id)
+	expect.Ok(t, err)
+	expect.Equal(t, expected, datasource)
+
+	// when not owning user
+	newName = "test snowdapter 2"
+	expected.Name = newName
+	datasource, err = store.Update(uuid.New().String(), id, &querycache.UpdateDatasource{
+		Name: &newName,
+	})
+	expect.Error(t, err)
+	expect.True(t, err == sql.ErrNoRows)
 
 	datasource, err = store.Get(userID, id)
 	expect.Ok(t, err)
