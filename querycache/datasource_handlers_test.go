@@ -29,8 +29,10 @@ func TestDatasourceCreate(t *testing.T) {
 	request, err := http.NewRequest("POST", "/datasources", json)
 	expect.Ok(t, err)
 
+	claims := testClaims()
 	expected := &querycache.Datasource{
 		ID:        id,
+		UserID:    claims.UserID,
 		Name:      "test datasource",
 		Type:      "postgres",
 		Options:   "",
@@ -38,7 +40,6 @@ func TestDatasourceCreate(t *testing.T) {
 		UpdatedAt: now,
 	}
 
-	claims := testClaims()
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 	expecthttp.JSONBody(t, expected, response.Body)

@@ -8,6 +8,7 @@ import (
 // against
 type Datasource struct {
 	ID        string    `json:"id" db:"id"`
+	UserID    string    `json:"userId" db:"user_id"`
 	Name      string    `json:"name"`
 	Type      string    `json:"type"`
 	Options   string    `json:"options"`

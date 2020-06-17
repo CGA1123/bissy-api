@@ -25,12 +25,12 @@ func (s *SQLDatasourceStore) Create(userID string, ca *CreateDatasource) (*Datas
 	id := s.idGenerator.Generate()
 
 	query := `
-		INSERT INTO querycache_datasources (id, name, type, options, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO querycache_datasources (id, user_id, name, type, options, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING *`
 
 	var datasource Datasource
-	if err := s.db.Get(&datasource, query, id, ca.Name, ca.Type, ca.Options, now, now); err != nil {
+	if err := s.db.Get(&datasource, query, id, userID, ca.Name, ca.Type, ca.Options, now, now); err != nil {
 		return nil, err
 	}
 

@@ -17,8 +17,10 @@ import (
 )
 
 func testDatasourceCreate(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
+	userID := uuid.New().String()
 	expected := &querycache.Datasource{
 		ID:        id,
+		UserID:    userID,
 		Name:      "test datasource",
 		Type:      "postgres",
 		Options:   "sslmode=disable",
@@ -26,7 +28,6 @@ func testDatasourceCreate(t *testing.T, store querycache.DatasourceStore, id str
 		UpdatedAt: now,
 	}
 
-	userID := uuid.New().String()
 	datasource, err := store.Create(userID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
@@ -43,8 +44,10 @@ func testDatasourceCreate(t *testing.T, store querycache.DatasourceStore, id str
 }
 
 func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
+	userID := uuid.New().String()
 	expected := &querycache.Datasource{
 		ID:        id,
+		UserID:    userID,
 		Name:      "test datasource",
 		Type:      "postgres",
 		Options:   "sslmode=disable",
@@ -52,7 +55,6 @@ func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id str
 		UpdatedAt: now,
 	}
 
-	userID := uuid.New().String()
 	_, err := store.Create(userID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
@@ -71,8 +73,10 @@ func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id str
 }
 
 func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
+	userID := uuid.New().String()
 	expected := &querycache.Datasource{
 		ID:        id,
+		UserID:    userID,
 		Name:      "test datasource",
 		Type:      "postgres",
 		Options:   "sslmode=disable",
@@ -80,7 +84,6 @@ func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string
 		UpdatedAt: now,
 	}
 
-	userID := uuid.New().String()
 	_, err := store.Create(userID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
@@ -94,8 +97,10 @@ func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string
 }
 
 func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id string, now time.Time) {
+	userID := uuid.New().String()
 	expected := &querycache.Datasource{
 		ID:        id,
+		UserID:    userID,
 		Name:      "test snowdapter",
 		Type:      "snowflake",
 		Options:   "",
@@ -103,7 +108,6 @@ func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id str
 		UpdatedAt: now,
 	}
 
-	userID := uuid.New().String()
 	_, err := store.Create(userID, &querycache.CreateDatasource{
 		Name:    "test datasource",
 		Type:    "postgres",
