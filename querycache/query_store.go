@@ -73,7 +73,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 
 // QueryStore describes a generic Store for Queries
 type QueryStore interface {
-	Get(string) (*Query, error)
+	Get(string, string) (*Query, error)
 	Create(*CreateQuery) (*Query, error)
 	List(page int, per int) ([]*Query, error)
 	Delete(string) (*Query, error)

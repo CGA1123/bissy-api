@@ -42,7 +42,7 @@ func TestQueryCreate(t *testing.T) {
 	response := testHandler(claims, config, request)
 	expecthttp.Ok(t, response)
 
-	actual, err := config.QueryStore.Get(id)
+	actual, err := config.QueryStore.Get(claims.UserID, id)
 	expected := &querycache.Query{
 		ID:           id,
 		Lifetime:     querycache.Duration(time.Hour + time.Minute),
@@ -214,7 +214,7 @@ func TestQueryUpdate(t *testing.T) {
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, query, response.Body)
 
-	query, err = config.QueryStore.Get(id)
+	query, err = config.QueryStore.Get(claims.UserID, id)
 	expect.Ok(t, err)
 
 	expect.Equal(t, querycache.Duration(time.Hour+time.Minute), query.Lifetime)

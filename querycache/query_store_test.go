@@ -64,7 +64,7 @@ func testQueryCreate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 	expect.Ok(t, err)
 	expect.Equal(t, expected, query)
 
-	query, err = store.Get(id)
+	query, err = store.Get(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, query)
 }
@@ -94,12 +94,12 @@ func testQueryGet(t *testing.T, datasourceStore querycache.DatasourceStore, stor
 	expect.Ok(t, err)
 
 	// when id is found
-	query, err := store.Get(id)
+	query, err := store.Get(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, *query)
 
 	// when id is not found
-	_, err = store.Get(uuid.New().String())
+	_, err = store.Get(userID, uuid.New().String())
 	expect.Error(t, err)
 }
 
@@ -221,7 +221,7 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 	expect.Equal(t, expected, *query)
 
 	// Test persistence
-	query, err = store.Get(id)
+	query, err = store.Get(userID, id)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, *query)
 
