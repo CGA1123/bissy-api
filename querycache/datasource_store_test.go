@@ -77,7 +77,7 @@ func testDatasourceDelete(t *testing.T, store querycache.DatasourceStore, id str
 	expect.Ok(t, err)
 	expect.Equal(t, expected, datasource)
 
-	datasources, err := store.List(1, 1)
+	datasources, err := store.List(userID, 1, 1)
 	expect.Ok(t, err)
 
 	expect.Equal(t, []*querycache.Datasource{}, datasources)
@@ -194,29 +194,34 @@ func testDatasourceList(t *testing.T, store querycache.DatasourceStore) {
 		expectedDatasources = append(expectedDatasources, datasource)
 	}
 
-	_, err := store.List(0, 1)
+	_, err := store.List(userID, 0, 1)
 	expect.Error(t, err)
 
-	_, err = store.List(1, 0)
+	_, err = store.List(userID, 1, 0)
 	expect.Error(t, err)
 
-	datasources, err := store.List(1, 10)
-	expect.Ok(t, err)
-	expect.Equal(t, expectedDatasources, datasources)
-
-	datasources, err = store.List(2, 3)
-	expect.Ok(t, err)
-	expect.Equal(t, expectedDatasources[3:6], datasources)
-
-	datasources, err = store.List(4, 3)
-	expect.Ok(t, err)
-	expect.Equal(t, expectedDatasources[9:10], datasources)
-
-	datasources, err = store.List(10, 3)
+	// when accessed by non owning user
+	datasources, err := store.List(uuid.New().String(), 1, 10)
 	expect.Ok(t, err)
 	expect.Equal(t, []*querycache.Datasource{}, datasources)
 
-	datasources, err = store.List(1, 30)
+	datasources, err = store.List(userID, 1, 10)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedDatasources, datasources)
+
+	datasources, err = store.List(userID, 2, 3)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedDatasources[3:6], datasources)
+
+	datasources, err = store.List(userID, 4, 3)
+	expect.Ok(t, err)
+	expect.Equal(t, expectedDatasources[9:10], datasources)
+
+	datasources, err = store.List(userID, 10, 3)
+	expect.Ok(t, err)
+	expect.Equal(t, []*querycache.Datasource{}, datasources)
+
+	datasources, err = store.List(userID, 1, 30)
 	expect.Ok(t, err)
 	expect.Equal(t, expectedDatasources, datasources)
 }
