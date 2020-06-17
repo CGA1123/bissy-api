@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -125,6 +126,35 @@ func TestGithubOAuthUser(t *testing.T) {
 	user, err := oauth.User()
 	expect.Ok(t, err)
 	expect.Equal(t, expectedUser, user)
+
+	// error url parsing
+	oauth = &auth.GithubOAuthClient{
+		Base: "\000api.com", Token: "my-access-token", HTTPClient: client}
+
+	mockGithubUserFetch(t, "github-user-id", "Bissy", client)
+
+	user, err = oauth.User()
+	expect.Error(t, err)
+	expect.Equal(t, "error building request: parse \"\\x00api.com/graphql\": net/url: invalid control character in URL", err.Error())
+
+	// error on request
+	oauth = &auth.GithubOAuthClient{
+		Base: "https://api.github.com", Token: "my-access-token", HTTPClient: client}
+	client.Mock("POST", "https://api.github.com/graphql", func(r *http.Request) (*http.Response, error) {
+		return nil, fmt.Errorf("errored!")
+	})
+	user, err = oauth.User()
+	expect.Error(t, err)
+	expect.Equal(t, "error doing request: errored!", err.Error())
+
+	// error parsing response
+	client.Mock("POST", "https://api.github.com/graphql", func(r *http.Request) (*http.Response, error) {
+		response := httptest.NewRecorder()
+		return response.Result(), nil
+	})
+	user, err = oauth.User()
+	expect.Error(t, err)
+	expect.Equal(t, "error parsing response: EOF", err.Error())
 }
 
 func TestGithubSignIn(t *testing.T) {
@@ -207,4 +237,17 @@ func TestGithubCallback(t *testing.T) {
 	userID, err = redis.Get(redisID)
 	expect.Ok(t, err)
 	expect.Equal(t, user.ID, userID)
+
+	// without code
+	request, err = http.NewRequest("GET", "/github/callback?state="+redisID, nil)
+	expect.Ok(t, err)
+	response = testRouter(config, request)
+	expecthttp.Status(t, http.StatusBadRequest, response)
+
+	// without state
+	request, err = http.NewRequest("GET", "/github/callback?code=my-code", nil)
+	expect.Ok(t, err)
+	response = testRouter(config, request)
+	expecthttp.Status(t, http.StatusBadRequest, response)
+
 }
