@@ -147,7 +147,7 @@ func TestQueryDelete(t *testing.T) {
 	expecthttp.ContentType(t, handlerutils.ContentTypeJSON, response)
 	expecthttp.JSONBody(t, query, response.Body)
 
-	queries, err := config.QueryStore.List(1, 1)
+	queries, err := config.QueryStore.List(claims.UserID, 1, 1)
 	expect.Ok(t, err)
 	expect.Equal(t, []*querycache.Query{}, queries)
 }

@@ -17,7 +17,7 @@ func (c *Config) queriesList(claims *auth.Claims, w http.ResponseWriter, r *http
 	page := params.MaybeInt("page", 1)
 	per := params.MaybeInt("per", 25)
 
-	queries, err := c.QueryStore.List(page, per)
+	queries, err := c.QueryStore.List(claims.UserID, page, per)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: err, Status: http.StatusInternalServerError}
