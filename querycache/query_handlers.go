@@ -69,7 +69,7 @@ func (c *Config) queryUpdate(claims *auth.Claims, id string, w http.ResponseWrit
 			Err: err, Status: http.StatusUnprocessableEntity}
 	}
 
-	query, err := c.QueryStore.Update(id, &updateQuery)
+	query, err := c.QueryStore.Update(claims.UserID, id, &updateQuery)
 	if err != nil {
 		return err
 	}

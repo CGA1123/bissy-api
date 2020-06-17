@@ -226,7 +226,7 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 	expect.Ok(t, err)
 
 	// Test returned query
-	query, err := store.Update(id, &updateQuery)
+	query, err := store.Update(userID, id, &updateQuery)
 	expect.Ok(t, err)
 	expect.Equal(t, expected, *query)
 
@@ -237,20 +237,30 @@ func testQueryUpdate(t *testing.T, datasourceStore querycache.DatasourceStore, s
 
 	// Partial update
 	newLifetime = 15 * querycache.Duration(time.Second)
-	query, err = store.Update(id, &querycache.UpdateQuery{Lifetime: &newLifetime})
+	query, err = store.Update(userID, id, &querycache.UpdateQuery{Lifetime: &newLifetime})
 	expect.Ok(t, err)
 	expect.Equal(t, newLifetime, query.Lifetime)
 
 	// Test updating lastrefresh
-	query, err = store.Update(id,
+	query, err = store.Update(userID, id,
 		&querycache.UpdateQuery{LastRefresh: now.Add(time.Hour)})
 	expect.Ok(t, err)
 	expect.Equal(t, newLifetime, query.Lifetime)
 	expect.Equal(t, now.Add(time.Hour), query.LastRefresh)
 
 	// Updating not existing query
-	_, err = store.Update(uuid.New().String(), &updateQuery)
+	_, err = store.Update(userID, uuid.New().String(), &updateQuery)
 	expect.Error(t, err)
+
+	// Updating query not from user
+	newLifetime = 30 * querycache.Duration(time.Second)
+	_, err = store.Update(uuid.New().String(), id, &querycache.UpdateQuery{Lifetime: &newLifetime})
+	expect.Error(t, err)
+	expect.True(t, err == sql.ErrNoRows)
+
+	query, err = store.Get(userID, id)
+	expect.Ok(t, err)
+	expect.Equal(t, 15*querycache.Duration(time.Second), query.Lifetime)
 }
 
 func testSQLQueryStore(now time.Time, id string, db *hnysqlx.DB) *querycache.SQLQueryStore {

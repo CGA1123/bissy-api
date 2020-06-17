@@ -109,7 +109,7 @@ func updateCache(cache *CachedExecutor, query *Query, result string) {
 		return
 	}
 
-	cache.Store.Update(query.ID, &UpdateQuery{LastRefresh: cache.Clock.Now()})
+	cache.Store.Update(query.UserID, query.ID, &UpdateQuery{LastRefresh: cache.Clock.Now()})
 }
 
 // NewCachedExecutor sets up a new CachedExecutor
