@@ -46,6 +46,7 @@ func initCors(frontend string) *cors.Cors {
 	return cors.New(cors.Options{
 		AllowCredentials: true,
 		AllowedMethods:   methods,
+		AllowedHeaders:   []string{"Authorization"},
 		AllowedOrigins:   []string{frontend}})
 }
 
