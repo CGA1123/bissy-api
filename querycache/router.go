@@ -44,53 +44,53 @@ func memberHandler(next func(*auth.Claims, string, http.ResponseWriter, *http.Re
 
 // SetupHandlers mounts the querycache handlers onto the given mux
 func (c *Config) SetupHandlers(router *mux.Router) {
-	router.HandleFunc("/", c.home).Methods("GET")
+	router.HandleFunc("/", c.home).Methods("OPTIONS", "GET")
 
 	// Queries
 	router.
 		Handle("/queries", handler(c.queriesList)).
-		Methods("GET")
+		Methods("OPTIONS", "GET")
 
 	router.
 		Handle("/queries", handler(c.queriesCreate)).
-		Methods("POST")
+		Methods("OPTIONS", "POST")
 
 	router.
 		Handle("/queries/{id}", memberHandler(c.queryGet)).
-		Methods("GET")
+		Methods("OPTIONS", "GET")
 
 	router.
 		Handle("/queries/{id}", memberHandler(c.queryDelete)).
-		Methods("DELETE")
+		Methods("OPTIONS", "DELETE")
 
 	router.
 		Handle("/queries/{id}", memberHandler(c.queryUpdate)).
-		Methods("PATCH")
+		Methods("OPTIONS", "PATCH")
 
 	router.
 		Handle("/queries/{id}/result", memberHandler(c.queryResult)).
-		Methods("GET")
+		Methods("OPTIONS", "GET")
 
 	// Datasources
 	router.
 		Handle("/datasources", handler(c.datasourcesList)).
-		Methods("GET")
+		Methods("OPTIONS", "GET")
 
 	router.
 		Handle("/datasources", handler(c.datasourcesCreate)).
-		Methods("POST")
+		Methods("OPTIONS", "POST")
 
 	router.
 		Handle("/datasources/{id}", memberHandler(c.datasourceGet)).
-		Methods("GET")
+		Methods("OPTIONS", "GET")
 
 	router.
 		Handle("/datasources/{id}", memberHandler(c.datasourceDelete)).
-		Methods("DELETE")
+		Methods("OPTIONS", "DELETE")
 
 	router.
 		Handle("/datasources/{id}", memberHandler(c.datasourceUpdate)).
-		Methods("PATCH")
+		Methods("OPTIONS", "PATCH")
 }
 
 func (c *Config) home(w http.ResponseWriter, r *http.Request) {
