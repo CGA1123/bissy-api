@@ -3,6 +3,8 @@ package utils
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -169,4 +171,44 @@ func RequireEnv(envVars ...string) (map[string]string, error) {
 	}
 
 	return vars, nil
+}
+
+// Random describes an interface to get random strings and bytes
+type Random interface {
+	String(int) (string, error)
+	Bytes(int) ([]byte, error)
+}
+
+// SecureRandom implements Random using the crypto/rand package
+type SecureRandom struct{}
+
+// Bytes returns a slice of random bytes of given size
+func (s *SecureRandom) Bytes(size int) ([]byte, error) {
+	bytes := make([]byte, size)
+	if _, err := rand.Read(bytes); err != nil {
+		return nil, err
+	}
+
+	return bytes, nil
+}
+
+// String returns a Base-64 encoded string of random bytes of given size
+func (s *SecureRandom) String(size int) (string, error) {
+	bytes, err := s.Bytes(size)
+	return base64.URLEncoding.EncodeToString(bytes), err
+}
+
+// TestRandom implements the Random implementation by returning a known value.
+type TestRandom struct {
+	Value []byte
+}
+
+// Bytes returns the configured Bytes
+func (s *TestRandom) Bytes(size int) ([]byte, error) {
+	return s.Value, nil
+}
+
+// String returns the configured Bytes as a String
+func (s *TestRandom) String(size int) (string, error) {
+	return string(s.Value), nil
 }

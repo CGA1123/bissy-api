@@ -179,3 +179,24 @@ func TestJSONBody(t *testing.T) {
 	_, err = utils.JSONBody(math.Inf(1))
 	expect.Error(t, err)
 }
+
+func TestTestRandom(t *testing.T) {
+	random := &utils.TestRandom{Value: []byte("hello, world")}
+
+	str, err := random.String(0)
+	expect.Ok(t, err)
+	expect.Equal(t, "hello, world", str)
+
+	bytes, err := random.Bytes(0)
+	expect.Ok(t, err)
+	expect.Equal(t, []byte("hello, world"), bytes)
+
+	srandom := &utils.SecureRandom{}
+	str1, err := srandom.String(32)
+	expect.Ok(t, err)
+
+	str2, err := srandom.String(32)
+	expect.Ok(t, err)
+
+	expect.NotEqual(t, str1, str2)
+}

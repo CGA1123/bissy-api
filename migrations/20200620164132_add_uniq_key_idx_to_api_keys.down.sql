@@ -1,0 +1,1 @@
+DROP UNIQUE INDEX CONCURRENTLY IF EXISTS auth_api_keys_uniq_key_idx;
