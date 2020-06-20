@@ -48,7 +48,7 @@ func ContentType(w http.ResponseWriter, contentType string) {
 	w.Header().Set("Content-Type", contentType)
 }
 
-// ServeHTTP satifies the http.Handler interface and wraps handlers to deal with
+// ServeHTTP satisfies the http.Handler interface and wraps handlers to deal with
 // a returned error.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := h.H(w, r)

@@ -27,7 +27,7 @@ func Header(t *testing.T, key string, val string, headers hasHeaders) {
 	expect.Equal(t, val, headers.Get(key))
 }
 
-// Ok expects the given repsonse to have status code OK (200)
+// Ok expects the given response to have status code OK (200)
 func Ok(t *testing.T, rr *httptest.ResponseRecorder) {
 	t.Helper()
 
@@ -52,7 +52,7 @@ type hasBytes interface {
 	Bytes() []byte
 }
 
-// JSONBody expectes the response body to match the marshaled struct given
+// JSONBody expects the response body to match the marshaled struct given
 func JSONBody(t *testing.T, expected interface{}, body hasBytes) {
 	t.Helper()
 
