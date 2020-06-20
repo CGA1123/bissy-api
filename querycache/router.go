@@ -19,27 +19,20 @@ type Config struct {
 	Clock           utils.Clock
 }
 
-func handler(next func(*auth.Claims, http.ResponseWriter, *http.Request) error) http.Handler {
-	return &handlerutils.Handler{
-		H: auth.BuildHandler(next),
-	}
-}
-
 func memberHandler(next func(*auth.Claims, string, http.ResponseWriter, *http.Request) error) http.Handler {
-	return &handlerutils.Handler{
-		H: auth.BuildHandler(
-			func(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
-				handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
+	return auth.BuildHandler(
+		func(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
+			handlerutils.ContentType(w, handlerutils.ContentTypeJSON)
 
-				params := handlerutils.Params(r)
-				id, ok := params.Get("id")
-				if !ok {
-					return &handlerutils.HandlerError{
-						Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
-				}
+			params := handlerutils.Params(r)
+			id, ok := params.Get("id")
+			if !ok {
+				return &handlerutils.HandlerError{
+					Err: fmt.Errorf("id not set"), Status: http.StatusBadRequest}
+			}
 
-				return next(claims, id, w, r)
-			})}
+			return next(claims, id, w, r)
+		})
 }
 
 // SetupHandlers mounts the querycache handlers onto the given mux
@@ -48,11 +41,11 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 
 	// Queries
 	router.
-		Handle("/queries", handler(c.queriesList)).
+		Handle("/queries", auth.BuildHandler(c.queriesList)).
 		Methods("OPTIONS", "GET")
 
 	router.
-		Handle("/queries", handler(c.queriesCreate)).
+		Handle("/queries", auth.BuildHandler(c.queriesCreate)).
 		Methods("OPTIONS", "POST")
 
 	router.
@@ -73,11 +66,11 @@ func (c *Config) SetupHandlers(router *mux.Router) {
 
 	// Datasources
 	router.
-		Handle("/datasources", handler(c.datasourcesList)).
+		Handle("/datasources", auth.BuildHandler(c.datasourcesList)).
 		Methods("OPTIONS", "GET")
 
 	router.
-		Handle("/datasources", handler(c.datasourcesCreate)).
+		Handle("/datasources", auth.BuildHandler(c.datasourcesCreate)).
 		Methods("OPTIONS", "POST")
 
 	router.

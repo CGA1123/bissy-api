@@ -200,22 +200,15 @@ func TestBuildHandler(t *testing.T) {
 	t.Parallel()
 
 	expectedClaims := &auth.Claims{UserID: uuid.New().String()}
-	handler := func(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
+	handler := auth.BuildHandler(func(claims *auth.Claims, w http.ResponseWriter, r *http.Request) error {
 		expect.Equal(t, expectedClaims, claims)
 
 		return nil
-	}
-
-	// With Claim
-	wrappedHandler := http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			err := auth.BuildHandler(handler)(w, r)
-			expect.Ok(t, err)
-		})
+	})
 
 	router := mux.NewRouter()
 	router.Use(auth.TestMiddleware(expectedClaims))
-	router.Handle("/", wrappedHandler).Methods("GET")
+	router.Handle("/", handler).Methods("GET")
 	recorder := httptest.NewRecorder()
 	request, err := http.NewRequest("GET", "/", nil)
 	expect.Ok(t, err)
@@ -224,18 +217,12 @@ func TestBuildHandler(t *testing.T) {
 	expecthttp.Ok(t, recorder)
 
 	// Without Claim
-	wrappedHandler = http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			err := auth.BuildHandler(handler)(w, r)
-			expect.Error(t, err)
-		})
-
 	router = mux.NewRouter()
-	router.Handle("/", wrappedHandler).Methods("GET")
+	router.Handle("/", handler).Methods("GET")
 	recorder = httptest.NewRecorder()
 	request, err = http.NewRequest("GET", "/", nil)
 	expect.Ok(t, err)
 
 	router.ServeHTTP(recorder, request)
-	expecthttp.Ok(t, recorder)
+	expecthttp.Status(t, http.StatusUnauthorized, recorder)
 }
