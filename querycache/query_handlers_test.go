@@ -131,6 +131,7 @@ func TestQueryDelete(t *testing.T) {
 	claims := testClaims()
 	datasource, err := config.DatasourceStore.Create(claims.UserID,
 		&querycache.CreateDatasource{Type: "test", Name: "Test"})
+	expect.Ok(t, err)
 
 	query, err := config.QueryStore.Create(claims.UserID, &querycache.CreateQuery{
 		Query:        "SELECT 1;",

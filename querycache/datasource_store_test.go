@@ -108,12 +108,12 @@ func testDatasourceGet(t *testing.T, store querycache.DatasourceStore, id string
 	expect.Equal(t, expected, datasource)
 
 	// when not found
-	datasource, err = store.Get(userID, uuid.New().String())
+	_, err = store.Get(userID, uuid.New().String())
 	expect.Error(t, err)
 	expect.True(t, sql.ErrNoRows == err)
 
 	// when other user
-	datasource, err = store.Get(uuid.New().String(), id)
+	_, err = store.Get(uuid.New().String(), id)
 	expect.Error(t, err)
 	expect.True(t, sql.ErrNoRows == err)
 }
@@ -170,7 +170,7 @@ func testDatasourceUpdate(t *testing.T, store querycache.DatasourceStore, id str
 	// when not owning user
 	newName = "test snowdapter 2"
 	expected.Name = newName
-	datasource, err = store.Update(uuid.New().String(), id, &querycache.UpdateDatasource{
+	_, err = store.Update(uuid.New().String(), id, &querycache.UpdateDatasource{
 		Name: &newName,
 	})
 	expect.Error(t, err)

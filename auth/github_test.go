@@ -133,7 +133,7 @@ func TestGithubOAuthUser(t *testing.T) {
 
 	mockGithubUserFetch(t, "github-user-id", "Bissy", client)
 
-	user, err = oauth.User()
+	_, err = oauth.User()
 	expect.Error(t, err)
 	expect.Equal(t, "error building request: parse \"\\x00api.com/graphql\": net/url: invalid control character in URL", err.Error())
 
@@ -143,7 +143,7 @@ func TestGithubOAuthUser(t *testing.T) {
 	client.Mock("POST", "https://api.github.com/graphql", func(r *http.Request) (*http.Response, error) {
 		return nil, fmt.Errorf("errored!")
 	})
-	user, err = oauth.User()
+	_, err = oauth.User()
 	expect.Error(t, err)
 	expect.Equal(t, "error doing request: errored!", err.Error())
 
@@ -152,7 +152,7 @@ func TestGithubOAuthUser(t *testing.T) {
 		response := httptest.NewRecorder()
 		return response.Result(), nil
 	})
-	user, err = oauth.User()
+	_, err = oauth.User()
 	expect.Error(t, err)
 	expect.Equal(t, "error parsing response: EOF", err.Error())
 }
