@@ -96,17 +96,17 @@ func TestMiddleware(claim *Claims) func(http.Handler) http.Handler {
 	}
 }
 
-// BuildHandler builds a ErrorHandler and passes in the *Claims if set,
+// BuildHandler builds a handlerutils.Handler and passes in the *Claims if set,
 // returns http.StatusUnauthorized if not.
-func BuildHandler(next func(*Claims, http.ResponseWriter, *http.Request) error) func(http.ResponseWriter, *http.Request) error {
-	return func(w http.ResponseWriter, r *http.Request) error {
+func BuildHandler(next func(*Claims, http.ResponseWriter, *http.Request) error) http.Handler {
+	return &handlerutils.Handler{H: func(w http.ResponseWriter, r *http.Request) error {
 		claim, ok := UserFromContext(r.Context())
 		if !ok {
 			return &handlerutils.HandlerError{Status: http.StatusUnauthorized, Err: fmt.Errorf("no claim present")}
 		}
 
 		return next(claim, w, r)
-	}
+	}}
 }
 
 func authenticate(c *Config, r *http.Request) (*Claims, error) {
