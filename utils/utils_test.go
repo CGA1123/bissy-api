@@ -49,7 +49,7 @@ func TestHTTPClient(t *testing.T) {
 	expect.Ok(t, err)
 
 	client.Mock("GET", "https://example.com/error", func(r *http.Request) (*http.Response, error) {
-		return nil, fmt.Errorf("an error occured")
+		return nil, fmt.Errorf("an error occurred")
 	})
 
 	response, err := client.Do(request)
@@ -58,7 +58,7 @@ func TestHTTPClient(t *testing.T) {
 	var nilResponse *http.Response
 
 	expect.Equal(t, nilResponse, response)
-	expect.Equal(t, "an error occured", err.Error())
+	expect.Equal(t, "an error occurred", err.Error())
 
 	request, err = http.NewRequest("GET", "https://example.com/notmocked", nil)
 	expect.Ok(t, err)
