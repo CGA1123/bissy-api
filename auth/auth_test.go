@@ -8,9 +8,9 @@ import (
 
 	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/auth/jwtprovider"
-	"github.com/cga1123/bissy-api/expect"
-	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/utils"
+	"github.com/cga1123/bissy-api/utils/expect"
+	"github.com/cga1123/bissy-api/utils/expecthttp"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )

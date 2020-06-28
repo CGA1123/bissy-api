@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-txdb"
-	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/utils"
+	"github.com/cga1123/bissy-api/utils/expect"
 	_ "github.com/lib/pq"
 )
 

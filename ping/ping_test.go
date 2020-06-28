@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cga1123/bissy-api/expect"
-	"github.com/cga1123/bissy-api/expecthttp"
-	"github.com/cga1123/bissy-api/handlerutils"
+	"github.com/cga1123/bissy-api/utils/expect"
+	"github.com/cga1123/bissy-api/utils/expecthttp"
+	"github.com/cga1123/bissy-api/utils/handlerutils"
 )
 
 func TestHandler(t *testing.T) {

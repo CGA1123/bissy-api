@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cga1123/bissy-api/expect"
+	"github.com/cga1123/bissy-api/utils/expect"
 )
 
 // Status expects the given status codes to match

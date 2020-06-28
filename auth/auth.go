@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cga1123/bissy-api/handlerutils"
+	"github.com/cga1123/bissy-api/utils/handlerutils"
 	"github.com/honeycombio/beeline-go"
 )
 

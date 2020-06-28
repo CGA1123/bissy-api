@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cga1123/bissy-api/expect"
+	"github.com/cga1123/bissy-api/utils/expect"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cga1123/bissy-api/handlerutils"
+	"github.com/cga1123/bissy-api/utils/handlerutils"
 )
 
 // Handler responds pong to your ping
