@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/auth"
+	"github.com/cga1123/bissy-api/auth/github"
 	"github.com/cga1123/bissy-api/ping"
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/cga1123/bissy-api/utils"
@@ -48,21 +49,6 @@ func initCors(frontend string) *cors.Cors {
 		AllowedMethods:   methods,
 		AllowedHeaders:   []string{"Authorization"},
 		AllowedOrigins:   []string{frontend}})
-}
-
-func initAuth(env map[string]string, db *hnysqlx.DB, redis *redis.Client) *auth.Config {
-	clock := &utils.RealClock{}
-	idGen := &utils.UUIDGenerator{}
-
-	store := auth.NewSQLUserStore(db, clock, idGen)
-
-	return auth.NewConfig(
-		[]byte(env[jwtSigningKeyVar]),
-		store,
-		clock,
-		&auth.RedisStateStore{Client: redis, IDGenerator: idGen},
-		auth.NewGithubApp(env[githubClientIDVar], env[githubClientSecretVar], &http.Client{}),
-	)
 }
 
 func initRedis(vars map[string]string) *redis.Client {
@@ -173,7 +159,7 @@ func main() {
 	initHoneycomb()
 	redisClient := initRedis(env)
 	db := initDb(env)
-	authConfig := initAuth(env, db, redisClient)
+	authConfig := auth.New([]byte(env[jwtSigningKeyVar]))
 	corsConfig := initCors(env[frontendOrigin])
 
 	router := mux.NewRouter()
@@ -182,8 +168,10 @@ func main() {
 	router.HandleFunc("/ping", ping.Handler)
 	router.Handle("/authping", authConfig.Middleware(http.HandlerFunc(ping.Handler)))
 
-	authMux := router.PathPrefix("/auth").Subrouter()
-	authConfig.SetupHandlers(authMux)
+	githubAuthMux := router.PathPrefix("/auth/github").Subrouter()
+	githubApp := github.NewApp(env[githubClientIDVar], env[githubClientSecretVar], &http.Client{Timeout: time.Second * 5})
+	githubAuthConfig := github.New(authConfig, db, redisClient, githubApp)
+	githubAuthConfig.SetupHandlers(githubAuthMux)
 
 	queryCacheConfig := initQueryCache(db, clock, generator, redisClient)
 	querycacheMux := router.PathPrefix("/querycache").Subrouter()

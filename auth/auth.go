@@ -26,29 +26,30 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-// Config contains all the values required to support the auth package
-type Config struct {
+// Auth contains the signing key for generation signed tokens
+type Auth struct {
 	signingKey []byte
-	expiryTime time.Duration
-	userStore  UserStore
 	clock      utils.Clock
-	redis      StateStore
-	githubApp  *GithubApp
 }
 
-// NewConfig build a new Config struct
-func NewConfig(key []byte, store UserStore, clock utils.Clock, redis StateStore, githubApp *GithubApp) *Config {
-	return &Config{
+// TestAuth builds an Auth struct with static time
+func TestAuth(key []byte, time time.Time) *Auth {
+	return &Auth{
 		signingKey: key,
-		userStore:  store,
-		clock:      clock,
-		redis:      redis,
-		githubApp:  githubApp,
+		clock:      &utils.TestClock{Time: time},
+	}
+}
+
+// New builds a new Auth struct
+func New(key []byte) *Auth {
+	return &Auth{
+		signingKey: key,
+		clock:      &utils.RealClock{},
 	}
 }
 
 // SignedToken returns a new signed JWT token string for the given User
-func (c *Config) SignedToken(u *User) (string, error) {
+func (c *Auth) SignedToken(u *User) (string, error) {
 	token := u.NewToken(c.clock.Now().Add(12 * time.Hour))
 
 	return token.SignedString(c.signingKey)
@@ -65,9 +66,9 @@ func UserFromContext(ctx context.Context) (*Claims, bool) {
 // to the next middleware in the stack.
 // It will inject a Claim struct into the request context on successful authentication
 // This Claim can be retrieved in downsteam handlers via UserFromContext.
-func (c *Config) Middleware(next http.Handler) http.Handler {
+func (c *Auth) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		claim, err := authenticate(c, r)
+		claim, err := c.Authenticate(r)
 		if err != nil {
 			code := http.StatusUnauthorized
 
@@ -109,7 +110,9 @@ func BuildHandler(next func(*Claims, http.ResponseWriter, *http.Request) error) 
 	}}
 }
 
-func authenticate(c *Config, r *http.Request) (*Claims, error) {
+// Authenticate authenticates a requests, returning the associated Claims if
+// if authentication succeeds, error otherwise.
+func (c *Auth) Authenticate(r *http.Request) (*Claims, error) {
 	header := strings.Split(r.Header.Get("Authorization"), "Bearer ")
 	if len(header) != 2 {
 		return nil, fmt.Errorf("bad Authorization header (%v)", r.Header.Get("Authorization"))

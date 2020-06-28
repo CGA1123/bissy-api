@@ -1,4 +1,4 @@
-package auth_test
+package github_test
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/auth"
+	"github.com/cga1123/bissy-api/auth/github"
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
@@ -83,7 +84,7 @@ func TestOAuthClient(t *testing.T) {
 	t.Parallel()
 
 	client := utils.NewTestHTTPClient()
-	app := auth.NewGithubApp("client-id", "client-secret", client)
+	app := github.NewApp("client-id", "client-secret", client)
 
 	mockGithubTokenExchange(t, client, "my-code", "my-state")
 
@@ -93,11 +94,11 @@ func TestOAuthClient(t *testing.T) {
 	expect.Equal(t, "https://api.github.com", oauth.Base)
 }
 
-func TestGithubOAuthDo(t *testing.T) {
+func TestOAuthDo(t *testing.T) {
 	t.Parallel()
 
 	client := utils.NewTestHTTPClient()
-	oauth := &auth.GithubOAuthClient{
+	oauth := &github.OAuthClient{
 		Base: "https://example.com", Token: "my-access-token", HTTPClient: client}
 
 	request, err := http.NewRequest("PURGE", "https://example.com/hello", nil)
@@ -114,10 +115,10 @@ func TestGithubOAuthDo(t *testing.T) {
 	expect.Ok(t, err)
 }
 
-func TestGithubOAuthUser(t *testing.T) {
+func TestOAuthUser(t *testing.T) {
 	t.Parallel()
 	client := utils.NewTestHTTPClient()
-	oauth := &auth.GithubOAuthClient{
+	oauth := &github.OAuthClient{
 		Base: "https://api.github.com", Token: "my-access-token", HTTPClient: client}
 	expectedUser := &auth.CreateUser{GithubID: "github-user-id", Name: "Bissy"}
 
@@ -128,7 +129,7 @@ func TestGithubOAuthUser(t *testing.T) {
 	expect.Equal(t, expectedUser, user)
 
 	// error url parsing
-	oauth = &auth.GithubOAuthClient{
+	oauth = &github.OAuthClient{
 		Base: "\000api.com", Token: "my-access-token", HTTPClient: client}
 
 	mockGithubUserFetch(t, "github-user-id", "Bissy", client)
@@ -138,7 +139,7 @@ func TestGithubOAuthUser(t *testing.T) {
 	expect.Equal(t, "error building request: parse \"\\x00api.com/graphql\": net/url: invalid control character in URL", err.Error())
 
 	// error on request
-	oauth = &auth.GithubOAuthClient{
+	oauth = &github.OAuthClient{
 		Base: "https://api.github.com", Token: "my-access-token", HTTPClient: client}
 	client.Mock("POST", "https://api.github.com/graphql", func(r *http.Request) (*http.Response, error) {
 		return nil, fmt.Errorf("errored!")
@@ -161,12 +162,12 @@ func TestGithubSignIn(t *testing.T) {
 	now := time.Now().Truncate(time.Millisecond)
 	userID := uuid.New().String()
 	redisID := uuid.New().String()
-	config, _, redis, teardown := testConfig(
+	config, _, _, redis, teardown := testConfig(
 		t, now, userID, redisID, utils.NewTestHTTPClient())
 	defer teardown()
 
 	request, err := http.NewRequest("GET",
-		"/github/signin?redirect_uri=https://app.bissy.io", nil)
+		"/signin?redirect_uri=https://app.bissy.io", nil)
 	expect.Ok(t, err)
 
 	response := testRouter(config, request)
@@ -185,7 +186,7 @@ func TestGithubSignIn(t *testing.T) {
 	expect.Ok(t, err)
 	expecthttp.JSONBody(
 		t,
-		&auth.ClientState{Redirect: "https://app.bissy.io"},
+		&github.ClientState{Redirect: "https://app.bissy.io"},
 		bytes.NewBuffer([]byte(clientState)))
 }
 
@@ -194,7 +195,7 @@ func TestGithubCallback(t *testing.T) {
 	userID := uuid.New().String()
 	redisID := uuid.New().String()
 	httpClient := utils.NewTestHTTPClient()
-	config, store, redis, teardown := testConfig(t, now, userID, redisID, httpClient)
+	config, _, store, redis, teardown := testConfig(t, now, userID, redisID, httpClient)
 	defer teardown()
 
 	clientState := `{"redirect": "https://app.bissy.io"}`
@@ -204,7 +205,7 @@ func TestGithubCallback(t *testing.T) {
 	expectedUser := &auth.User{ID: userID, GithubID: "github-user-id", Name: "Bissy", CreatedAt: now}
 	expect.Ok(t, err)
 
-	request, err := http.NewRequest("GET", "/github/callback?code=my-code&state="+redisID, nil)
+	request, err := http.NewRequest("GET", "/callback?code=my-code&state="+redisID, nil)
 	expect.Ok(t, err)
 
 	mockGithubTokenExchange(t, httpClient, "my-code", redisID)
@@ -239,13 +240,13 @@ func TestGithubCallback(t *testing.T) {
 	expect.Equal(t, user.ID, userID)
 
 	// without code
-	request, err = http.NewRequest("GET", "/github/callback?state="+redisID, nil)
+	request, err = http.NewRequest("GET", "/callback?state="+redisID, nil)
 	expect.Ok(t, err)
 	response = testRouter(config, request)
 	expecthttp.Status(t, http.StatusBadRequest, response)
 
 	// without state
-	request, err = http.NewRequest("GET", "/github/callback?code=my-code", nil)
+	request, err = http.NewRequest("GET", "/callback?code=my-code", nil)
 	expect.Ok(t, err)
 	response = testRouter(config, request)
 	expecthttp.Status(t, http.StatusBadRequest, response)

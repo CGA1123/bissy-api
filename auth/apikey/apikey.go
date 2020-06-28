@@ -1,4 +1,4 @@
-package auth
+package apikey
 
 import (
 	"fmt"
@@ -8,11 +8,11 @@ import (
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
-// APIKey represents a key that can be used via to interact with an API as an
+// Struct represents a key that can be used via to interact with an API as an
 // authenticated user.
 //
 // The Key itself is not exposed.
-type APIKey struct {
+type Struct struct {
 	ID        string
 	Name      string
 	UserID    string    `json:"userId" db:"user_id"`
@@ -20,14 +20,14 @@ type APIKey struct {
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 }
 
-// CreateAPIKey defines the parameters passed when creating an APIKey
-type CreateAPIKey struct {
+// Create defines the parameters passed when creating an
+type Create struct {
 	Name string
 }
 
-// NewAPIKey represents a newly created API key and is the only struct exposing
+// New represents a newly created API key and is the only struct exposing
 // the Key itself
-type NewAPIKey struct {
+type New struct {
 	ID        string
 	UserID    string `json:"userId" db:"user_id"`
 	Name      string
@@ -36,26 +36,26 @@ type NewAPIKey struct {
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 }
 
-// The APIKeyStore interface defines functions for interacting and managing API
+// The Store interface defines functions for interacting and managing API
 // keys
-type APIKeyStore interface {
-	Create(string, *CreateAPIKey) (*NewAPIKey, error)
-	Delete(string, string) (*APIKey, error)
-	GetByKey(string) (*APIKey, error)
-	List(string) ([]*APIKey, error)
+type Store interface {
+	Create(string, *Create) (*New, error)
+	Delete(string, string) (*Struct, error)
+	GetByKey(string) (*Struct, error)
+	List(string) ([]*Struct, error)
 }
 
-// SQLAPIKeyStore is an SQL-backed implementation of an APIKeyStore
-type SQLAPIKeyStore struct {
+// SQLStore is an SQL-backed implementation of a Store
+type SQLStore struct {
 	db           *hnysqlx.DB
 	clock        utils.Clock
 	idGenerator  utils.IDGenerator
 	keyGenerator utils.Random
 }
 
-// NewSQLAPIKeyStore build a new SQLAPIKeyStore
-func NewSQLAPIKeyStore(db *hnysqlx.DB) *SQLAPIKeyStore {
-	return &SQLAPIKeyStore{
+// NewSQLStore build a new Store
+func NewSQLStore(db *hnysqlx.DB) *SQLStore {
+	return &SQLStore{
 		db:           db,
 		clock:        &utils.RealClock{},
 		idGenerator:  &utils.UUIDGenerator{},
@@ -63,9 +63,9 @@ func NewSQLAPIKeyStore(db *hnysqlx.DB) *SQLAPIKeyStore {
 	}
 }
 
-// NewTestSQLAPIKeyStore allow build a SQLAPIKeyStore with custom generators
-func NewTestSQLAPIKeyStore(db *hnysqlx.DB, time time.Time, id, key string) *SQLAPIKeyStore {
-	return &SQLAPIKeyStore{
+// NewTestSQLStore allow build a Store with custom generators
+func NewTestSQLStore(db *hnysqlx.DB, time time.Time, id, key string) *SQLStore {
+	return &SQLStore{
 		db:           db,
 		clock:        &utils.TestClock{Time: time},
 		idGenerator:  &utils.TestIDGenerator{ID: id},
@@ -74,7 +74,7 @@ func NewTestSQLAPIKeyStore(db *hnysqlx.DB, time time.Time, id, key string) *SQLA
 }
 
 // Create persists a new key for a user
-func (store *SQLAPIKeyStore) Create(userID string, ck *CreateAPIKey) (*NewAPIKey, error) {
+func (store *SQLStore) Create(userID string, ck *Create) (*New, error) {
 	now := store.clock.Now()
 	id := store.idGenerator.Generate()
 	key, err := store.keyGenerator.String(32)
@@ -87,7 +87,7 @@ func (store *SQLAPIKeyStore) Create(userID string, ck *CreateAPIKey) (*NewAPIKey
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING *`
 
-	var newKey NewAPIKey
+	var newKey New
 	if err := store.db.Get(&newKey, query, id, userID, ck.Name, key, now, now); err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (store *SQLAPIKeyStore) Create(userID string, ck *CreateAPIKey) (*NewAPIKey
 }
 
 // Delete removes a give key for a user
-func (store *SQLAPIKeyStore) Delete(userID, keyID string) (*APIKey, error) {
-	var key APIKey
+func (store *SQLStore) Delete(userID, keyID string) (*Struct, error) {
+	var key Struct
 
 	query := `
 		DELETE FROM auth_api_keys
@@ -110,9 +110,9 @@ func (store *SQLAPIKeyStore) Delete(userID, keyID string) (*APIKey, error) {
 	return &key, nil
 }
 
-// GetByKey returns the APIKey related to a given Key
-func (store *SQLAPIKeyStore) GetByKey(key string) (*APIKey, error) {
-	var apiKey APIKey
+// GetByKey returns the  related to a given Key
+func (store *SQLStore) GetByKey(key string) (*Struct, error) {
+	var apiKey Struct
 
 	query := `
 		SELECT id, name, user_id, last_used, created_at
@@ -125,9 +125,9 @@ func (store *SQLAPIKeyStore) GetByKey(key string) (*APIKey, error) {
 	return &apiKey, nil
 }
 
-// List returns all APIKeys associated with a user
-func (store *SQLAPIKeyStore) List(userID string) ([]*APIKey, error) {
-	keys := []*APIKey{}
+// List returns all s associated with a user
+func (store *SQLStore) List(userID string) ([]*Struct, error) {
+	keys := []*Struct{}
 	query := `
 		SELECT id, name, user_id, last_used, created_at
 		FROM auth_api_keys

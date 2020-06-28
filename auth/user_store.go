@@ -48,9 +48,18 @@ type SQLUserStore struct {
 	clock       utils.Clock
 }
 
+// TestSQLUserStore builds a new test sql user store
+func TestSQLUserStore(now time.Time, id string, db *hnysqlx.DB) *SQLUserStore {
+	return &SQLUserStore{
+		db:          db,
+		clock:       &utils.TestClock{Time: now},
+		idGenerator: &utils.TestIDGenerator{ID: id},
+	}
+}
+
 // NewSQLUserStore configures a new SQLUserStore
-func NewSQLUserStore(db *hnysqlx.DB, clock utils.Clock, gen utils.IDGenerator) *SQLUserStore {
-	return &SQLUserStore{db: db, idGenerator: gen, clock: clock}
+func NewSQLUserStore(db *hnysqlx.DB) *SQLUserStore {
+	return &SQLUserStore{db: db, idGenerator: &utils.UUIDGenerator{}, clock: &utils.RealClock{}}
 }
 
 // GetByGithubID fetches a user from the store based on their GithubID

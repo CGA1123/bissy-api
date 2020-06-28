@@ -1,20 +1,34 @@
-package auth_test
+package apikey_test
 
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-txdb"
 	"github.com/cga1123/bissy-api/auth"
+	"github.com/cga1123/bissy-api/auth/apikey"
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/google/uuid"
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
-func withTestSQLAPIKeyStore(t *testing.T, f func(*testing.T, auth.APIKeyStore, *auth.User, time.Time, string, string)) {
+func init() {
+	url, ok := os.LookupEnv("DATABASE_URL")
+	if !ok {
+		log.Fatal("DATABASE_URL not set")
+	}
+
+	txdb.Register("pgx", "postgres", url)
+}
+
+func withTestSQLStore(t *testing.T, f func(*testing.T, apikey.Store, *auth.User, time.Time, string, string)) {
 	db, err := sqlx.Open("pgx", uuid.New().String())
 	expect.Ok(t, err)
 	defer db.Close()
@@ -23,20 +37,20 @@ func withTestSQLAPIKeyStore(t *testing.T, f func(*testing.T, auth.APIKeyStore, *
 	id := uuid.New().String()
 	userID := uuid.New().String()
 
-	userStore := testSQLUserStore(now, userID, hnysqlx.WrapDB(db))
+	userStore := auth.TestSQLUserStore(now, userID, hnysqlx.WrapDB(db))
 	user, err := userStore.Create(&auth.CreateUser{GithubID: "github-id", Name: "test"})
 	expect.Ok(t, err)
 
 	key, err := (&utils.SecureRandom{}).String(32)
 	expect.Ok(t, err)
 
-	store := auth.NewTestSQLAPIKeyStore(hnysqlx.WrapDB(db), now, id, key)
+	store := apikey.NewTestSQLStore(hnysqlx.WrapDB(db), now, id, key)
 
 	f(t, store, user, now, key, id)
 }
 
-func testAPIKeyCreate(t *testing.T, store auth.APIKeyStore, user *auth.User, now time.Time, key, id string) {
-	expected := &auth.NewAPIKey{
+func testCreate(t *testing.T, store apikey.Store, user *auth.User, now time.Time, key, id string) {
+	expected := &apikey.New{
 		Name:      "test",
 		UserID:    user.ID,
 		ID:        id,
@@ -45,17 +59,17 @@ func testAPIKeyCreate(t *testing.T, store auth.APIKeyStore, user *auth.User, now
 		LastUsed:  now,
 	}
 
-	apiKey, err := store.Create(user.ID, &auth.CreateAPIKey{Name: "test"})
+	apiKey, err := store.Create(user.ID, &apikey.Create{Name: "test"})
 	expect.Ok(t, err)
 	expect.Equal(t, expected, apiKey)
 
 	// duplicate
-	_, err = store.Create(user.ID, &auth.CreateAPIKey{Name: "test"})
+	_, err = store.Create(user.ID, &apikey.Create{Name: "test"})
 	expect.Error(t, err)
 }
 
-func testAPIKeyDelete(t *testing.T, store auth.APIKeyStore, user *auth.User, now time.Time, key, id string) {
-	apiKey, err := store.Create(user.ID, &auth.CreateAPIKey{Name: "test"})
+func testDelete(t *testing.T, store apikey.Store, user *auth.User, now time.Time, key, id string) {
+	apiKey, err := store.Create(user.ID, &apikey.Create{Name: "test"})
 	expect.Ok(t, err)
 
 	// different user
@@ -84,11 +98,11 @@ func testAPIKeyDelete(t *testing.T, store auth.APIKeyStore, user *auth.User, now
 	expect.True(t, err == sql.ErrNoRows)
 }
 
-func testAPIKeyGetByKey(t *testing.T, store auth.APIKeyStore, user *auth.User, now time.Time, key, id string) {
-	apiKey, err := store.Create(user.ID, &auth.CreateAPIKey{Name: "test"})
+func testGetByKey(t *testing.T, store apikey.Store, user *auth.User, now time.Time, key, id string) {
+	apiKey, err := store.Create(user.ID, &apikey.Create{Name: "test"})
 	expect.Ok(t, err)
 
-	expectedAPIKey := &auth.APIKey{
+	expected := &apikey.Struct{
 		ID:        apiKey.ID,
 		UserID:    apiKey.UserID,
 		Name:      apiKey.Name,
@@ -97,7 +111,7 @@ func testAPIKeyGetByKey(t *testing.T, store auth.APIKeyStore, user *auth.User, n
 
 	actual, err := store.GetByKey(apiKey.Key)
 	expect.Ok(t, err)
-	expect.Equal(t, expectedAPIKey, actual)
+	expect.Equal(t, expected, actual)
 
 	// key doesn't exist
 	_, err = store.GetByKey("nope")
@@ -105,14 +119,14 @@ func testAPIKeyGetByKey(t *testing.T, store auth.APIKeyStore, user *auth.User, n
 	expect.True(t, err == sql.ErrNoRows)
 }
 
-func testAPIKeyList(t *testing.T, store auth.APIKeyStore, userOne, userTwo *auth.User) {
-	expectedKeys := []*auth.APIKey{}
+func testList(t *testing.T, store apikey.Store, userOne, userTwo *auth.User) {
+	expectedKeys := []*apikey.Struct{}
 	for i := 0; i < 5; i++ {
-		k := &auth.CreateAPIKey{Name: fmt.Sprintf("key %v", i)}
+		k := &apikey.Create{Name: fmt.Sprintf("key %v", i)}
 		apiKey, err := store.Create(userOne.ID, k)
 		expect.Ok(t, err)
 
-		expectedKeys = append(expectedKeys, &auth.APIKey{
+		expectedKeys = append(expectedKeys, &apikey.Struct{
 			ID:        apiKey.ID,
 			UserID:    apiKey.UserID,
 			Name:      apiKey.Name,
@@ -123,7 +137,7 @@ func testAPIKeyList(t *testing.T, store auth.APIKeyStore, userOne, userTwo *auth
 	// with other user
 	keys, err := store.List(userTwo.ID)
 	expect.Ok(t, err)
-	expect.Equal(t, []*auth.APIKey{}, keys)
+	expect.Equal(t, []*apikey.Struct{}, keys)
 
 	// with owning user
 	keys, err = store.List(userOne.ID)
@@ -135,25 +149,25 @@ func testAPIKeyList(t *testing.T, store auth.APIKeyStore, userOne, userTwo *auth
 	expect.Error(t, err)
 }
 
-func TestSQLAPIKeyStoreCreate(t *testing.T) {
+func TestSQLStoreCreate(t *testing.T) {
 	t.Parallel()
 
-	withTestSQLAPIKeyStore(t, testAPIKeyCreate)
+	withTestSQLStore(t, testCreate)
 }
 
-func TestSQLAPIKeyStoreDelete(t *testing.T) {
+func TestSQLStoreDelete(t *testing.T) {
 	t.Parallel()
 
-	withTestSQLAPIKeyStore(t, testAPIKeyDelete)
+	withTestSQLStore(t, testDelete)
 }
 
-func TestSQLAPIKeyStoreGetByKey(t *testing.T) {
+func TestSQLStoreGetByKey(t *testing.T) {
 	t.Parallel()
 
-	withTestSQLAPIKeyStore(t, testAPIKeyGetByKey)
+	withTestSQLStore(t, testGetByKey)
 }
 
-func TestSQLAPIKeyStoreList(t *testing.T) {
+func TestSQLStoreList(t *testing.T) {
 	t.Parallel()
 
 	db, err := sqlx.Open("pgx", uuid.New().String())
@@ -161,15 +175,15 @@ func TestSQLAPIKeyStoreList(t *testing.T) {
 	defer db.Close()
 
 	hnydb := hnysqlx.WrapDB(db)
-	userStore := auth.NewSQLUserStore(hnydb, &utils.RealClock{}, &utils.UUIDGenerator{})
+	userStore := auth.NewSQLUserStore(hnydb)
 	userOne, err := userStore.Create(&auth.CreateUser{GithubID: "github-id-1", Name: "test"})
 	expect.Ok(t, err)
 
 	userTwo, err := userStore.Create(&auth.CreateUser{GithubID: "github-id-2", Name: "test"})
 	expect.Ok(t, err)
 
-	store := auth.NewSQLAPIKeyStore(hnysqlx.WrapDB(db))
+	store := apikey.NewSQLStore(hnysqlx.WrapDB(db))
 	expect.Ok(t, err)
 
-	testAPIKeyList(t, store, userOne, userTwo)
+	testList(t, store, userOne, userTwo)
 }
