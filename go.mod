@@ -1,8 +1,8 @@
-// +heroku goVersion go1.13
+// +heroku goVersion go1.14
 // +heroku install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate .
 module github.com/cga1123/bissy-api
 
-go 1.13
+go 1.14
 
 require (
 	github.com/DATA-DOG/go-txdb v0.1.3
