@@ -4,14 +4,19 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/cga1123/bissy-api/handlerutils"
-	"github.com/cga1123/bissy-api/utils"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/honeycombio/beeline-go"
 )
+
+// The Provider interface describes and authentication provider, it contains two
+// methods:
+// - Valid which checks whether the given request is attempting to authenticate with a give provider
+// - Authenticate which attempts to authenticate the request
+type Provider interface {
+	Valid(*http.Request) bool
+	Authenticate(*http.Request) (*Claims, bool)
+}
 
 type contextKey int
 
@@ -23,36 +28,11 @@ const (
 type Claims struct {
 	UserID string `json:"user_id"`
 	Name   string
-	jwt.StandardClaims
 }
 
 // Auth contains the signing key for generation signed tokens
 type Auth struct {
-	signingKey []byte
-	clock      utils.Clock
-}
-
-// TestAuth builds an Auth struct with static time
-func TestAuth(key []byte, time time.Time) *Auth {
-	return &Auth{
-		signingKey: key,
-		clock:      &utils.TestClock{Time: time},
-	}
-}
-
-// New builds a new Auth struct
-func New(key []byte) *Auth {
-	return &Auth{
-		signingKey: key,
-		clock:      &utils.RealClock{},
-	}
-}
-
-// SignedToken returns a new signed JWT token string for the given User
-func (c *Auth) SignedToken(u *User) (string, error) {
-	token := u.NewToken(c.clock.Now().Add(12 * time.Hour))
-
-	return token.SignedString(c.signingKey)
+	Providers []Provider
 }
 
 // UserFromContext fetches the Claim from the current context
@@ -68,8 +48,8 @@ func UserFromContext(ctx context.Context) (*Claims, bool) {
 // This Claim can be retrieved in downsteam handlers via UserFromContext.
 func (c *Auth) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		claim, err := c.Authenticate(r)
-		if err != nil {
+		claim, ok := c.Provider(r)
+		if !ok {
 			code := http.StatusUnauthorized
 
 			w.Header().Set("WWW-Authenticate", `Bearer realm="bissy-api" charset="UTF-8"`)
@@ -83,6 +63,17 @@ func (c *Auth) Middleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// Provider returns a matching provider for a request, if any
+func (c *Auth) Provider(r *http.Request) (*Claims, bool) {
+	for _, provider := range c.Providers {
+		if provider.Valid(r) {
+			return provider.Authenticate(r)
+		}
+	}
+
+	return nil, false
 }
 
 // TestMiddleware will return a middleware which injects the given claim into
@@ -108,31 +99,4 @@ func BuildHandler(next func(*Claims, http.ResponseWriter, *http.Request) error) 
 
 		return next(claim, w, r)
 	}}
-}
-
-// Authenticate authenticates a requests, returning the associated Claims if
-// if authentication succeeds, error otherwise.
-func (c *Auth) Authenticate(r *http.Request) (*Claims, error) {
-	header := strings.Split(r.Header.Get("Authorization"), "Bearer ")
-	if len(header) != 2 {
-		return nil, fmt.Errorf("bad Authorization header (%v)", r.Header.Get("Authorization"))
-	}
-
-	token, err := jwt.ParseWithClaims(header[1], &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-
-		return c.signingKey, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(*Claims)
-	if !ok || !token.Valid {
-		return nil, fmt.Errorf("could not verify token")
-	}
-
-	return claims, nil
 }

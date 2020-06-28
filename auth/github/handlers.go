@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/auth"
+	"github.com/cga1123/bissy-api/auth/jwtprovider"
 	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/go-redis/redis/v8"
@@ -16,7 +17,7 @@ import (
 
 // Config contains all the values required to support the auth package
 type Config struct {
-	auth      *auth.Auth
+	jwt       *jwtprovider.Config
 	userStore auth.UserStore
 	clock     utils.Clock
 	redis     StateStore
@@ -24,9 +25,9 @@ type Config struct {
 }
 
 // TestConfig builds a config used for testing
-func TestConfig(authConfig *auth.Auth, store auth.UserStore, stateStore StateStore, githubApp *App, now time.Time) *Config {
+func TestConfig(jwtConfig *jwtprovider.Config, store auth.UserStore, stateStore StateStore, githubApp *App, now time.Time) *Config {
 	return &Config{
-		auth:      authConfig,
+		jwt:       jwtConfig,
 		userStore: store,
 		clock:     &utils.TestClock{Time: now},
 		redis:     stateStore,
@@ -35,9 +36,9 @@ func TestConfig(authConfig *auth.Auth, store auth.UserStore, stateStore StateSto
 }
 
 // New build a new Config struct
-func New(authConfig *auth.Auth, db *hnysqlx.DB, client *redis.Client, githubApp *App) *Config {
+func New(jwtConfig *jwtprovider.Config, db *hnysqlx.DB, client *redis.Client, githubApp *App) *Config {
 	return &Config{
-		auth:      authConfig,
+		jwt:       jwtConfig,
 		userStore: auth.NewSQLUserStore(db),
 		clock:     &utils.RealClock{},
 		redis:     &RedisStateStore{Client: client, IDGenerator: &utils.UUIDGenerator{}},
@@ -79,7 +80,7 @@ func (c *Config) token(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("bad user id"), Status: http.StatusBadRequest}
 	}
 
-	token, err := c.auth.SignedToken(user)
+	token, err := c.jwt.SignedToken(user)
 	if err != nil {
 		return &handlerutils.HandlerError{
 			Err: fmt.Errorf("error signing token"), Status: http.StatusInternalServerError}

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/utils"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 )
 
@@ -27,18 +26,6 @@ type UserStore interface {
 	Get(string) (*User, error)
 	GetByGithubID(string) (*User, error)
 	Create(*CreateUser) (*User, error)
-}
-
-// NewToken generates a new jwt.Token expiring at exp for the given user
-func (u *User) NewToken(exp time.Time) *jwt.Token {
-	return jwt.NewWithClaims(jwt.SigningMethodHS512, Claims{
-		u.ID,
-		u.Name,
-		jwt.StandardClaims{
-			ExpiresAt: exp.Unix(),
-			Issuer:    "bissy-api",
-		},
-	})
 }
 
 // SQLUserStore is an SQL implementation of UserStore

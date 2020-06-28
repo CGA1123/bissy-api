@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/auth"
+	"github.com/cga1123/bissy-api/auth/jwtprovider"
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/utils"
@@ -37,26 +38,31 @@ func testHandler(c *auth.Auth, r *http.Request, h http.Handler) *httptest.Respon
 	return recorder
 }
 
-func testConfig(t *testing.T, now time.Time, userID string) (*auth.Auth, *auth.SQLUserStore, func()) {
+func testConfig(t *testing.T, now time.Time, provider auth.Provider, userID string) (*auth.Auth, *auth.SQLUserStore, func()) {
 	db, dbTeardown := utils.TestDB(t)
 
 	store := auth.TestSQLUserStore(now.Truncate(time.Millisecond), userID, db)
-	signingKey := []byte("test-key")
-	config := auth.TestAuth(signingKey, now)
+	config := &auth.Auth{Providers: []auth.Provider{provider}}
 
 	return config, store, func() {
 		expect.Ok(t, dbTeardown())
 	}
 }
 
+// TODO: move JWT specific tests to jwtprovider & make tests more generic using
+// Provider interface
 func TestAuthHandler(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now().Truncate(time.Millisecond)
+	signingKey := []byte("test-key")
+	jwtProvider := jwtprovider.TestConfig(signingKey, now)
+
 	userID := uuid.New().String()
 	authConfig, store, teardown := testConfig(
 		t,
 		now,
+		jwtProvider,
 		userID,
 	)
 	defer teardown()
@@ -81,7 +87,7 @@ func TestAuthHandler(t *testing.T) {
 	expecthttp.Header(t, "WWW-Authenticate", `Bearer realm="bissy-api" charset="UTF-8"`, r.Header())
 
 	// with correct auth header
-	token, err := authConfig.SignedToken(user)
+	token, err := jwtProvider.SignedToken(user)
 	expect.Ok(t, err)
 
 	request, err = http.NewRequest("GET", "/", nil)
