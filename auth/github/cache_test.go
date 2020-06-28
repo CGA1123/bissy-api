@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/auth/github"
-	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/utils"
+	"github.com/cga1123/bissy-api/utils/expect"
 )
 
 func TestRedisStateStore(t *testing.T) {

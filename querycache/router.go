@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/cga1123/bissy-api/auth"
-	"github.com/cga1123/bissy-api/handlerutils"
 	"github.com/cga1123/bissy-api/utils"
+	"github.com/cga1123/bissy-api/utils/handlerutils"
 	"github.com/gorilla/mux"
 )
 
