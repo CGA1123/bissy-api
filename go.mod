@@ -15,7 +15,6 @@ require (
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/honeycombio/beeline-go v0.5.1
-	github.com/jcmturner/gokrb5/v8 v8.3.0 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.8.0
 	github.com/rs/cors v1.7.0
