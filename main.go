@@ -11,6 +11,7 @@ import (
 
 	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/auth/github"
+	"github.com/cga1123/bissy-api/auth/jwtprovider"
 	"github.com/cga1123/bissy-api/ping"
 	"github.com/cga1123/bissy-api/querycache"
 	"github.com/cga1123/bissy-api/utils"
@@ -159,7 +160,8 @@ func main() {
 	initHoneycomb()
 	redisClient := initRedis(env)
 	db := initDb(env)
-	authConfig := auth.New([]byte(env[jwtSigningKeyVar]))
+	jwtConfig := jwtprovider.New([]byte(env[jwtSigningKeyVar]))
+	authConfig := &auth.Auth{Providers: []auth.Provider{jwtConfig}}
 	corsConfig := initCors(env[frontendOrigin])
 
 	router := mux.NewRouter()
@@ -170,7 +172,7 @@ func main() {
 
 	githubAuthMux := router.PathPrefix("/auth/github").Subrouter()
 	githubApp := github.NewApp(env[githubClientIDVar], env[githubClientSecretVar], &http.Client{Timeout: time.Second * 5})
-	githubAuthConfig := github.New(authConfig, db, redisClient, githubApp)
+	githubAuthConfig := github.New(jwtConfig, db, redisClient, githubApp)
 	githubAuthConfig.SetupHandlers(githubAuthMux)
 
 	queryCacheConfig := initQueryCache(db, clock, generator, redisClient)

@@ -11,6 +11,7 @@ import (
 	"github.com/DATA-DOG/go-txdb"
 	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/auth/github"
+	"github.com/cga1123/bissy-api/auth/jwtprovider"
 	"github.com/cga1123/bissy-api/expect"
 	"github.com/cga1123/bissy-api/expecthttp"
 	"github.com/cga1123/bissy-api/handlerutils"
@@ -29,7 +30,7 @@ func init() {
 	txdb.Register("pgx", "postgres", url)
 }
 
-func testConfig(t *testing.T, now time.Time, userID, redisID string, client utils.HTTPClient) (*github.Config, *auth.Auth, *auth.SQLUserStore, *github.RedisStateStore, func()) {
+func testConfig(t *testing.T, now time.Time, userID, redisID string, client utils.HTTPClient) (*github.Config, *jwtprovider.Config, *auth.SQLUserStore, *github.RedisStateStore, func()) {
 	db, dbTeardown := utils.TestDB(t)
 	redisClient, redisTeardown := utils.TestRedis(t)
 	redis := &github.RedisStateStore{Client: redisClient, IDGenerator: &utils.TestIDGenerator{ID: redisID}}
@@ -37,7 +38,7 @@ func testConfig(t *testing.T, now time.Time, userID, redisID string, client util
 
 	store := auth.TestSQLUserStore(now.Truncate(time.Millisecond), userID, db)
 	signingKey := []byte("test-key")
-	authConfig := auth.TestAuth(signingKey, now)
+	authConfig := jwtprovider.TestConfig(signingKey, now)
 	config := github.TestConfig(
 		authConfig,
 		store,
