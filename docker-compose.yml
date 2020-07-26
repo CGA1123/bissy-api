@@ -27,6 +27,7 @@ services:
       - JWT_SIGNING_KEY=8bb1f10acd560f472b9eaaeb3ffd092d
       - PORT=1123
       - FRONTEND_ORIGIN=http://localhost:8000
+      - PAGERDUTY_WEBHOOK_TOKEN=dev-token
       - GITHUB_CLIENT_ID
       - GITHUB_CLIENT_SECRET
     ports:

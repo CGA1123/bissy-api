@@ -6,6 +6,7 @@ go 1.14
 
 require (
 	github.com/DATA-DOG/go-txdb v0.1.3
+	github.com/PagerDuty/go-pagerduty v1.2.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-redis/redis/v8 v8.0.0-beta.7
 	github.com/go-sql-driver/mysql v1.5.0
