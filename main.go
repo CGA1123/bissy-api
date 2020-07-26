@@ -16,6 +16,7 @@ import (
 	"github.com/cga1123/bissy-api/auth/jwtprovider"
 	"github.com/cga1123/bissy-api/ping"
 	"github.com/cga1123/bissy-api/querycache"
+	"github.com/cga1123/bissy-api/slackerduty"
 	"github.com/cga1123/bissy-api/utils"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/handlers"
@@ -29,13 +30,14 @@ import (
 )
 
 const (
-	redisURLVar           = "REDISCLOUD_URL"
-	jwtSigningKeyVar      = "JWT_SIGNING_KEY"
-	githubClientIDVar     = "GITHUB_CLIENT_ID"
-	githubClientSecretVar = "GITHUB_CLIENT_SECRET"
-	databaseURLVar        = "DATABASE_URL"
-	portVar               = "PORT"
-	frontendOrigin        = "FRONTEND_ORIGIN"
+	redisURLVar              = "REDISCLOUD_URL"
+	jwtSigningKeyVar         = "JWT_SIGNING_KEY"
+	githubClientIDVar        = "GITHUB_CLIENT_ID"
+	githubClientSecretVar    = "GITHUB_CLIENT_SECRET"
+	databaseURLVar           = "DATABASE_URL"
+	portVar                  = "PORT"
+	frontendOriginVar        = "FRONTEND_ORIGIN"
+	pagerdutyWebhookTokenVar = "PAGERDUTY_WEBHOOK_TOKEN"
 )
 
 func initCors(frontend string) *cors.Cors {
@@ -110,7 +112,8 @@ func requireEnv() map[string]string {
 		githubClientSecretVar,
 		databaseURLVar,
 		portVar,
-		frontendOrigin,
+		frontendOriginVar,
+		pagerdutyWebhookTokenVar,
 	)
 
 	if err != nil {
@@ -165,23 +168,32 @@ func main() {
 	jwtConfig := jwtprovider.New([]byte(env[jwtSigningKeyVar]))
 	apikeyConfig := apikeyprovider.New(apikey.NewSQLStore(db))
 	authConfig := &auth.Auth{Providers: []auth.Provider{jwtConfig, apikeyConfig}}
-	corsConfig := initCors(env[frontendOrigin])
+	corsConfig := initCors(env[frontendOriginVar])
 
 	router := mux.NewRouter()
 	router.Use(hnygorilla.Middleware, corsConfig.Handler)
+
+	// ping
 	router.HandleFunc("/", homeHandler)
 	router.HandleFunc("/ping", ping.Handler)
 	router.Handle("/authping", authConfig.Middleware(http.HandlerFunc(ping.Handler)))
 
+	// auth
 	githubAuthMux := router.PathPrefix("/auth/github").Subrouter()
 	githubApp := github.NewApp(env[githubClientIDVar], env[githubClientSecretVar], &http.Client{Timeout: time.Second * 5})
 	githubAuthConfig := github.New(jwtConfig, db, redisClient, githubApp)
 	githubAuthConfig.SetupHandlers(githubAuthMux)
 
+	// querycache
 	queryCacheConfig := initQueryCache(db, clock, generator, redisClient)
 	querycacheMux := router.PathPrefix("/querycache").Subrouter()
 	querycacheMux.Use(authConfig.Middleware)
 	queryCacheConfig.SetupHandlers(querycacheMux)
+
+	// slackerduty
+	slackerdutyConfig := &slackerduty.Config{PagerdutyWebhookToken: env[pagerdutyWebhookTokenVar]}
+	slackerdutyMux := router.PathPrefix("/slackerduty").Subrouter()
+	slackerdutyConfig.SetupHandlers(slackerdutyMux)
 
 	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
 

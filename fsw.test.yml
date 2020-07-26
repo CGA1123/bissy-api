@@ -10,6 +10,8 @@ triggers:
     psql -c "DROP DATABASE IF EXISTS bissy_test;" postgres://bissy:bissy@postgres_test:5432/postgres?sslmode=disable
     echo " * Create"
     psql -c "CREATE DATABASE bissy_test;" postgres://bissy:bissy@postgres_test:5432/postgres?sslmode=disable
+    echo " * Deps"
+    go get
     echo " * Migrate"
     migrate -path migrations -database $DATABASE_URL -verbose up
     echo " * Test"
