@@ -12,6 +12,8 @@ import (
 	"github.com/cga1123/bissy-api/utils/handlerutils"
 )
 
+const baseURL = "https://api.github.com"
+
 // ClientState represents the state passed in by a client auth request,
 // including a random State string, and the Redirect URI callback
 type ClientState struct {
@@ -82,23 +84,10 @@ func NewApp(id, secret string, client utils.HTTPClient) *App {
 // OAuthClient swaps a code token for a OAuthClient to make subsequent
 // authenticated requests to the  API
 func (ga *App) OAuthClient(code, state string) (*OAuthClient, error) {
-	baseURL := "https://api.github.com"
-	body, err := utils.JSONBody(map[string]string{
-		"client_id":     ga.clientID,
-		"client_secret": ga.clientSecret,
-		"code":          code,
-		"state":         state,
-	})
+	request, err := ga.buildOauthRequest(code, state)
 	if err != nil {
 		return nil, err
 	}
-
-	request, err := http.NewRequest("POST", baseURL+"/login/oauth/access_token", body)
-	if err != nil {
-		return nil, err
-	}
-
-	request.Header.Add("Accept", handlerutils.ContentTypeJSON)
 
 	response, err := ga.httpClient.Do(request)
 	if err != nil {
@@ -118,6 +107,27 @@ func (ga *App) OAuthClient(code, state string) (*OAuthClient, error) {
 		Base:       baseURL,
 		HTTPClient: ga.httpClient,
 	}, nil
+}
+
+func (ga *App) buildOauthRequest(code, state string) (*http.Request, error) {
+	body, err := utils.JSONBody(map[string]string{
+		"client_id":     ga.clientID,
+		"client_secret": ga.clientSecret,
+		"code":          code,
+		"state":         state,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	request, err := http.NewRequest("POST", baseURL+"/login/oauth/access_token", body)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Add("Accept", handlerutils.ContentTypeJSON)
+
+	return request, nil
 }
 
 func getOrCreateUser(store auth.UserStore, cu *auth.CreateUser) (*auth.User, error) {

@@ -65,13 +65,7 @@ func (c *Config) Authenticate(r *http.Request) (*auth.Claims, bool) {
 		return nil, false
 	}
 
-	token, err := jwt.ParseWithClaims(header[1], &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-
-		return c.signingKey, nil
-	})
+	token, err := c.parseToken(header[1])
 	if err != nil {
 		return nil, false
 	}
@@ -82,6 +76,16 @@ func (c *Config) Authenticate(r *http.Request) (*auth.Claims, bool) {
 	}
 
 	return toClaims(claims), true
+}
+
+func (c *Config) parseToken(header string) (*jwt.Token, error) {
+	return jwt.ParseWithClaims(header, &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return c.signingKey, nil
+	})
 }
 
 func toClaims(jwtClaim *jwtClaims) *auth.Claims {
