@@ -68,16 +68,9 @@ func (c *Config) token(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("code not set"), Status: http.StatusBadRequest}
 	}
 
-	userID, err := c.redis.Get(code)
-	if err != nil || userID == "" {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("bad token"), Status: http.StatusBadRequest}
-	}
-
-	user, err := c.userStore.Get(userID)
+	user, err := c.getUser(code)
 	if err != nil {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("bad user id"), Status: http.StatusBadRequest}
+		return err
 	}
 
 	token, err := c.jwt.SignedToken(user)
@@ -90,6 +83,22 @@ func (c *Config) token(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(struct {
 		Token string `json:"token"`
 	}{Token: token})
+}
+
+func (c *Config) getUser(code string) (*auth.User, error) {
+	userID, err := c.redis.Get(code)
+	if err != nil || userID == "" {
+		return nil, &handlerutils.HandlerError{
+			Err: fmt.Errorf("bad token"), Status: http.StatusBadRequest}
+	}
+
+	user, err := c.userStore.Get(userID)
+	if err != nil {
+		return nil, &handlerutils.HandlerError{
+			Err: fmt.Errorf("bad user id"), Status: http.StatusBadRequest}
+	}
+
+	return user, nil
 }
 
 func (c *Config) signin(w http.ResponseWriter, r *http.Request) error {
@@ -121,18 +130,13 @@ func (c *Config) signin(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Config) callback(w http.ResponseWriter, r *http.Request) error {
-	params := handlerutils.Params(r)
-	code, ok := params.Get("code")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("code not set"), Status: http.StatusBadRequest}
+	requiredParams, err := requireParams(r, "code", "state")
+	if err != nil {
+		return err
 	}
 
-	state, ok := params.Get("state")
-	if !ok {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("state not set"), Status: http.StatusBadRequest}
-	}
+	code := requiredParams["code"]
+	state := requiredParams["state"]
 
 	clientState, err := c.fetchState(state)
 	if err != nil {
@@ -140,23 +144,7 @@ func (c *Config) callback(w http.ResponseWriter, r *http.Request) error {
 			Err: fmt.Errorf("error fetching state set"), Status: http.StatusBadRequest}
 	}
 
-	oauth, err := c.githubApp.OAuthClient(code, state)
-	if err != nil {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("could not fetch token"), Status: http.StatusBadRequest}
-	}
-
-	createUser, err := oauth.User()
-	if err != nil {
-		return &handlerutils.HandlerError{
-			Err: fmt.Errorf("could not fetch github user"), Status: http.StatusBadRequest}
-	}
-
-	user, err := getOrCreateUser(c.userStore, createUser)
-	if err != nil {
-		return err
-	}
-
+	user, err := createUser(c, code, state)
 	code, err = c.redis.Set(user.ID, time.Minute*5)
 	if err != nil {
 		return fmt.Errorf("error setting code: %v", err)
@@ -167,4 +155,37 @@ func (c *Config) callback(w http.ResponseWriter, r *http.Request) error {
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 
 	return nil
+}
+
+func createUser(c *Config, code, state string) (*auth.User, error) {
+	oauth, err := c.githubApp.OAuthClient(code, state)
+	if err != nil {
+		return nil, &handlerutils.HandlerError{
+			Err: fmt.Errorf("could not fetch token"), Status: http.StatusBadRequest}
+	}
+
+	createUser, err := oauth.User()
+	if err != nil {
+		return nil, &handlerutils.HandlerError{
+			Err: fmt.Errorf("could not fetch github user"), Status: http.StatusBadRequest}
+	}
+
+	return getOrCreateUser(c.userStore, createUser)
+}
+
+func requireParams(r *http.Request, required ...string) (map[string]string, error) {
+	params := handlerutils.Params(r)
+	requiredParams := map[string]string{}
+
+	for _, param := range required {
+		value, ok := params.Get(param)
+		if !ok {
+			return requiredParams, &handlerutils.HandlerError{
+				Err: fmt.Errorf("%v not set", param), Status: http.StatusBadRequest}
+		}
+
+		requiredParams[param] = value
+	}
+
+	return requiredParams, nil
 }
