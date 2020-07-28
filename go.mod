@@ -17,7 +17,7 @@ require (
 	github.com/honeycombio/beeline-go v0.5.1
 	github.com/jcmturner/gokrb5/v8 v8.3.0 // indirect
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/lib/pq v1.7.1
+	github.com/lib/pq v1.8.0
 	github.com/rs/cors v1.7.0
 	github.com/snowflakedb/gosnowflake v1.3.6
 	gopkg.in/yaml.v2 v2.3.0 // indirect
