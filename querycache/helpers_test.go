@@ -1,8 +1,6 @@
 package querycache_test
 
 import (
-	"bytes"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -53,13 +51,4 @@ func testHandler(claims *auth.Claims, c *querycache.Config, r *http.Request) *ht
 	router.ServeHTTP(recorder, r)
 
 	return recorder
-}
-
-func jsonBody(v interface{}) (*bytes.Reader, error) {
-	body, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes.NewReader(body), nil
 }

@@ -28,7 +28,7 @@ func TestQueryCreate(t *testing.T) {
 	datasource, err := config.DatasourceStore.Create(claims.UserID, &querycache.CreateDatasource{Type: "test", Name: "Test"})
 	expect.Ok(t, err)
 
-	json, err := jsonBody(map[string]string{
+	json, err := utils.JSONBody(map[string]string{
 		"lifetime":     "1h01m",
 		"query":        "SELECT 1;",
 		"datasourceID": datasource.ID,
@@ -118,7 +118,7 @@ func TestQueryGetNotFound(t *testing.T) {
 
 	claims := testClaims()
 	response := testHandler(claims, config, request)
-	expecthttp.Status(t, http.StatusInternalServerError, response)
+	expecthttp.Status(t, http.StatusNotFound, response)
 }
 
 func TestQueryDelete(t *testing.T) {
@@ -168,7 +168,7 @@ func TestQueryDeleteNotFound(t *testing.T) {
 
 	claims := testClaims()
 	response := testHandler(claims, config, request)
-	expecthttp.Status(t, http.StatusInternalServerError, response)
+	expecthttp.Status(t, http.StatusNotFound, response)
 }
 
 func TestQueryUpdate(t *testing.T) {
@@ -196,7 +196,7 @@ func TestQueryUpdate(t *testing.T) {
 	expect.Ok(t, err)
 
 	oneHourAgo := now.Add(-time.Hour)
-	json, err := jsonBody(map[string]string{
+	json, err := utils.JSONBody(map[string]string{
 		"lifetime":    "1h01m",
 		"lastRefresh": oneHourAgo.Format(time.RFC3339Nano)})
 	expect.Ok(t, err)
@@ -225,7 +225,7 @@ func TestQueryUpdateNotFound(t *testing.T) {
 	defer teardown()
 
 	_, id, config := testConfig(db)
-	json, err := jsonBody(map[string]string{
+	json, err := utils.JSONBody(map[string]string{
 		"lifetime": "1h01m",
 		"query":    "SELECT 2;",
 	})
@@ -236,7 +236,7 @@ func TestQueryUpdateNotFound(t *testing.T) {
 
 	claims := testClaims()
 	response := testHandler(claims, config, request)
-	expecthttp.Status(t, http.StatusInternalServerError, response)
+	expecthttp.Status(t, http.StatusNotFound, response)
 }
 
 func TestQueryList(t *testing.T) {

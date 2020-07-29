@@ -151,6 +151,9 @@ func JSONBody(v interface{}) (*bytes.Reader, error) {
 
 // ParseJSONBody parse the given body into target using a JSON Decoder
 func ParseJSONBody(body io.ReadCloser, target interface{}) error {
+	if body == nil {
+		return fmt.Errorf("empty body")
+	}
 	defer body.Close()
 
 	return json.NewDecoder(body).Decode(target)

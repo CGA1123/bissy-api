@@ -19,7 +19,7 @@ func TestDatasourceCreate(t *testing.T) {
 	defer teardown()
 
 	now, id, config := testConfig(db)
-	json, err := jsonBody(map[string]string{
+	json, err := utils.JSONBody(map[string]string{
 		"name":    "test datasource",
 		"type":    "postgres",
 		"options": "",
@@ -116,7 +116,7 @@ func TestDatasourceUpdate(t *testing.T) {
 		Options: "sslmode=disable"})
 	expect.Ok(t, err)
 
-	json, err := jsonBody(map[string]string{
+	json, err := utils.JSONBody(map[string]string{
 		"name":    "test",
 		"type":    "snowflake",
 		"options": ""})
