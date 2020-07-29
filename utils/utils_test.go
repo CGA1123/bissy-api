@@ -105,6 +105,10 @@ func TestParseJSONBody(t *testing.T) {
 	expect.Ok(t, err)
 	expect.Equal(t, result.Hello, "what's up")
 	expect.Equal(t, result.AnotherKey, "yep")
+
+	err = utils.ParseJSONBody(nil, &result)
+	expect.Error(t, err)
+	expect.Equal(t, "empty body", err.Error())
 }
 
 func TestGenerators(t *testing.T) {

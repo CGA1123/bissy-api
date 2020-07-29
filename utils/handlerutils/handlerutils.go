@@ -1,6 +1,7 @@
 package handlerutils
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"strconv"
@@ -54,10 +55,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := h.H(w, r)
 	if err != nil {
 		log.Println("error:", err)
+
+		if err == sql.ErrNoRows {
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			return
+		}
+
 		switch e := err.(type) {
 		case handlerError:
 			http.Error(w, e.Error(), e.StatusCode())
-
 		default:
 			http.Error(
 				w,
