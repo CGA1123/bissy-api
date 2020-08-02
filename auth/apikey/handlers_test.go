@@ -111,6 +111,8 @@ func TestCreate(t *testing.T) {
 
 	claims := &auth.Claims{UserID: user.ID}
 	requestJson, err := utils.JSONBody(map[string]string{"name": "test key"})
+	expect.Ok(t, err)
+
 	request, err := http.NewRequest("POST", "/apikeys", requestJson)
 	expect.Ok(t, err)
 
@@ -141,6 +143,8 @@ func TestCreateStoreError(t *testing.T) {
 	// Bad User
 	claims := &auth.Claims{UserID: uuid.New().String()}
 	requestJson, err := utils.JSONBody(map[string]string{"name": "test key"})
+	expect.Ok(t, err)
+
 	request, err := http.NewRequest("POST", "/apikeys", requestJson)
 	expect.Ok(t, err)
 

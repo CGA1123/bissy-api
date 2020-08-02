@@ -51,7 +51,7 @@ func (c *Config) SignedToken(u *auth.User) (string, error) {
 	return token.SignedString(c.signingKey)
 }
 
-// Valid checks whether the request is a valid attemp at JWT auth
+// Valid checks whether the request is a valid attempt at JWT auth
 func (c *Config) Valid(r *http.Request) bool {
 	header := strings.Split(r.Header.Get("Authorization"), "Bearer ")
 	return len(header) == 2

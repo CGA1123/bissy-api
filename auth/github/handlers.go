@@ -145,6 +145,10 @@ func (c *Config) callback(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	user, err := createUser(c, code, state)
+	if err != nil {
+		return fmt.Errorf("error creating user: %v", err)
+	}
+
 	code, err = c.redis.Set(user.ID, time.Minute*5)
 	if err != nil {
 		return fmt.Errorf("error setting code: %v", err)
