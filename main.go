@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/cga1123/bissy-api/auth"
+	"github.com/cga1123/bissy-api/auth/apikey"
+	"github.com/cga1123/bissy-api/auth/apikeyprovider"
 	"github.com/cga1123/bissy-api/auth/github"
 	"github.com/cga1123/bissy-api/auth/jwtprovider"
 	"github.com/cga1123/bissy-api/ping"
@@ -161,7 +163,8 @@ func main() {
 	redisClient := initRedis(env)
 	db := initDb(env)
 	jwtConfig := jwtprovider.New([]byte(env[jwtSigningKeyVar]))
-	authConfig := &auth.Auth{Providers: []auth.Provider{jwtConfig}}
+	apikeyConfig := apikeyprovider.New(apikey.NewSQLStore(db))
+	authConfig := &auth.Auth{Providers: []auth.Provider{jwtConfig, apikeyConfig}}
 	corsConfig := initCors(env[frontendOrigin])
 
 	router := mux.NewRouter()
