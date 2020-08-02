@@ -11,7 +11,7 @@ import (
 
 // The Provider interface describes and authentication provider, it contains two
 // methods:
-// - Valid which checks whether the given request is attempting to authenticate with a give provider
+// - Valid which checks whether the given request is attempting to authenticate with a given provider
 // - Authenticate which attempts to authenticate the request
 type Provider interface {
 	Valid(*http.Request) bool
