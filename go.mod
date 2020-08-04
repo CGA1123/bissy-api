@@ -18,5 +18,5 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.8.0
 	github.com/rs/cors v1.7.0
-	github.com/snowflakedb/gosnowflake v1.3.6
+	github.com/snowflakedb/gosnowflake v1.3.7
 )
