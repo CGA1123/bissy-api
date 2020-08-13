@@ -13,6 +13,7 @@ import (
 	"github.com/cga1123/bissy-api/auth/github"
 	"github.com/cga1123/bissy-api/auth/jwtprovider"
 	"github.com/cga1123/bissy-api/utils"
+	"github.com/cga1123/bissy-api/utils/cache"
 	"github.com/cga1123/bissy-api/utils/expect"
 	"github.com/cga1123/bissy-api/utils/expecthttp"
 	"github.com/cga1123/bissy-api/utils/handlerutils"
@@ -30,10 +31,10 @@ func init() {
 	txdb.Register("pgx", "postgres", url)
 }
 
-func testConfig(t *testing.T, now time.Time, userID, redisID string, client utils.HTTPClient) (*github.Config, *jwtprovider.Config, *auth.SQLUserStore, *github.RedisStateStore, func()) {
+func testConfig(t *testing.T, now time.Time, userID, redisID string, client utils.HTTPClient) (*github.Config, *jwtprovider.Config, *auth.SQLUserStore, *cache.RedisStateStore, func()) {
 	db, dbTeardown := utils.TestDB(t)
 	redisClient, redisTeardown := utils.TestRedis(t)
-	redis := &github.RedisStateStore{Client: redisClient, IDGenerator: &utils.TestIDGenerator{ID: redisID}}
+	redis := &cache.RedisStateStore{Client: redisClient, IDGenerator: &utils.TestIDGenerator{ID: redisID}}
 	githubApp := github.NewApp("client-id", "client-secret", client)
 
 	store := auth.TestSQLUserStore(now.Truncate(time.Millisecond), userID, db)

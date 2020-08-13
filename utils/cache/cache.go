@@ -1,4 +1,4 @@
-package github
+package cache
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 // StateStore defines an interface for caching state parameters during the
-// O authentication processes
+// OAuth authentication processes
 type StateStore interface {
 	Exists(string) (bool, error)
 	Set(string, time.Duration) (string, error)
@@ -21,11 +21,16 @@ type StateStore interface {
 type RedisStateStore struct {
 	Client      *redis.Client
 	IDGenerator utils.IDGenerator
+	Prefix      string
+}
+
+func (r *RedisStateStore) key(k string) string {
+	return r.Prefix + ":" + k
 }
 
 // Get returns the payload stored at a key
 func (r *RedisStateStore) Get(key string) (string, error) {
-	value, err := r.Client.Get(context.TODO(), "auth:"+key).Result()
+	value, err := r.Client.Get(context.TODO(), r.key(key)).Result()
 	if err != nil {
 		return "", err
 	}
@@ -35,7 +40,7 @@ func (r *RedisStateStore) Get(key string) (string, error) {
 
 // Exists checks whether the given key exists in cache
 func (r *RedisStateStore) Exists(key string) (bool, error) {
-	value, err := r.Client.Exists(context.TODO(), "auth:"+key).Result()
+	value, err := r.Client.Exists(context.TODO(), r.key(key)).Result()
 	if err != nil {
 		return false, err
 	}
@@ -49,7 +54,7 @@ func (r *RedisStateStore) Set(payload string, exp time.Duration) (string, error)
 	key := r.IDGenerator.Generate()
 	_, err := r.Client.Set(
 		context.TODO(),
-		"auth:"+key,
+		r.key(key),
 		payload,
 		exp,
 	).Result()
@@ -60,7 +65,7 @@ func (r *RedisStateStore) Set(payload string, exp time.Duration) (string, error)
 // Del removes the given key
 // returns true if a key was removed.
 func (r *RedisStateStore) Del(key string) (bool, error) {
-	count, err := r.Client.Del(context.TODO(), "auth:"+key).Result()
+	count, err := r.Client.Del(context.TODO(), r.key(key)).Result()
 	if err != nil {
 		return false, err
 	}

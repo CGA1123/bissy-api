@@ -9,6 +9,7 @@ import (
 	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/auth/jwtprovider"
 	"github.com/cga1123/bissy-api/utils"
+	"github.com/cga1123/bissy-api/utils/cache"
 	"github.com/cga1123/bissy-api/utils/handlerutils"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
@@ -20,12 +21,12 @@ type Config struct {
 	jwt       *jwtprovider.Config
 	userStore auth.UserStore
 	clock     utils.Clock
-	redis     StateStore
+	redis     cache.StateStore
 	githubApp *App
 }
 
 // TestConfig builds a config used for testing
-func TestConfig(jwtConfig *jwtprovider.Config, store auth.UserStore, stateStore StateStore, githubApp *App, now time.Time) *Config {
+func TestConfig(jwtConfig *jwtprovider.Config, store auth.UserStore, stateStore cache.StateStore, githubApp *App, now time.Time) *Config {
 	return &Config{
 		jwt:       jwtConfig,
 		userStore: store,
@@ -41,7 +42,7 @@ func New(jwtConfig *jwtprovider.Config, db *hnysqlx.DB, client *redis.Client, gi
 		jwt:       jwtConfig,
 		userStore: auth.NewSQLUserStore(db),
 		clock:     &utils.RealClock{},
-		redis:     &RedisStateStore{Client: client, IDGenerator: &utils.UUIDGenerator{}},
+		redis:     &cache.RedisStateStore{Client: client, IDGenerator: &utils.UUIDGenerator{}, Prefix: "github"},
 		githubApp: githubApp,
 	}
 }
