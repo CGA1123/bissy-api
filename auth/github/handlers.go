@@ -131,13 +131,13 @@ func (c *Config) signin(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Config) callback(w http.ResponseWriter, r *http.Request) error {
-	requiredParams, err := requireParams(r, "code", "state")
-	if err != nil {
+	params := handlerutils.Params(r)
+	if err := params.Require("code", "state"); err != nil {
 		return err
 	}
 
-	code := requiredParams["code"]
-	state := requiredParams["state"]
+	code, _ := params.Get("code")
+	state, _ := params.Get("state")
 
 	clientState, err := c.fetchState(state)
 	if err != nil {
@@ -176,21 +176,4 @@ func createUser(c *Config, code, state string) (*auth.User, error) {
 	}
 
 	return getOrCreateUser(c.userStore, createUser)
-}
-
-func requireParams(r *http.Request, required ...string) (map[string]string, error) {
-	params := handlerutils.Params(r)
-	requiredParams := map[string]string{}
-
-	for _, param := range required {
-		value, ok := params.Get(param)
-		if !ok {
-			return requiredParams, &handlerutils.HandlerError{
-				Err: fmt.Errorf("%v not set", param), Status: http.StatusBadRequest}
-		}
-
-		requiredParams[param] = value
-	}
-
-	return requiredParams, nil
 }
