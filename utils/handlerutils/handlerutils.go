@@ -2,6 +2,7 @@ package handlerutils
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -79,6 +80,11 @@ type RequestParams struct {
 	values map[string][]string
 }
 
+// ParamsFromMap builds a RequestParams from the given map
+func ParamsFromMap(values map[string][]string) *RequestParams {
+	return &RequestParams{values: values}
+}
+
 // Params is a helper function that combines URL and query parameters into a
 // single map
 func Params(r *http.Request) *RequestParams {
@@ -95,6 +101,17 @@ func Params(r *http.Request) *RequestParams {
 	}
 
 	return &RequestParams{values: params}
+}
+
+// Require ensures all passed keys are in the RequestParams
+func (p *RequestParams) Require(required ...string) error {
+	for _, param := range required {
+		if _, ok := p.Get(param); !ok {
+			return &HandlerError{Err: fmt.Errorf("%v not set", param), Status: http.StatusBadRequest}
+		}
+	}
+
+	return nil
 }
 
 // Get returns the requested param, if available
