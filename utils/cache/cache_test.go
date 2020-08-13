@@ -1,11 +1,11 @@
-package github_test
+package cache_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/cga1123/bissy-api/auth/github"
 	"github.com/cga1123/bissy-api/utils"
+	"github.com/cga1123/bissy-api/utils/cache"
 	"github.com/cga1123/bissy-api/utils/expect"
 )
 
@@ -13,7 +13,8 @@ func TestRedisStateStore(t *testing.T) {
 	redis, teardown := utils.TestRedis(t)
 	defer teardown()
 
-	store := &github.RedisStateStore{Client: redis, IDGenerator: &utils.UUIDGenerator{}}
+	store := &cache.RedisStateStore{
+		Client: redis, IDGenerator: &utils.UUIDGenerator{}, Prefix: "test"}
 
 	key, err := store.Set("hello", time.Hour)
 	expect.Ok(t, err)
