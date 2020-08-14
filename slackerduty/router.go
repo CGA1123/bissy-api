@@ -8,13 +8,14 @@ import (
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/cga1123/bissy-api/utils/handlerutils"
 	"github.com/gorilla/mux"
+	"github.com/slack-go/slack"
 )
-
-const baseURL = "https://app.pagerduty.com"
 
 // Config contains the configuration for slackerduty
 type Config struct {
 	PagerdutyWebhookToken string
+	SlackClient           *slack.Client
+	SlackChannel          string
 }
 
 // SetupHandlers adds slackerduty HTTP handlers to the given router
@@ -37,6 +38,18 @@ func (c *Config) pagerdutyEvent(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	fmt.Println(messages)
+
+	for _, message := range messages.Messages {
+		incident := message.Incident
+		message := fmt.Sprintf("[%v] %v (%v)", incident.ID, incident.Title, message.Event)
+
+		_, _, err := c.SlackClient.PostMessage(
+			c.SlackChannel,
+			slack.MsgOptionText(message, false))
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		}
+	}
 
 	return nil
 }
