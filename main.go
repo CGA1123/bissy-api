@@ -27,17 +27,20 @@ import (
 	"github.com/honeycombio/beeline-go/wrappers/hnysqlx"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/cors"
+	"github.com/slack-go/slack"
 )
 
 const (
-	redisURLVar              = "REDISCLOUD_URL"
-	jwtSigningKeyVar         = "JWT_SIGNING_KEY"
-	githubClientIDVar        = "GITHUB_CLIENT_ID"
-	githubClientSecretVar    = "GITHUB_CLIENT_SECRET"
-	databaseURLVar           = "DATABASE_URL"
-	portVar                  = "PORT"
-	frontendOriginVar        = "FRONTEND_ORIGIN"
-	pagerdutyWebhookTokenVar = "PAGERDUTY_WEBHOOK_TOKEN"
+	redisURLVar                = "REDISCLOUD_URL"
+	jwtSigningKeyVar           = "JWT_SIGNING_KEY"
+	githubClientIDVar          = "GITHUB_CLIENT_ID"
+	githubClientSecretVar      = "GITHUB_CLIENT_SECRET"
+	databaseURLVar             = "DATABASE_URL"
+	portVar                    = "PORT"
+	frontendOriginVar          = "FRONTEND_ORIGIN"
+	pagerdutyWebhookTokenVar   = "PAGERDUTY_WEBHOOK_TOKEN"
+	slackBotTokenVar           = "SLACK_BOT_TOKEN"
+	slackerdutySlackChannelVar = "SLACKERDUTY_SLACK_CHANNEL"
 )
 
 func initCors(frontend string) *cors.Cors {
@@ -114,6 +117,8 @@ func requireEnv() map[string]string {
 		portVar,
 		frontendOriginVar,
 		pagerdutyWebhookTokenVar,
+		slackBotTokenVar,
+		slackerdutySlackChannelVar,
 	)
 
 	if err != nil {
@@ -191,7 +196,10 @@ func main() {
 	queryCacheConfig.SetupHandlers(querycacheMux)
 
 	// slackerduty
-	slackerdutyConfig := &slackerduty.Config{PagerdutyWebhookToken: env[pagerdutyWebhookTokenVar]}
+	slackerdutyConfig := &slackerduty.Config{
+		PagerdutyWebhookToken: env[pagerdutyWebhookTokenVar],
+		SlackChannel:          env[slackerdutySlackChannelVar],
+		SlackClient:           slack.New(env[slackBotTokenVar])}
 	slackerdutyMux := router.PathPrefix("/slackerduty").Subrouter()
 	slackerdutyConfig.SetupHandlers(slackerdutyMux)
 

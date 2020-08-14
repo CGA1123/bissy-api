@@ -30,6 +30,8 @@ services:
       - PAGERDUTY_WEBHOOK_TOKEN=dev-token
       - GITHUB_CLIENT_ID
       - GITHUB_CLIENT_SECRET
+      - SLACKERDUTY_SLACK_CHANNEL
+      - SLACK_BOT_TOKEN
     ports:
       - 1123:1123
     volumes:
