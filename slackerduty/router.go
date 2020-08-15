@@ -1,6 +1,7 @@
 package slackerduty
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,7 +38,8 @@ func (c *Config) pagerdutyEvent(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	fmt.Println(messages)
+	msgsJson, _ := json.Marshal(messages)
+	fmt.Println(msgsJson)
 
 	for _, message := range messages.Messages {
 		incident := message.Incident
