@@ -38,8 +38,8 @@ func (c *Config) pagerdutyEvent(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	msgsJson, _ := json.Marshal(messages)
-	fmt.Println(msgsJson)
+	msgsJSON, _ := json.Marshal(messages)
+	fmt.Println(string(msgsJSON))
 
 	for _, message := range messages.Messages {
 		incident := message.Incident
