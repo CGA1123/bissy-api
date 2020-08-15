@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/bugsnag/bugsnag-go"
 	"github.com/cga1123/bissy-api/auth"
 	"github.com/cga1123/bissy-api/auth/apikey"
 	"github.com/cga1123/bissy-api/auth/apikeyprovider"
@@ -41,7 +42,14 @@ const (
 	pagerdutyWebhookTokenVar   = "PAGERDUTY_WEBHOOK_TOKEN"
 	slackBotTokenVar           = "SLACK_BOT_TOKEN"
 	slackerdutySlackChannelVar = "SLACKERDUTY_SLACK_CHANNEL"
+	bugsnagAPIKeyVar           = "BUGSNAG_API_KEY"
 )
+
+func setupBugsnag(apiKey string) {
+	bugsnag.Configure(bugsnag.Configuration{
+		APIKey:          apiKey,
+		ProjectPackages: []string{"github.com/cga1123/bissy-api/*", "main"}})
+}
 
 func initCors(frontend string) *cors.Cors {
 	methods := []string{
@@ -119,6 +127,7 @@ func requireEnv() map[string]string {
 		pagerdutyWebhookTokenVar,
 		slackBotTokenVar,
 		slackerdutySlackChannelVar,
+		bugsnagAPIKeyVar,
 	)
 
 	if err != nil {
@@ -165,6 +174,8 @@ func shutdown(server *http.Server) {
 
 func main() {
 	env := requireEnv()
+	setupBugsnag(env[bugsnagAPIKeyVar])
+
 	clock := &utils.RealClock{}
 	generator := &utils.UUIDGenerator{}
 	initHoneycomb()
@@ -203,7 +214,7 @@ func main() {
 	slackerdutyMux := router.PathPrefix("/slackerduty").Subrouter()
 	slackerdutyConfig.SetupHandlers(slackerdutyMux)
 
-	handler := handlers.LoggingHandler(os.Stdout, hnynethttp.WrapHandler(router))
+	handler := handlers.LoggingHandler(os.Stdout, bugsnag.Handler(hnynethttp.WrapHandler(router)))
 
 	shutdown(runServer(handler, env[portVar]))
 
