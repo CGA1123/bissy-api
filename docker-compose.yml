@@ -32,6 +32,7 @@ services:
       - GITHUB_CLIENT_SECRET
       - SLACKERDUTY_SLACK_CHANNEL
       - SLACK_BOT_TOKEN
+      - BUGSNAG_API_KEY
     ports:
       - 1123:1123
     volumes:

@@ -1,7 +1,6 @@
 package slackerduty
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -38,16 +37,11 @@ func (c *Config) pagerdutyEvent(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	msgsJSON, _ := json.Marshal(messages)
-	fmt.Println(string(msgsJSON))
-
 	for _, message := range messages.Messages {
-		incident := message.Incident
-		message := fmt.Sprintf("[%v] %v (%v)", incident.ID, incident.Title, message.Event)
-
 		_, _, err := c.SlackClient.PostMessage(
 			c.SlackChannel,
-			slack.MsgOptionText(message, false))
+			slack.MsgOptionBlocks(BuildBlocks(&message)...),
+			slack.MsgOptionText(IncidentTitle(&message), false))
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		}
