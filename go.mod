@@ -15,7 +15,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.12.2
 	github.com/google/go-cmp v0.5.1
 	github.com/google/uuid v1.1.1
-	github.com/gorilla/handlers v1.4.2
+	github.com/gorilla/handlers v1.5.0
 	github.com/gorilla/mux v1.8.0
 	github.com/honeycombio/beeline-go v0.6.1
 	github.com/jmoiron/sqlx v1.2.0
