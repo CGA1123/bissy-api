@@ -17,7 +17,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/handlers v1.5.0
 	github.com/gorilla/mux v1.8.0
-	github.com/honeycombio/beeline-go v0.6.1
+	github.com/honeycombio/beeline-go v0.6.2
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.8.0
 	github.com/rs/cors v1.7.0
