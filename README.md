@@ -29,3 +29,17 @@ open "https://api.bissy.io/auth/github/signin?redirect_uri=https://api.bissy.io/
 
 curl -i -H "Authorization: Bearer a-jwt-token" "https://api.bissy.io/authping
 ```
+
+To create an apikey:
+
+```
+curl -i -H "Authorization: Bearer a-jwt-token" \
+        -H "Content-Type: application/json" \
+        -d '{ "name": "Personal API Key" }' \
+        "https://api.bissy.io/auth/apikeys"
+
+# Returns { id: "an-id", "name": "Personal API Key", "key": "the-api-key"}
+# The "key" value will no longer be exposed after this call, make sure you keep it safe!
+
+curl -i -H "X-Bissy-Apikey: the-api-key" "https://api.bissy.io/authping"
+```

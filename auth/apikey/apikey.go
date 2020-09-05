@@ -13,8 +13,8 @@ import (
 //
 // The Key itself is not exposed.
 type Struct struct {
-	ID        string
-	Name      string
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
 	UserID    string    `json:"userId" db:"user_id"`
 	LastUsed  time.Time `json:"lastUsed" db:"last_used"`
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
