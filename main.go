@@ -182,8 +182,9 @@ func main() {
 	redisClient := initRedis(env)
 	db := initDb(env)
 	jwtConfig := jwtprovider.New([]byte(env[jwtSigningKeyVar]))
-	apikeyConfig := apikeyprovider.New(apikey.NewSQLStore(db))
-	authConfig := &auth.Auth{Providers: []auth.Provider{jwtConfig, apikeyConfig}}
+	apikeyStore := apikey.NewSQLStore(db)
+	apikeyproviderConfig := apikeyprovider.New(apikeyStore)
+	authConfig := &auth.Auth{Providers: []auth.Provider{jwtConfig, apikeyproviderConfig}}
 	corsConfig := initCors(env[frontendOriginVar])
 
 	router := mux.NewRouter()
@@ -199,6 +200,12 @@ func main() {
 	githubApp := github.NewApp(env[githubClientIDVar], env[githubClientSecretVar], &http.Client{Timeout: time.Second * 5})
 	githubAuthConfig := github.New(jwtConfig, db, redisClient, githubApp)
 	githubAuthConfig.SetupHandlers(githubAuthMux)
+
+	// apikey
+	apikeyConfig := &apikey.Config{Store: apikeyStore}
+	apikeyMux := router.PathPrefix("/auth").Subrouter()
+	apikeyMux.Use(authConfig.Middleware)
+	apikeyConfig.SetupHandlers(apikeyMux)
 
 	// querycache
 	queryCacheConfig := initQueryCache(db, clock, generator, redisClient)

@@ -12,3 +12,20 @@ Some toy APIs to learn go!
 This project comes with a `docker-compose` setup! If you want to run the webserver use `docker-compose up dev`. The webserver will watch `*.go` files and recompile and restart whenever you make a change.
 
 For testing, run `docker-compose up test`, again this process will watch for changes to `*.go` files and recompile and re-run the test suite on every change.
+
+## Auth
+
+Authentication is done via JWT Token or API Token.
+You can get a JWT token via Github OAuth, via this url:
+```
+https://api.bissy.io/auth/github/signin?redirect_uri=https://api.bissy.io/auth/github/token
+```
+
+Subsequent request to the API will need to set the `Authorization` header with the `Bearer` token equal to the token returned from the above request. A potential exchange might look like this (on macOS):
+
+```
+open "https://api.bissy.io/auth/github/signin?redirect_uri=https://api.bissy.io/auth/github/token"
+# Returns a JSON payload of `{ "token": "a-jwt-token" }
+
+curl -i -H "Authorization: Bearer a-jwt-token" "https://api.bissy.io/authping
+```
