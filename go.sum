@@ -346,6 +346,8 @@ github.com/honeycombio/beeline-go v0.6.2 h1:1m67UXFiM+ZOVrgXfszKGGYM8dnDxzvLIBVm
 github.com/honeycombio/beeline-go v0.6.2/go.mod h1:a7d0oE2AGOGbLPVfjLtYllTT7k318WJTIGs/n7kilOg=
 github.com/honeycombio/beeline-go v0.7.0 h1:TbDuqQGjbPYzoHPWsYftCOZYsoT42jnukm4SqfmumRM=
 github.com/honeycombio/beeline-go v0.7.0/go.mod h1:RzjZ/vHD6pK//uae5LP/QeepWMVbWGtA8kDZ3Yz/uO0=
+github.com/honeycombio/beeline-go v0.7.1 h1:5JzbCPa2nImkv1+Uvw5IBivDMr0wr+GXo1NzFfV3Ec8=
+github.com/honeycombio/beeline-go v0.7.1/go.mod h1:RzjZ/vHD6pK//uae5LP/QeepWMVbWGtA8kDZ3Yz/uO0=
 github.com/honeycombio/libhoney-go v1.12.4 h1:rWAoxhpvu2briq85wZc04osHgKtueCLAk/3igqTX3+Q=
 github.com/honeycombio/libhoney-go v1.12.4/go.mod h1:tp2qtK0xMZyG/ZfykkebQESKFS78xpyPr2wEswZ1j6U=
 github.com/honeycombio/libhoney-go v1.14.0 h1:e764aeqc8d1jCcqvhAFCuuZ7S8nqJsg1DMazT/yRlGM=
