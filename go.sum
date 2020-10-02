@@ -67,6 +67,8 @@ github.com/Microsoft/go-winio v0.4.14 h1:+hMXMk01us9KgxGb7ftKQt2Xpf5hH/yky+TDA+q
 github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jBhyzoq1bpyYA=
 github.com/PagerDuty/go-pagerduty v1.2.0 h1:5MKPOz6hBj3D01on6kkFPMDoPEChBmpwpAlNof51Jgo=
 github.com/PagerDuty/go-pagerduty v1.2.0/go.mod h1:W5hSIIPrzSgAkNBDiuymWN5g9yQVzimL7BUBL44f3RY=
+github.com/PagerDuty/go-pagerduty v1.3.0 h1:2vWajLxpmGeP8pmsyZ0MjFneHa8ASJrztJRSe3FNOzg=
+github.com/PagerDuty/go-pagerduty v1.3.0/go.mod h1:W5hSIIPrzSgAkNBDiuymWN5g9yQVzimL7BUBL44f3RY=
 github.com/apache/arrow/go/arrow v0.0.0-20200601151325-b2287a20f230 h1:5ultmol0yeX75oh1hY78uAFn3dupBQ/QUNxERCkiaUQ=
 github.com/apache/arrow/go/arrow v0.0.0-20200601151325-b2287a20f230/go.mod h1:QNYViu/X0HXDHw7m3KXzWSVXIbfUvJqBFe6Gj8/pYA0=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=

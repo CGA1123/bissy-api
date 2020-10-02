@@ -6,7 +6,7 @@ go 1.14
 
 require (
 	github.com/DATA-DOG/go-txdb v0.1.3
-	github.com/PagerDuty/go-pagerduty v1.2.0
+	github.com/PagerDuty/go-pagerduty v1.3.0
 	github.com/bugsnag/bugsnag-go v1.5.3
 	github.com/bugsnag/panicwrap v1.2.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
