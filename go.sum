@@ -479,8 +479,8 @@ github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPx
 github.com/sirupsen/logrus v1.4.1/go.mod h1:ni0Sbl8bgC9z8RoU9G6nDWqqs/fq4eDPysMBDgk/93Q=
 github.com/sirupsen/logrus v1.4.2 h1:SPIRibHv4MatM3XXNO2BJeFLZwZ2LvZgfQ5+UNI2im4=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
-github.com/slack-go/slack v0.7.1 h1:eM4NV8t5iGpEoVZy2C+J7QS1QoxNEgH3YgAH89hyKm0=
-github.com/slack-go/slack v0.7.1/go.mod h1:FGqNzJBmxIsZURAxh2a8D21AnOVvvXZvGligs4npPUM=
+github.com/slack-go/slack v0.7.2 h1:oLy2a2YqrtoHSSxbjRhrtLDGbCKcZJwgbuQ826BWxaI=
+github.com/slack-go/slack v0.7.2/go.mod h1:FGqNzJBmxIsZURAxh2a8D21AnOVvvXZvGligs4npPUM=
 github.com/snowflakedb/glog v0.0.0-20180824191149-f5055e6f21ce h1:CGR1hXCOeoZ1aJhCs8qdKJuEu3xoZnxsLcYoh5Bnr+4=
 github.com/snowflakedb/glog v0.0.0-20180824191149-f5055e6f21ce/go.mod h1:EB/w24pR5VKI60ecFnKqXzxX3dOorz1rnVicQTQrGM0=
 github.com/snowflakedb/gosnowflake v1.3.5/go.mod h1:13Ky+lxzIm3VqNDZJdyvu9MCGy+WgRdYFdXp96UcLZU=
