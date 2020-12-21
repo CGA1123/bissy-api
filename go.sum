@@ -323,10 +323,10 @@ github.com/hashicorp/go-multierror v1.1.0/go.mod h1:spPvp8C1qA32ftKqdAHm4hHTbPw+
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
-github.com/honeycombio/beeline-go v0.10.0 h1:qX3wQmptkb+qzI9iv6K9eyF0UoTpZRe5oKApueL/r1E=
-github.com/honeycombio/beeline-go v0.10.0/go.mod h1:m6Pt1CR3NFvnDY41YqK0xSiU0p9TCh5b11S1wZ1ffTI=
-github.com/honeycombio/libhoney-go v1.14.1 h1:TyFJrPua66YodzBf/eyi0nWEOL/YMhtegkAHVBocUa8=
-github.com/honeycombio/libhoney-go v1.14.1/go.mod h1:SPNdLieCW/Ryt6cAIeELQENobj8H9bYXezWkA5ZI+u4=
+github.com/honeycombio/beeline-go v0.10.1 h1:0S6N6tyo+Xuo0a+5kzaMAi2mLRecUwghUFfe4mm5YYg=
+github.com/honeycombio/beeline-go v0.10.1/go.mod h1:GuNUw2veKqJsH+e8s+B+GVNyt2PNNseELUI2As0nCpg=
+github.com/honeycombio/libhoney-go v1.15.0 h1:RZTzGhKfaJQ3i0qKZg0rYvx3c8jH4KvB5oZkzpYe+X4=
+github.com/honeycombio/libhoney-go v1.15.0/go.mod h1:oa9PAQSksfcIFkHT0K7vgrp9Y0Nax9iK7EDFEVl5NfY=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
@@ -399,8 +399,8 @@ github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:C
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
-github.com/klauspost/compress v1.10.11 h1:K9z59aO18Aywg2b/WSgBaUX99mHy2BES18Cr5lBKZHk=
-github.com/klauspost/compress v1.10.11/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
+github.com/klauspost/compress v1.11.2 h1:MiK62aErc3gIiVEtyzKfeOHgW7atJb5g/KNX5m3c2nQ=
+github.com/klauspost/compress v1.11.2/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2 h1:DB17ag19krx9CFsz4o3enTrPXyIXCl+2iCXH/aMAp9s=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
