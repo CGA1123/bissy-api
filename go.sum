@@ -541,8 +541,8 @@ github.com/slack-go/slack v0.7.4/go.mod h1:FGqNzJBmxIsZURAxh2a8D21AnOVvvXZvGligs
 github.com/snowflakedb/glog v0.0.0-20180824191149-f5055e6f21ce h1:CGR1hXCOeoZ1aJhCs8qdKJuEu3xoZnxsLcYoh5Bnr+4=
 github.com/snowflakedb/glog v0.0.0-20180824191149-f5055e6f21ce/go.mod h1:EB/w24pR5VKI60ecFnKqXzxX3dOorz1rnVicQTQrGM0=
 github.com/snowflakedb/gosnowflake v1.3.5/go.mod h1:13Ky+lxzIm3VqNDZJdyvu9MCGy+WgRdYFdXp96UcLZU=
-github.com/snowflakedb/gosnowflake v1.3.12 h1:81KEau9pF2/nSHVQtAv6IrucHp8ck0nsrSRjhNxsCT8=
-github.com/snowflakedb/gosnowflake v1.3.12/go.mod h1:/pSAJAdlrfhZ10TanQW5c+oOt257eGdRBBA7Pl5DcC0=
+github.com/snowflakedb/gosnowflake v1.3.13 h1:GgyXGYIRXhjonLKi5vg8iaLwNtDojJbJYs/Z2dptR9c=
+github.com/snowflakedb/gosnowflake v1.3.13/go.mod h1:6nfka9aTXkUNha1p1cjeeyjDvcyh7jfjp0l8kGpDBok=
 github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4kGIyLM=
 github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d/go.mod h1:UdhH50NIW0fCiwBSr0co2m7BnFLdv4fQTgdqdJTHFeE=
 github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e/go.mod h1:HuIsMU8RRBOtsCgI77wP899iHVBQpCmg4ErYMZB+2IA=
