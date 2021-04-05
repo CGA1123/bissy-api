@@ -5,7 +5,7 @@ module github.com/cga1123/bissy-api
 go 1.14
 
 require (
-	github.com/DATA-DOG/go-txdb v0.1.3
+	github.com/DATA-DOG/go-txdb v0.1.4
 	github.com/PagerDuty/go-pagerduty v1.3.0
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bugsnag/bugsnag-go v1.9.0
