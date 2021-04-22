@@ -20,7 +20,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/honeycombio/beeline-go v0.11.1
 	github.com/jmoiron/sqlx v1.3.1
-	github.com/lib/pq v1.10.0
+	github.com/lib/pq v1.10.1
 	github.com/rs/cors v1.7.0
 	github.com/slack-go/slack v0.8.1
 	github.com/snowflakedb/gosnowflake v1.4.1
