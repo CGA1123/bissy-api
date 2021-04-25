@@ -215,3 +215,19 @@ func (s *TestRandom) Bytes(size int) ([]byte, error) {
 func (s *TestRandom) String(size int) (string, error) {
 	return string(s.Value), nil
 }
+
+func HerokuHTTPSOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		protocol := r.Header.Get("X-Forwarded-Proto")
+
+		// If X-Forwarded-Proto is not set or is https, serve, else redirect to https!
+		if protocol == "https" {
+			next.ServeHTTP(w, r)
+		} else {
+			url := r.URL
+			url.Scheme = "https"
+
+			http.Redirect(w, r, url.String(), http.StatusMovedPermanently)
+		}
+	})
+}
