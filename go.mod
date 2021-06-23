@@ -23,5 +23,5 @@ require (
 	github.com/lib/pq v1.10.2
 	github.com/rs/cors v1.7.0
 	github.com/slack-go/slack v0.9.1
-	github.com/snowflakedb/gosnowflake v1.5.0
+	github.com/snowflakedb/gosnowflake v1.5.1
 )
